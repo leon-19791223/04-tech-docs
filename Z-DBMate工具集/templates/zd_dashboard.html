@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block page_title %}Z-DBMate 仪表盘{% endblock %}
+{% block content %}
+
+<!-- 状态概览 -->
+<div class="two">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F3AF;</span> 部署流水线</span></div>
+    <div style="padding:16px 0;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <span class="tag tg-blu" style="font-size:13px;padding:8px 16px;">Step 1</span>
+        <div style="flex:1;"><div style="font-weight:600;">环境预检</div><div style="font-size:12px;color:var(--g500);">10项检查确保环境就绪</div></div>
+        <a href="/precheck" class="btn btn-ghost btn-sm">预检 &rarr;</a>
+      </div>
+      <div style="height:1px;background:var(--g100);margin:0 40px;"></div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <span class="tag tg-org" style="font-size:13px;padding:8px 16px;">Step 2</span>
+        <div style="flex:1;"><div style="font-weight:600;">一键部署</div><div style="font-size:12px;color:var(--g500);">选择场景+模式，执行部署</div></div>
+        <a href="/deploy" class="btn btn-ghost btn-sm">部署 &rarr;</a>
+      </div>
+      <div style="height:1px;background:var(--g100);margin:0 40px;"></div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <span class="tag tg-grn" style="font-size:13px;padding:8px 16px;">Step 3</span>
+        <div style="flex:1;"><div style="font-weight:600;">部署监控</div><div style="font-size:12px;color:var(--g500);">实时查看进度与日志</div></div>
+        <a href="/monitor" class="btn btn-ghost btn-sm">监控 &rarr;</a>
+      </div>
+      <div style="height:1px;background:var(--g100);margin:0 40px;"></div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <span class="tag tg-grn" style="font-size:13px;padding:8px 16px;">Step 4</span>
+        <div style="flex:1;"><div style="font-weight:600;">生产验收</div><div style="font-size:12px;color:var(--g500);">26项检查清单逐项确认</div></div>
+        <a href="/checklist" class="btn btn-ghost btn-sm">验收 &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> 场景速查</span></div>
+    <div class="tw"><table class="mt">
+      <thead><tr><th>场景</th><th>配置文件</th></tr></thead>
+      <tbody>
+        {% for s in scenarios %}
+        <tr><td>{{ s.label }}</td><td><code>{{ s.conf }}</code></td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+    <div class="alert alert-ok mt12">&#x1F4A1; 执行前请编辑 conf/user_edit_file.conf 中的IP地址</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x1F504;</span> 执行模式对比</span>
+    <span style="font-size:13px;color:var(--g500);">根据安全策略选择</span>
+  </div>
+  <div class="two">
+    {% for m in modes %}
+    <div class="st-card" style="padding:20px;">
+      <div class="stl">{{ m.id|upper }} 模式</div>
+      <div style="font-size:18px;font-weight:700;color:var(--primary);margin:4px 0;">{{ m.label }}</div>
+      <div class="sts" style="font-size:13px;">{{ m.desc }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x1F517;</span> 与迁移评估系统集成</span>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;padding:16px;">
+    <span class="tag tg-blu" style="font-size:14px;padding:10px 20px;">&#x1F4CA; 迁移评估系统</span>
+    <span style="color:var(--g300);font-size:24px;">&rarr;</span>
+    <span class="tag tg-org" style="font-size:14px;padding:10px 20px;">&#x1F680; Z-DBMate 部署</span>
+    <span style="color:var(--g300);font-size:24px;">&rarr;</span>
+    <span class="tag tg-grn" style="font-size:14px;padding:10px 20px;">&#x1F504; TPOPS + GaussDB</span>
+  </div>
+  <div style="font-size:13px;color:var(--g500);line-height:1.8;padding:8px 0;">
+    <strong>推荐流程:</strong> 迁移评估系统评估兼容性 &rarr; Z-DBMate部署目标环境 &rarr; DRS/DataX数据迁移 &rarr; 应用割接
+  </div>
+</div>
+{% endblock %}

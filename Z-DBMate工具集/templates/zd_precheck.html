@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block page_title %}环境预检{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x2705;</span> 部署前环境预检</span>
+    <div class="fsbc">
+      <span class="tag tg-grn" id="count-pass">0 通过</span>
+      <span class="tag tg-org" id="count-warn">0 警告</span>
+      <span class="tag tg-red" id="count-fail">0 失败</span>
+    </div>
+  </div>
+
+  {% for item in precheck_items %}
+  {% set r = mock_data.get(item.id, {"status":"pass","detail":""}) %}
+  <div class="precheck-item" data-id="{{ item.id }}" style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--g100);">
+    <div class="status-icon" style="font-size:20px;min-width:28px;text-align:center;">
+      {% if r.status == "pass" %}✅{% elif r.status == "warn" %}⚠️{% else %}❌{% endif %}
+    </div>
+    <div style="flex:1;">
+      <div style="font-weight:600;font-size:14px;">{{ item.name }}</div>
+      <div style="font-size:13px;color:var(--g500);margin-top:2px;">{{ item.description }}</div>
+      <div class="detail-text" style="font-size:12px;color:var(--g400);margin-top:4px;">{{ r.detail }}</div>
+    </div>
+    <div>
+      <span class="tag {% if r.status == 'pass' %}tg-grn{% elif r.status == 'warn' %}tg-org{% else %}tg-red{% endif %}">
+        {% if r.status == "pass" %}通过{% elif r.status == "warn" %}警告{% else %}失败{% endif %}
+      </span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div style="text-align:center;" class="mt12">
+  <button class="btn btn-pri" onclick="alert('正在执行预检...\n\n模拟环境预检完毕。\n在真实环境中将调用 precheck.sh 脚本。')">&#x1F504; 重新执行预检</button>
+  <a href="/deploy" class="btn btn-success">&#x1F680; 通过预检，开始部署</a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  var pass=0, warn=0, fail=0;
+  document.querySelectorAll('.precheck-item').forEach(function(el){
+    var tag = el.querySelector('.tag');
+    if(tag.classList.contains('tg-grn')) pass++;
+    else if(tag.classList.contains('tg-org')) warn++;
+    else fail++;
+  });
+  document.getElementById('count-pass').textContent = pass + ' 通过';
+  document.getElementById('count-warn').textContent = warn + ' 警告';
+  document.getElementById('count-fail').textContent = fail + ' 失败';
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block page_title %}生产检查清单{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x1F4CB;</span> 生产环境部署检查清单</span>
+    <div>
+      <span class="tag tg-grn" id="cl-pass">0</span>
+      <span class="tag tg-gry" id="cl-total">/ 0</span>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--g500);margin-bottom:16px;">逐项确认后勾选：<span class="tag tg-grn">✅ 已完成</span> <span class="tag tg-gry">⬜ 未完成</span></p>
+</div>
+
+{% for cat in categories %}
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">{{ cat.icon }}</span> {{ cat.label }}</span>
+    <span class="tag tg-gry" id="cat-total-{{ cat.id }}">0/0</span>
+  </div>
+  {% for item in items.get(cat.id, []) %}
+  <div class="cl-item" data-category="{{ cat.id }}" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--g100);cursor:pointer;" onclick="toggleCheck(this)">
+    <span style="font-size:16px;">⬜</span>
+    <span style="font-size:13px;flex:1;">{{ item.label }}</span>
+    <span style="font-size:11px;color:var(--g400);">
+      {% if item.prod and item.test %}生产+测试{% elif item.prod %}仅生产{% else %}仅测试{% endif %}
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+
+<div style="text-align:center;">
+  <button class="btn btn-success" onclick="resetAll()">&#x1F504; 重置所有</button>
+  <span style="font-size:12px;color:var(--g400);margin-left:12px;">点击条目切换状态</span>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleCheck(el){
+  var icon = el.querySelector('span:first-child');
+  if(icon.textContent === '⬜'){
+    icon.textContent = '✅';
+    el.style.background = 'linear-gradient(135deg,#E6F7EE,#F0FBF4)';
+    el.style.borderRadius = '4px';
+    el.style.padding = '10px';
+  } else {
+    icon.textContent = '⬜';
+    el.style.background = 'transparent';
+    el.style.padding = '10px 0';
+  }
+  updateCounts();
+}
+
+function updateCounts(){
+  var pass = 0, total = 0;
+  document.querySelectorAll('.cl-item').forEach(function(el){
+    total++;
+    if(el.querySelector('span:first-child').textContent === '✅') pass++;
+  });
+  document.getElementById('cl-pass').textContent = pass;
+  document.getElementById('cl-total').textContent = '/ ' + total;
+
+  // 更新各分类进度
+  {% for cat in categories %}
+  var catTotal = 0, catPass = 0;
+  document.querySelectorAll('.cl-item[data-category="{{ cat.id }}"]').forEach(function(el){
+    catTotal++;
+    if(el.querySelector('span:first-child').textContent === '✅') catPass++;
+  });
+  document.getElementById('cat-total-{{ cat.id }}').textContent = catPass + '/' + catTotal;
+  {% endfor %}
+}
+
+function resetAll(){
+  document.querySelectorAll('.cl-item').forEach(function(el){
+    el.querySelector('span:first-child').textContent = '⬜';
+    el.style.background = 'transparent';
+    el.style.padding = '10px 0';
+  });
+  updateCounts();
+}
+
+updateCounts();
+</script>
+{% endblock %}

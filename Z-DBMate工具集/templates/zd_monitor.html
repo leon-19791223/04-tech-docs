@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block page_title %}部署监控{% endblock %}
+{% block content %}
+
+<div class="two">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4C8;</span> 执行进度</span></div>
+    <div id="progress-bar" style="height:12px;border-radius:6px;background:var(--g200);overflow:hidden;margin-bottom:16px;">
+      <div id="progress-fill" style="height:100%;border-radius:6px;background:var(--grad-primary);width:0%;transition:width 0.5s ease;"></div>
+    </div>
+    <div id="progress-pct" style="text-align:center;font-size:24px;font-weight:700;color:var(--accent);margin-bottom:16px;">0%</div>
+    <div id="steps-container"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4CA;</span> 系统资源</span></div>
+    <div class="st-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="st-card" style="text-align:center;padding:20px;">
+        <div class="stl">运行时间</div>
+        <div class="stv" id="run-time" style="font-size:18px;">00:00:00</div>
+      </div>
+      <div class="st-card" style="text-align:center;padding:20px;">
+        <div class="stl">错误数</div>
+        <div class="stv" id="error-count" style="color:var(--danger);">0</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="fsb" style="margin-bottom:8px;"><span>/data 磁盘</span><span id="disk-used">0%</span></div>
+      <div style="height:6px;border-radius:3px;background:var(--g200);"><div id="disk-bar" style="height:100%;border-radius:3px;background:var(--grad-primary);width:0%;"></div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="fsb" style="margin-bottom:8px;"><span>内存</span><span id="mem-used">0%</span></div>
+      <div style="height:6px;border-radius:3px;background:var(--g200);"><div id="mem-bar" style="height:100%;border-radius:3px;background:var(--grad-warning);width:0%;"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x1F4DD;</span> 最近日志</span>
+    <span><button class="btn btn-ghost btn-sm" onclick="refreshMonitor()">&#x1F504; 刷新</button></span>
+  </div>
+  <div id="log-container" style="font-family:monospace;font-size:12px;background:#1a1d26;color:#e0e0e0;border-radius:var(--rs);padding:16px;max-height:200px;overflow-y:auto;"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function refreshMonitor(){
+  fetch('/api/monitor/status').then(function(r){ return r.json(); }).then(function(d){
+    // 进度
+    document.getElementById('progress-fill').style.width = d.progress + '%';
+    document.getElementById('progress-pct').textContent = d.progress + '%';
+
+    // 步骤
+    var html = '';
+    d.steps.forEach(function(s){
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--g100);">' +
+        (s.done ? '<span>✅</span>' : '<span>⏳</span>') +
+        '<span style="font-size:13px;">' + s.name + '</span>' +
+        '<span style="font-size:11px;color:var(--g400);">' + s.file + '</span>' +
+        (s.done ? '<span class="tag tg-grn" style="margin-left:auto;">完成</span>' : '<span class="tag tg-org" style="margin-left:auto;">进行中</span>') +
+        '</div>';
+    });
+    document.getElementById('steps-container').innerHTML = html;
+
+    // 资源
+    document.getElementById('run-time').textContent = d.running_time;
+    document.getElementById('error-count').textContent = d.errors;
+    document.getElementById('disk-used').textContent = d.disk_used;
+    document.getElementById('disk-bar').style.width = d.disk_used;
+    document.getElementById('mem-used').textContent = d.mem_used;
+    document.getElementById('mem-bar').style.width = d.mem_used;
+
+    // 日志
+    var logHtml = '';
+    d.recent_errors.forEach(function(l){ logHtml += '<div>' + l + '</div>'; });
+    document.getElementById('log-container').innerHTML = logHtml;
+  });
+}
+
+// 自动刷新
+refreshMonitor();
+setInterval(refreshMonitor, 5000);
+</script>
+{% endblock %}
