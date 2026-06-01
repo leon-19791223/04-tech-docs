@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block page_title %}评估仪表盘{% endblock %}
+{% block content %}
+
+<div class="two">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F3AF;</span> 兼容性评分</span></div>
+    {% set score = result.overall_score %}
+    {% set gauge_class = "grn" if score >= 85 else "org" if score >= 65 else "red" %}
+    {% set risk_class = "risk-low" if score >= 85 else "risk-mid" if score >= 65 else "risk-high" %}
+    {% set circum = 2 * 3.14159 * 72 %}
+    {% set offset = circum - (score / 100 * circum) %}
+    {% set stroke = "#0F7B3E" if score >= 85 else "#CC7A00" if score >= 65 else "#C62828" %}
+    <div class="gauge-wrap">
+      <div class="gauge">
+        <svg viewBox="0 0 164 164">
+          <circle class="gb" cx="82" cy="82" r="72"/>
+          <circle class="gf" cx="82" cy="82" r="72" stroke="{{ stroke }}" stroke-dasharray="{{ circum }}" stroke-dashoffset="{{ offset }}"/>
+        </svg>
+        <div class="gc {{ gauge_class }}">
+          <div class="score">{{ score }}</div>
+          <div class="lbl">/ 100</div>
+        </div>
+      </div>
+      <div class="gmeta">
+        <span class="risk-tag {{ risk_class }}">&#x25CF; {{ "低风险" if score >= 85 else "中风险" if score >= 65 else "高风险" }}</span>
+        <div class="srow">
+          <div class="sitem"><div class="num">{{ result.critical_issues|length }}</div><div class="dsc">不兼容项</div></div>
+          <div class="sitem"><div class="num">{{ result.recommendations|length }}</div><div class="dsc">建议</div></div>
+          <div class="sitem"><div class="num">{{ result.estimated_phases.get('total_months','4-6') }}</div><div class="dsc">总工期</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F5A5;</span> 源端环境概览</span></div>
+    <div class="st-grid">
+      <div class="st-card"><div class="stl">数据库版本</div><div class="stv" style="font-size:14px;">{{ result.db_version or "Greenplum" }}</div></div>
+      <div class="st-card"><div class="stl">数据容量</div><div class="stv">{{ result.total_capacity or "—" }}</div></div>
+      <div class="st-card"><div class="stl">表 / 视图</div><div class="stv">{{ result.table_count }} / {{ result.view_count }}</div></div>
+      <div class="st-card"><div class="stl">函数/UDF</div><div class="stv">{{ result.function_count }}</div></div>
+      <div class="st-card"><div class="stl">分区表</div><div class="stv">{{ result.partition_table_count }}</div></div>
+      <div class="st-card"><div class="stl">集群规模</div><div class="stv" style="font-size:14px;">{{ result.cluster_scale or "—" }}</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4CA;</span> 各维度评分</span></div>
+  <div class="sgrid">
+    {% for cat in result.category_results %}
+    {% set c = "#0F7B3E" if cat.actual_score >= 85 else "#CC7A00" if cat.actual_score >= 65 else "#C62828" %}
+    <div class="sb-item">
+      <div class="sb-top"><span class="sb-name">{{ cat.category_name }}</span><span class="sb-score" style="color:{{ c }}">{{ cat.actual_score }}</span></div>
+      <div class="sb-track"><div class="sb-fill" style="width:{{ cat.actual_score }}%;background:{{ c }};"></div></div>
+      <div class="sb-meta"><span>&#x2705; {{ cat.passed }}</span><span>&#x26A0; {{ cat.warnings }}</span><span>&#x274C; {{ cat.errors }}</span><span>共 {{ cat.total_rules }} 项</span></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="two">
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title"><span class="ti">&#x26A0;</span> 关键发现</span>
+      <a href="/issues" class="btn btn-ghost btn-sm">查看全部</a>
+    </div>
+    {% if result.critical_issues %}
+    <div style="margin-bottom:12px;font-size:13px;color:var(--g500);">
+      发现 <strong style="color:var(--danger);">{{ result.critical_issues|length }}</strong> 项不兼容问题
+    </div>
+    <div class="icards">
+    {% for issue in result.critical_issues[:4] %}
+      <div class="icd ir" style="margin-bottom:0;">
+        <div class="icn">&#x1F534; {{ issue.name }}</div>
+        <div class="icdsc">{{ issue.description[:80] }}...</div>
+      </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-ok">&#x2705; 未发现严重不兼容问题</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title"><span class="ti">&#x1F4A1;</span> 迁移建议</span>
+      <a href="/recommendations" class="btn btn-ghost btn-sm">查看全部</a>
+    </div>
+    <div class="rlist">
+      {% for rec in result.recommendations[:4] %}
+      <div class="ritem"><span class="rt">{{ rec }}</span></div>
+      {% endfor %}
+    </div>
+    <div class="alert alert-warn mt12">&#x1F4DD; 详细建议和工具链请查看"建议与推荐"页面</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  setTimeout(function(){
+    document.querySelectorAll('.sb-fill').forEach(function(el){
+      var w = el.style.width;
+      el.style.width = '0%';
+      setTimeout(function(){ el.style.width = w; }, 200);
+    });
+    document.querySelectorAll('.gf').forEach(function(el){
+      var arr = el.getAttribute('stroke-dasharray');
+      var off = el.getAttribute('stroke-dashoffset');
+      el.style.strokeDashoffset = arr;
+      setTimeout(function(){ el.style.strokeDashoffset = off; }, 200);
+    });
+  }, 200);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block page_title %}关键问题清单{% endblock %}
+{% block content %}
+
+{% if result.critical_issues %}
+<div class="card">
+  <div class="fsb" style="margin-bottom:8px;">
+    <div>
+      <span style="font-size:16px;font-weight:600;color:var(--danger);">&#x26A0; 共发现 {{ result.critical_issues|length }} 项不兼容的关键问题</span>
+      <p class="c-secondary" style="font-size:13px;margin-top:4px;">这些问题需要逐个评估和改造，建议在POC阶段优先验证</p>
+    </div>
+  </div>
+</div>
+
+<div class="icards">
+  {% for issue in result.critical_issues %}
+  <div class="icd ir">
+    <div class="ict">
+      <div class="icn">&#x1F534; {{ issue.name }}</div>
+      <span class="tag tg-red">{{ issue.category }}</span>
+    </div>
+    <div class="icdsc" style="margin-top:4px;">{{ issue.description }}</div>
+    {% if issue.solution %}<div class="icsol">&#x2705; 方案: {{ issue.solution }}</div>{% endif %}
+    {% if issue.difficulty %}
+    <div style="margin-top:6px;">
+      <span class="tag {% if issue.difficulty == '高' %}tg-red{% elif issue.difficulty == '中' %}tg-org{% else %}tg-grn{% endif %}">改造难度: {{ issue.difficulty }}</span>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:48px;">
+  <div style="font-size:48px;margin-bottom:12px;">&#x2705;</div>
+  <div style="font-size:18px;font-weight:600;color:var(--success);">未发现严重不兼容问题</div>
+  <p class="c-secondary" style="margin-top:8px;">所有检查规则均通过，可直接进入迁移实施阶段</p>
+</div>
+{% endif %}
+
+<div class="two">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> UDF语言兼容性矩阵</span></div>
+    <div class="tw"><table class="mt">
+      <thead><tr><th>语言</th><th>GP</th><th>DWS</th><th>迁移策略</th><th>难度</th></tr></thead>
+      <tbody>
+        <tr><td>SQL</td><td>&#x2705;</td><td>&#x2705;</td><td>无需改造</td><td><span class="tag tg-grn">低</span></td></tr>
+        <tr><td>PL/pgSQL</td><td>&#x2705;</td><td>&#x2705;</td><td>无需改造</td><td><span class="tag tg-grn">低</span></td></tr>
+        <tr><td>PL/Pythonu</td><td>&#x2705;</td><td>&#x274C;</td><td>重写为plpgsql或Java UDF</td><td><span class="tag tg-red">高</span></td></tr>
+        <tr><td>PL/Perl</td><td>&#x2705;</td><td>&#x274C;</td><td>重写为plpgsql</td><td><span class="tag tg-red">高</span></td></tr>
+        <tr><td>PL/Java</td><td>&#x2705;</td><td>&#x26A0;</td><td>迁移为DWS FGC</td><td><span class="tag tg-org">中</span></td></tr>
+        <tr><td>PL/R</td><td>&#x2705;</td><td>&#x274C;</td><td>迁移到Spark MLlib</td><td><span class="tag tg-red">高</span></td></tr>
+        <tr><td>C</td><td>&#x2705;</td><td>&#x274C;</td><td>迁移到应用层</td><td><span class="tag tg-red">高</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4E6;</span> 扩展兼容性矩阵</span></div>
+    <div class="tw"><table class="mt">
+      <thead><tr><th>扩展</th><th>GP</th><th>DWS</th><th>替代方案</th><th>难度</th></tr></thead>
+      <tbody>
+        <tr><td>madlib</td><td>&#x2705;</td><td>&#x274C;</td><td>DWS ML/Spark</td><td><span class="tag tg-red">高</span></td></tr>
+        <tr><td>PostGIS</td><td>&#x2705;</td><td>&#x26A0;</td><td>DWS PostGIS子集</td><td><span class="tag tg-org">中</span></td></tr>
+        <tr><td>hstore</td><td>&#x2705;</td><td>&#x274C;</td><td>JSONB替代</td><td><span class="tag tg-grn">低</span></td></tr>
+        <tr><td>pgcrypto</td><td>&#x2705;</td><td>&#x2705;</td><td>无需改造</td><td><span class="tag tg-grn">低</span></td></tr>
+        <tr><td>uuid-ossp</td><td>&#x2705;</td><td>&#x2705;</td><td>无需改造</td><td><span class="tag tg-grn">低</span></td></tr>
+        <tr><td>tablefunc</td><td>&#x2705;</td><td>&#x274C;</td><td>CASE WHEN替代</td><td><span class="tag tg-org">中</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+{% endblock %}

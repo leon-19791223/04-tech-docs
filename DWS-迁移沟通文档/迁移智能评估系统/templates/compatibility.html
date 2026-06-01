@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block page_title %}兼容性详细分析{% endblock %}
+{% block content %}
+
+<div class="tabbar" id="tabs">
+  {% for cat in result.category_results if cat.details %}
+  <div class="tab {% if loop.first %}active{% endif %}" onclick="st('c-{{ cat.category }}')">
+    {% if cat.errors > 0 %}&#x1F534;{% elif cat.warnings > 0 %}&#x1F7E1;{% else %}&#x1F7E2;{% endif %}
+    {{ cat.category_name }}
+  </div>
+  {% endfor %}
+</div>
+
+{% for cat in result.category_results if cat.details %}
+{% set c = "#0F7B3E" if cat.actual_score >= 85 else "#CC7A00" if cat.actual_score >= 65 else "#C62828" %}
+<div id="c-{{ cat.category }}" class="tc2 {% if loop.first %}active{% endif %}">
+  <div class="card">
+    <div class="fsb" style="margin-bottom:16px;">
+      <div>
+        <span style="font-size:18px;font-weight:600;">{{ cat.category_name }}</span>
+        <span class="c-secondary" style="margin-left:12px;font-size:13px;">
+          得分: <strong style="color:{{ c }};">{{ cat.actual_score }}</strong>/100
+        </span>
+      </div>
+      <div class="fsbc">
+        <span class="tag tg-grn">&#x2705; {{ cat.passed }}</span>
+        <span class="tag tg-org">&#x26A0; {{ cat.warnings }}</span>
+        <span class="tag tg-red">&#x274C; {{ cat.errors }}</span>
+      </div>
+    </div>
+    <div class="tw"><table class="mt">
+      <thead><tr><th style="width:170px;">规则</th><th style="width:90px;">状态</th><th>说明</th><th>DWS解决方案</th></tr></thead>
+      <tbody>
+      {% for d in cat.details %}
+      <tr class="{% if d.severity == 'error' %}ir{% endif %}">
+        <td><strong>{{ d.name }}</strong><br><span class="c-secondary" style="font-size:11px;">{{ d.rule_id }}</span></td>
+        <td>
+          {% if d.severity == "info" %}<span class="tag tg-grn">&#x2705; 兼容</span>
+          {% elif d.severity == "warning" %}<span class="tag tg-org">&#x26A0; 需注意</span>
+          {% else %}<span class="tag tg-red">&#x274C; 不兼容</span>{% endif %}
+        </td>
+        <td style="font-size:13px;">{{ d.description[:100] }}{% if d.description|length > 100 %}...{% endif %}</td>
+        <td style="font-size:13px;color:var(--accent);max-width:240px;">{{ d.target_solution[:80] }}{% if d.target_solution|length > 80 %}...{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% if cat.warnings > 0 or cat.errors > 0 %}
+    <div class="alert alert-warn mt12">&#x1F4A1; 该维度 {{ cat.errors }} 项不兼容、{{ cat.warnings }} 项需注意，迁移时需重点关注</div>
+    {% else %}
+    <div class="alert alert-ok mt12">&#x2705; 该维度所有规则检查通过，兼容性良好</div>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+{% block scripts %}
+<script>
+function st(id) {
+  document.querySelectorAll('.tc2').forEach(function(e){ e.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(e){ e.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  document.querySelector('.tab[onclick*="'+id+'"]').classList.add('active');
+}
+</script>
+{% endblock %}

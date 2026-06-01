@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block page_title %}工作量与阶段规划{% endblock %}
+{% block content %}
+
+<div class="two">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4C5;</span> 迁移工作量评估</span></div>
+    {% set wl = result.workload_estimate %}
+    <div class="tw"><table class="mt">
+      <thead><tr><th>工作项</th><th>预估天数</th></tr></thead>
+      <tbody>
+        <tr><td>DDL转换</td><td><strong>{{ wl.get('ddl_conversion_days','—') }}</strong> 天</td></tr>
+        <tr><td>数据迁移</td><td><strong>{{ wl.get('data_migration_days','—') }}</strong> 天</td></tr>
+        <tr><td>UDF改造</td><td><strong>{{ wl.get('udf_migration_days','—') }}</strong> 天</td></tr>
+        <tr><td>ETL迁移</td><td><strong>{{ wl.get('etl_migration_days','—') }}</strong> 天</td></tr>
+        <tr><td>测试验证</td><td><strong>{{ wl.get('testing_days','—') }}</strong> 天</td></tr>
+        <tr class="hl"><td><strong>总计</strong></td><td><strong style="font-size:18px;color:var(--accent);">{{ wl.get('total_estimated_days','—') }}</strong> 天（约 <strong>{{ wl.get('total_estimated_months','—') }}</strong> 人月）</td></tr>
+      </tbody>
+    </table></div>
+    {% if wl.get('note') %}<div class="c-secondary" style="font-size:12px;margin-top:8px;">注: {{ wl['note'] }}</div>{% endif %}
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4B0;</span> 数据迁移耗时估算</span></div>
+    <div style="padding:8px 0;">
+      <div class="fsb" style="margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--g100);">
+        <span class="c-secondary">总数据量</span><span style="font-weight:700;font-size:18px;">{{ result.total_capacity or "35TB" }}</span>
+      </div>
+      <div class="fsb" style="margin-bottom:10px;"><span class="c-secondary">迁移速率</span><span style="font-weight:600;">100 MB/s</span></div>
+      <div class="fsb" style="margin-bottom:10px;"><span class="c-secondary">全量迁移</span><span class="tag tg-blu" style="font-size:14px;font-weight:600;">~7 天</span></div>
+      <div class="fsb" style="margin-bottom:10px;"><span class="c-secondary">增量同步</span><span class="tag tg-org" style="font-size:14px;font-weight:600;">持续进行</span></div>
+      <div class="fsb"><span class="c-secondary">数据校验</span><span class="tag tg-grn" style="font-size:14px;font-weight:600;">行数+MD5</span></div>
+    </div>
+    <div class="alert alert-warn mt12">&#x26A1; 建议分批迁移: 先迁移20%非核心表验证，再迁移80%核心业务表</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x1F4C8;</span> 四阶段迁移规划</span>
+    <span style="font-size:14px;color:var(--accent);font-weight:600;">总工期: {{ result.estimated_phases.get('total_months','4-6个月') }}</span>
+  </div>
+  <div class="tl">
+    {% set phase_colors = ['p1','p2','p3','p4'] %}
+    {% for key in ['phase1_survey','phase2_poc','phase3_migration','phase4_go_live'] %}
+    {% if key in result.estimated_phases %}
+    {% set ph = result.estimated_phases[key] %}
+    <div class="tli">
+      <div class="tlp {{ phase_colors[loop.index0] }}">Phase {{ ph.order }} &middot; {{ ph.weeks }}周</div>
+      <div class="tlt">{{ ph.name }}</div>
+      <div class="tld">{{ ph.description }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F504;</span> 回切方案</span></div>
+  <div class="tw"><table class="mt">
+    <thead><tr><th>场景</th><th>触发条件</th><th>操作</th><th>RTO</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tg-org">回退</span></td><td>关键业务异常 2h无法修复</td><td>停止DWS &rarr; 切换应用到GP &rarr; 同步增量</td><td>&lt; 2h</td></tr>
+      <tr><td><span class="tag tg-org">保底</span></td><td>性能劣化超50%且无法优化</td><td>回退至GP，保留DWS持续优化</td><td>—</td></tr>
+      <tr><td><span class="tag tg-grn">正常</span></td><td>正常运行</td><td>源端保留1个月以备回切</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+  <div class="alert alert-ok mt12">&#x2705; 建议在正式割接前至少执行2次完整演练</div>
+</div>
+{% endblock %}
