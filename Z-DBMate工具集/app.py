@@ -215,6 +215,6 @@ if __name__ == "__main__":
     print("=" * 50)
     print("  Z-DBMate 部署工具集 - Web UI")
     print("=" * 50)
-    print("  访问地址: http://127.0.0.1:5001")
+    print("  访问地址: http://127.0.0.1:5002")
     print("=" * 50)
-    app.run(debug=False, host="127.0.0.1", port=5001)
+    app.run(debug=False, host="127.0.0.1", port=5002)
