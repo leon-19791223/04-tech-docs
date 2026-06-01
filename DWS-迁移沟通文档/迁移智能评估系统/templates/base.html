@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}GP->DWS 迁移评估{% endblock %}</title>
+<title>{% block title %}{{ paths.get(current_path, {}).get("label", "迁移评估") }}{% endblock %}</title>
 <style>
 /* ============================================================
    Design Tokens
@@ -539,8 +539,22 @@ table.mt tbody tr:first-child td { border-top:none; }
       <span>v1.0</span>
     </div>
     <h1>迁移评估系统</h1>
-    <p>Greenplum &rarr; GaussDB(DWS)</p>
+    <p id="sidebar-path-label">{{ paths.get(current_path, {}).get("label", "GP -> DWS") }}</p>
   </div>
+    <!-- 迁移路径切换 -->
+    <div style="padding:8px 16px 4px;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.3);margin-bottom:8px;font-weight:600;">&#x8FC1;&#x79FB;&#x8DEF;&#x5F84;</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        {% for key, cfg in paths.items() %}
+        <a href="/switch-path/{{ key }}" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:500;transition:all 0.2s;{% if current_path == key %}background:rgba(0,163,255,0.15);color:#fff;{% else %}color:rgba(255,255,255,0.5);{% endif %}">
+          <span>{{ cfg.icon|safe }}</span>
+          <span>{{ cfg.label }}</span>
+          {% if current_path == key %}<span style="margin-left:auto;font-size:9px;background:rgba(0,163,255,0.3);padding:1px 6px;border-radius:4px;">&#x5F53;&#x524D;</span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
   <nav class="sb-nav">
     <div class="sb-label">概览</div>
     <a href="/" class="{% if request.path == '/' %}active{% endif %}">

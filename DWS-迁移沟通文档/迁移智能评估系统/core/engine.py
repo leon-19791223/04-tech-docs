@@ -153,42 +153,55 @@ class MigrationAnalyzer:
         return issues
 
     def _generate_recommendations(self, result: AssessmentResult) -> list:
-        """生成迁移建议（可被子类覆盖以增加特定建议）"""
+        """生成迁移建议"""
         recs = []
         udf = self.metadata.udf_languages
+        src = self.source_type
 
+        # UDF语言建议 (通用)
         if udf.get("plpythonu", 0) > 0:
             recs.append(
-                f"plpythonu函数({udf['plpythonu']}个)需改造为plpgsql或Java UDF，"
-                f"建议在POC阶段选取10+个复杂函数进行验证"
+                f"plpythonu函数({udf['plpythonu']}个)需改造为plpgsql或Java UDF"
             )
         if udf.get("plperl", 0) > 0 or udf.get("plperlu", 0) > 0:
             total_perl = udf.get("plperl", 0) + udf.get("plperlu", 0)
-            recs.append(
-                f"plperl/plperlu函数({total_perl}个)需完全重写为plpgsql"
-            )
+            recs.append(f"plperl/plperlu函数({total_perl}个)需完全重写为plpgsql")
 
+        # Oracle特有建议
+        if src == "oracle" or src == "oracle":
+            if udf.get("plsql", 0) > 0:
+                recs.append(
+                    f"PL/SQL包/函数/过程({udf['plsql']}个)需迁移为plpgsql，"
+                    f"重点关注包(PACKAGE)和游标语法的改造"
+                )
+            # 检查是否有CONNECT BY相关规则被触发
+            for cat in result.category_results:
+                if cat.category == "function":
+                    for d in cat.details:
+                        if "CONNECT BY" in d.description:
+                            recs.append(
+                                "CONNECT BY层级查询需改为WITH RECURSIVE递归CTE，"
+                                "建议在POC阶段选取5+个复杂查询进行验证"
+                            )
+                            break
+
+        # 数据量建议
         if "TB" in self.metadata.total_capacity:
             import re
             nums = re.findall(r'\d+', self.metadata.total_capacity)
             if nums and int(nums[0]) >= 20:
-                recs.append(
-                    f"数据量较大({self.metadata.total_capacity})，建议分批迁移"
-                )
+                recs.append(f"数据量较大({self.metadata.total_capacity})，建议分批迁移")
 
+        # ETL工具建议
         if "Kettle" in self.metadata.etl_tool:
-            recs.append(
-                f"ETL工具({self.metadata.etl_tool})建议逐步迁移到DataX"
-            )
+            recs.append(f"ETL工具({self.metadata.etl_tool})建议逐步迁移到DataX")
+        if "GoldenGate" in self.metadata.etl_tool:
+            recs.append(f"OGG({self.metadata.etl_tool})可保留对接DWS，需安装DWS适配器")
         if "iControl" in self.metadata.scheduler_tool or "TaskCTL" in self.metadata.scheduler_tool:
-            recs.append(
-                f"调度工具({self.metadata.scheduler_tool})建议迁移到DolphinScheduler"
-            )
+            recs.append(f"调度工具({self.metadata.scheduler_tool})建议迁移到DolphinScheduler")
 
         if self.metadata.table_count > 2000:
-            recs.append(
-                f"表数量较大({self.metadata.table_count}张)，建议按优先级分批次迁移"
-            )
+            recs.append(f"表数量较大({self.metadata.table_count}张)，建议按优先级分批次迁移")
 
         recs.append("建议在POC阶段搭建测试环境，选取50+代表性SQL和20+典型UDF进行兼容性验证")
         recs.append("源端环境保留至少1个月，确保在迁移异常时可快速回切")

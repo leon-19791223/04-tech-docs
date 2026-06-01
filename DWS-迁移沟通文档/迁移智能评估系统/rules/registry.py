@@ -36,5 +36,7 @@ def get_category_name(category: str, source: str = "", target: str = "") -> str:
         "etl_tool": "ETL工具兼容性",
         "scheduler": "调度工具兼容性",
         "bi_tool": "BI工具兼容性",
+        "plsql": "PL/SQL语法兼容性",     # Oracle特有
+        "trigger": "触发器兼容性",        # Oracle特有
     }
     return names.get(category, category)
