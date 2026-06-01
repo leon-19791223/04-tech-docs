@@ -1,0 +1,25 @@
+# ============================================================
+# Z-DBMate 环境配置示例
+# 按实际场景复制为 .env 文件
+# ============================================================
+
+# --- 测试环境 ---
+# 使用: cp environments .env && vi .env
+[test]
+DISK_COUNT_MIN=2
+DATA_DISK_MIN_GB=300
+RAID_LEVEL="无"
+CPU_MIN=8
+MEM_MIN_GB=8
+NODE_COUNT=3
+NOTE="功能验证用，无需高可用"
+
+# --- 生产环境 ---
+[prod]
+DISK_COUNT_MIN=6
+DATA_DISK_MIN_GB=1000
+RAID_LEVEL="系统盘RAID1 + 数据盘RAID10"
+CPU_MIN=16
+MEM_MIN_GB=32
+NODE_COUNT=3
+NOTE="关键业务，需高可用保障"
