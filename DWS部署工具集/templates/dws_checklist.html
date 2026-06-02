@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block page_title %}检查清单{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4CB;</span> DWS 部署检查清单</span></div>
+  <p style="font-size:13px;color:var(--g500);margin-bottom:16px;">逐项确认后勾选：<span class="tag tg-grn">✅ 已完成</span> <span class="tag tg-gry">⬜ 未完成</span></p>
+</div>
+
+{% set checklist_sections = [
+  ("硬件环境", [
+    ("RAID策略: Read Ahead + Write Back With BBU", True),
+    ("网卡MTU一致性 1500", True),
+    ("Hi1822网卡中断配置", False),
+    ("系统盘/数据盘区分", True),
+    ("磁盘数量 ≥6块(生产)", True),
+  ]),
+  ("OS配置", [
+    ("auditd 已关闭", True),
+    ("firewalld + iptables 已关闭", True),
+    ("SELinux = disabled", True),
+    ("swap 已关闭", True),
+    ("透明大页 已关闭", True),
+    ("时区 = Asia/Shanghai", True),
+    ("内核参数已优化", False),
+  ]),
+  ("磁盘分区", [
+    ("parted GPT 分区完成", True),
+    ("XFS 格式化完成", True),
+    ("/etc/fstab 配置完成", True),
+    ("mount -a 验证通过", True),
+    ("SSD 确认 (ROTA=0)", True),
+  ]),
+  ("软件安装", [
+    ("Python 3.8.5 安装完成", True),
+    ("依赖包安装完成", True),
+    ("ISO 挂载 + yum源就绪", True),
+    ("fio 压测工具已上传", False),
+  ]),
+  ("集群验证", [
+    ("FusionInsight SetupTool 执行完成", False),
+    ("集群安装完成", False),
+    ("gsql 连接测试通过", False),
+    ("实例状态正常", False),
+    ("备份策略已配置", False),
+  ]),
+] %}
+
+{% for section_name, items in checklist_sections %}
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">{{ loop.index }}&#xFE0F&#x20E3;</span> {{ section_name }}</span></div>
+  {% for item, default in items %}
+  <div class="cl-item" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--g100);cursor:pointer;" onclick="toggleCheck(this)">
+    <span style="font-size:16px;">{% if default %}✅{% else %}⬜{% endif %}</span>
+    <span style="font-size:13px;flex:1;">{{ item }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+
+<script>
+function toggleCheck(el){
+  var icon = el.querySelector('span:first-child');
+  icon.textContent = icon.textContent === '⬜' ? '✅' : '⬜';
+  el.style.background = icon.textContent === '✅' ? 'linear-gradient(135deg,#E6F7EE,#F0FBF4)' : 'transparent';
+  el.style.borderRadius = icon.textContent === '✅' ? '4px' : '0';
+  el.style.padding = icon.textContent === '✅' ? '10px' : '10px 0';
+}
+</script>
+{% endblock %}

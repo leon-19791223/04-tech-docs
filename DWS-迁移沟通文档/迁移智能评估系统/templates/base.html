@@ -595,6 +595,35 @@ table.mt tbody tr:first-child td { border-top:none; }
     <div class="topbar-right"><a href="/report/download" class="btn btn-pri">&#x1F4E5; 下载报告</a></div>
   </div>
   <div class="page-wrap">{% block content %}{% endblock %}</div>
+
+<div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--g200);">
+  <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--g400);margin-bottom:12px;font-weight:600;text-align:center;">&#x2699; 数据库全生命周期工具链</div>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+    <a href="http://127.0.0.1:5010" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50);color:var(--text);transition:all 0.2s;">
+      <span style="font-size:14px;">&#x1F4CA;</span>
+      <span><strong>迁移智能评估系统</strong><br><span style="font-size:10px;color:var(--g500);">OLAP/OLTP兼容性评估</span></span>
+      <span style="font-size:10px;color:var(--accent);">:5000</span>
+    </a>
+    <div style="display:flex;align-items:center;color:var(--g300);font-size:18px;">&rarr;</div>
+    <a href="http://127.0.0.1:5012" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50);color:var(--text);transition:all 0.2s;">
+      <span style="font-size:14px;">&#x2699;</span>
+      <span><strong>Z-DBMate 工具集</strong><br><span style="font-size:10px;color:var(--g500);">GaussDB OLTP 部署</span></span>
+      <span style="font-size:10px;color:var(--accent);">:5002</span>
+    </a>
+    <div style="display:flex;align-items:center;color:var(--g300);font-size:18px;">&rarr;</div>
+    <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50);color:var(--text);">
+      <span style="font-size:14px;">&#x1F4E6;</span>
+      <span><strong>DWS 部署工具集</strong><br><span style="font-size:10px;color:var(--g500);">DWS MPP 数仓部署</span></span>
+      <span style="font-size:10px;color:var(--g500);">CLI</span>
+    </div>
+    <div style="display:flex;align-items:center;color:var(--g300);font-size:18px;">&rarr;</div>
+    <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50);color:var(--text);">
+      <span style="font-size:14px;">&#x1F504;</span>
+      <span><strong>DRS / DataX</strong><br><span style="font-size:10px;color:var(--g500);">数据迁移工具</span></span>
+    </div>
+  </div>
+</div>
+
 </div>
 
 {% block scripts %}{% endblock %}

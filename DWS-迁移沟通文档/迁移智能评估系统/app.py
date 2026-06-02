@@ -204,6 +204,6 @@ if __name__ == "__main__":
     print("=" * 50)
     print("  迁移智能评估系统 - Web UI")
     print("=" * 50)
-    print("  访问地址: http://127.0.0.1:5000")
+    print("  访问地址: http://127.0.0.1:5010")
     print("=" * 50)
-    app.run(debug=False, host="127.0.0.1", port=5000)
+    app.run(debug=False, host="127.0.0.1", port=5010)

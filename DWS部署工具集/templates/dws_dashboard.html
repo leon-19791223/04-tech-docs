@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block page_title %}DWS 部署仪表盘{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F3AF;</span> DWS MPP 数仓部署工具集</span></div>
+  <div style="display:flex;flex-direction:column;gap:16px;padding:8px 0;">
+    <div style="padding:12px 16px;background:var(--grad-accent-soft);border-radius:var(--rs);font-size:13px;">
+      <strong>&#x26A0; 与 Z-DBMate 的区别：</strong> 此工具集用于 <strong>GaussDB(DWS) MPP 数仓</strong> 的部署（管理平台：FusionInsight Manager）。<br>
+      GaussDB OLTP（单机/主备）的部署请使用 <a href="http://127.0.0.1:5012" target="_blank" style="color:var(--accent);">Z-DBMate 工具集 &rarr;</a>
+    </div>
+  </div>
+</div>
+
+<div class="two">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4C5;</span> 7阶段部署流程</span></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
+        <span style="font-weight:600;font-size:13px;">Phase 1 环境准备</span>
+        <span class="tag tg-gry">RAID/BIOS/网络</span>
+      </div>
+      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
+        <span style="font-weight:600;font-size:13px;">Phase 2 OS配置</span>
+        <span class="tag tg-gry">内核/SELinux/防火墙</span>
+      </div>
+      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
+        <span style="font-weight:600;font-size:13px;">Phase 3 磁盘分区</span>
+        <span class="tag tg-gry">LVM/XFS/挂载</span>
+      </div>
+      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
+        <span style="font-weight:600;font-size:13px;">Phase 4 软件安装</span>
+        <span class="tag tg-gry">Python 3.8.5/依赖/ISO</span>
+      </div>
+      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
+        <span style="font-weight:600;font-size:13px;">Phase 5 集群部署</span>
+        <span class="tag tg-gry">FusionInsight Setup</span>
+      </div>
+      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
+        <span style="font-weight:600;font-size:13px;">Phase 6 性能测试</span>
+        <span class="tag tg-gry">fio/dd/网络压测</span>
+      </div>
+      <div class="fsb" style="padding:10px 0;">
+        <span style="font-weight:600;font-size:13px;">Phase 7 验收交付</span>
+        <span class="tag tg-gry">功能验证/备份</span>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><a href="/flow" class="btn btn-pri" style="width:100%;justify-content:center;">查看详细流程</a></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F517;</span> 与迁移评估系统联动</span></div>
+    <div style="padding:8px 0;">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--rs);background:var(--g50);margin-bottom:8px;">
+        <span style="font-size:24px;">1&#xFE0F&#x20E3;</span>
+        <div><div style="font-weight:600;font-size:13px;">迁移智能评估系统</div><div style="font-size:12px;color:var(--g500);">评估源库到 DWS 的兼容性</div></div>
+        <a href="http://127.0.0.1:5010" target="_blank" class="btn btn-ghost btn-sm">打开 &rarr;</a>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--rs);background:var(--g50);margin-bottom:8px;">
+        <span style="font-size:24px;">2&#xFE0F&#x20E3;</span>
+        <div><div style="font-weight:600;font-size:13px;">Z-DBMate 工具集</div><div style="font-size:12px;color:var(--g500);">部署 GaussDB OLTP</div></div>
+        <a href="http://127.0.0.1:5012" target="_blank" class="btn btn-ghost btn-sm">打开 &rarr;</a>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--rs);background:var(--accent-bg, #E8EAF6);margin-bottom:8px;">
+        <span style="font-size:24px;">3&#xFE0F&#x20E3;</span>
+        <div><div style="font-weight:600;font-size:13px;color:var(--accent);">DWS 部署工具集</div><div style="font-size:12px;color:var(--g500);">部署 DWS MPP 数仓</div></div>
+        <span class="tag tg-blu" style="margin-left:auto;">当前</span>
+      </div>
+    </div>
+    <div style="padding:10px;background:var(--g50);border-radius:var(--rs);font-size:12px;color:var(--g500);margin-top:8px;">
+      &#x1F504; 部署完成后，使用 DRS/DataX 迁移数据
+    </div>
+  </div>
+</div>
+{% endblock %}
