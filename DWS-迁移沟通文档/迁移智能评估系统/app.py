@@ -11,9 +11,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask, render_template, request, jsonify, send_file
 
 from rules.registry import get_rules, list_registered
-from rules import gp_to_dws, oracle_to_dws
+from rules import gp_to_dws, oracle_to_dws, mysql_to_dws, mssql_to_dws
 from scanners.gp_scanner import GPScanner
 from scanners.oracle_scanner import OracleScanner
+from scanners.mysql_scanner import MySQLScanner
+from scanners.mssql_scanner import MSSQLScanner
 from scanners.sample_scanner import SampleScanner
 from core.engine import MigrationAnalyzer
 from core.models import MigrationMetadata, AssessmentResult
@@ -31,6 +33,16 @@ MIGRATION_PATHS = {
         "label": "Oracle -> DWS", "source": "oracle", "target": "dws",
         "rules_module": oracle_to_dws, "scanner": OracleScanner,
         "icon": "&#x1F534;"
+    },
+    "mysql_dws": {
+        "label": "MySQL -> DWS", "source": "mysql", "target": "dws",
+        "rules_module": mysql_to_dws, "scanner": MySQLScanner,
+        "icon": "&#x1F431;"
+    },
+    "mssql_dws": {
+        "label": "SQL Server -> DWS", "source": "mssql", "target": "dws",
+        "rules_module": mssql_to_dws, "scanner": MSSQLScanner,
+        "icon": "&#x1F4CB;"
     },
 }
 

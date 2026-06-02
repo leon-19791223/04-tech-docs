@@ -1,25 +1,94 @@
 # ============================================================
-# Z-DBMate 环境配置示例
-# 按实际场景复制为 .env 文件
+# Z-DBMate 环境规格配置 (DWS 聚焦)
+# 支持 x86_64 / ARM64 (aarch64) 双架构
 # ============================================================
 
-# --- 测试环境 ---
-# 使用: cp environments .env && vi .env
+# --- 测试环境 (x86/ARM通用) ---
 [test]
+ARCH="x86_64|aarch64"
 DISK_COUNT_MIN=2
 DATA_DISK_MIN_GB=300
 RAID_LEVEL="无"
 CPU_MIN=8
 MEM_MIN_GB=8
 NODE_COUNT=3
+NETWORK_CARD="10GE"
+MTU=1500
 NOTE="功能验证用，无需高可用"
 
-# --- 生产环境 ---
-[prod]
+# --- 生产环境 (x86) ---
+[prod_x86]
+ARCH="x86_64"
 DISK_COUNT_MIN=6
 DATA_DISK_MIN_GB=1000
 RAID_LEVEL="系统盘RAID1 + 数据盘RAID10"
 CPU_MIN=16
 MEM_MIN_GB=32
 NODE_COUNT=3
-NOTE="关键业务，需高可用保障"
+NETWORK_CARD="25GE"
+MTU=1500
+NOTE="x86生产环境，通用配置"
+
+# --- 生产环境 (ARM/鲲鹏) ---
+[prod_arm]
+ARCH="aarch64"
+DISK_COUNT_MIN=6
+DATA_DISK_MIN_GB=2400
+RAID_LEVEL="系统盘RAID1 + 数据盘RAID10"
+CPU_MIN=32
+MEM_MIN_GB=256
+NODE_COUNT=3
+NETWORK_CARD="25GE"
+MTU=1500
+NOTE="ARM鲲鹏920生产环境，高性能配置"
+
+# --- DWS多环境配置参考 ---
+[gaussdb_dev]
+ENV_NAME="DEV开发环境"
+GAUSSDB_VERSION="9.1.0"
+NODE_COUNT=3
+CPU_MIN=16
+MEM_MIN_GB=64
+DISK_MIN_GB=500
+NETWORK="管理10.134.91.x / 业务10.134.91.x"
+NOTE="开发自测用"
+
+[gaussdb_sit]
+ENV_NAME="SIT集成测试"
+GAUSSDB_VERSION="9.1.0"
+NODE_COUNT=3
+CPU_MIN=32
+MEM_MIN_GB=128
+DISK_MIN_GB=1000
+NETWORK="管理10.134.134.x / 业务10.134.134.x"
+NOTE="系统集成测试"
+
+[gaussdb_uat]
+ENV_NAME="UAT验收测试"
+GAUSSDB_VERSION="9.1.0"
+NODE_COUNT=3
+CPU_MIN=32
+MEM_MIN_GB=128
+DISK_MIN_GB=1000
+NETWORK="管理10.134.21.x / 业务10.134.21.x"
+NOTE="用户验收测试"
+
+[gaussdb_preprod]
+ENV_NAME="PREPROD准生产"
+GAUSSDB_VERSION="9.1.0"
+NODE_COUNT=7
+CPU_MIN=32
+MEM_MIN_GB=256
+DISK_MIN_GB=2400
+NETWORK="管理10.134.50.x / 业务10.134.50.x"
+NOTE="压测验证"
+
+[gaussdb_prod]
+ENV_NAME="PROD正式生产"
+GAUSSDB_VERSION="9.1.0"
+NODE_COUNT=5
+CPU_MIN=48
+MEM_MIN_GB=512
+DISK_MIN_GB=4800
+NETWORK="管理10.134.49.x / 业务10.134.50.x / 存储10.134.51.x / 心跳10.134.52.x"
+NOTE="正式生产环境"

@@ -1,16 +1,40 @@
 """
-GP -> DWS 迁移智能评估系统 - CLI入口
+迁移智能评估系统 - CLI入口
 
-演示新架构用法:
-    python main.py                           # 使用样本数据 + GP->DWS规则
-    python main.py -t xxx-调研模板.xlsx       # 从调研模板Excel生成
-    python main.py -o report.docx             # 指定输出路径
-    python main.py --list-rules               # 查看已注册规则集
+用法:
+    python main.py                              # 使用样本数据 + MySQL->DWS规则(默认)
+    python main.py --path mysql_dws              # MySQL -> DWS
+    python main.py --path gp_dws                 # GP -> DWS
+    python main.py --path oracle_dws             # Oracle -> DWS
+    python main.py --path mssql_dws              # SQL Server -> DWS
+    python main.py -t xxx-调研模板.xlsx           # 从调研模板Excel生成(GP)
+    python main.py -o report.docx                # 指定输出路径
+    python main.py --list-rules                  # 查看已注册规则集
 """
 
 import os
 import sys
 import argparse
+
+# 迁移路径配置
+MIGRATION_PATHS = {
+    "gp_dws": {
+        "label": "Greenplum -> DWS", "source": "gp", "target": "dws",
+        "rules_module": "rules.gp_to_dws", "default_output": "GP到DWS迁移智能评估报告.docx",
+    },
+    "oracle_dws": {
+        "label": "Oracle -> DWS", "source": "oracle", "target": "dws",
+        "rules_module": "rules.oracle_to_dws", "default_output": "Oracle到DWS迁移智能评估报告.docx",
+    },
+    "mysql_dws": {
+        "label": "MySQL -> DWS", "source": "mysql", "target": "dws",
+        "rules_module": "rules.mysql_to_dws", "default_output": "MySQL到DWS迁移智能评估报告.docx",
+    },
+    "mssql_dws": {
+        "label": "SQL Server -> DWS", "source": "mssql", "target": "dws",
+        "rules_module": "rules.mssql_to_dws", "default_output": "SQLServer到DWS迁移智能评估报告.docx",
+    },
+}
 
 
 def main():
@@ -18,7 +42,10 @@ def main():
         description="迁移智能评估系统 - 通用异构数据库迁移引擎",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("-t", "--template", help="调研模板Excel路径")
+    parser.add_argument("--path", default="mysql_dws",
+                        choices=list(MIGRATION_PATHS.keys()),
+                        help="迁移路径 (默认: mysql_dws)")
+    parser.add_argument("-t", "--template", help="调研模板Excel路径(仅GP路径支持)")
     parser.add_argument("-o", "--output", help="输出报告路径")
     parser.add_argument("-v", "--verbose", action="store_true", help="详细输出")
     parser.add_argument("--list-rules", action="store_true", help="列出已注册规则集")
@@ -34,19 +61,28 @@ def main():
             print(f"    - {item}")
         return
 
-    # 使用新架构：scanner + rules.registry + core.engine
+    cfg = MIGRATION_PATHS[args.path]
+
+    # 模块导入
     from rules.registry import get_rules
-    from rules.gp_to_dws import load_weights
-    from scanners.gp_scanner import GPScanner
+    scanners = {
+        "gp": ("scanners.gp_scanner", "GPScanner"),
+        "oracle": ("scanners.oracle_scanner", "OracleScanner"),
+        "mysql": ("scanners.mysql_scanner", "MySQLScanner"),
+        "mssql": ("scanners.mssql_scanner", "MSSQLScanner"),
+    }
     from scanners.sample_scanner import SampleScanner
     from core.engine import MigrationAnalyzer
-    from core.models import MigrationMetadata
 
     # --- 1. 采集元数据 ---
     print("=" * 50)
-    print("  迁移智能评估系统")
+    print(f"  {cfg['label']} 迁移智能评估")
     print("=" * 50)
 
+    weights_module = __import__(cfg["rules_module"], fromlist=["load_weights"])
+    load_weights = getattr(weights_module, "load_weights")
+
+    # 确定扫描器
     template_path = None
     if args.template:
         template_path = args.template
@@ -58,12 +94,20 @@ def main():
                 print(f"[WARN] 未找到模板: {args.template}")
                 template_path = None
 
-    if template_path:
+    src = cfg["source"]
+    if template_path and src == "gp":
+        from scanners.gp_scanner import GPScanner
         print(f"[INFO] 读取调研模板: {template_path}")
         scanner = GPScanner(excel_path=template_path)
+    elif src in scanners:
+        mod_path, cls_name = scanners[src]
+        mod = __import__(mod_path, fromlist=[cls_name])
+        scanner_cls = getattr(mod, cls_name)
+        scanner = scanner_cls()
+        print(f"[INFO] 使用 {src} 样本数据")
     else:
-        print(f"[INFO] 使用内置样本数据")
-        scanner = SampleScanner()
+        print(f"[INFO] 使用通用样本数据")
+        scanner = SampleScanner(source_type=src)
 
     metadata = scanner.scan()
 
@@ -75,8 +119,8 @@ def main():
         print()
 
     # --- 2. 加载规则集 ---
-    print("[INFO] 加载 GP->DWS 规则集...")
-    rules = get_rules("gp", "dws")
+    print(f"[INFO] 加载 {cfg['source']}->{cfg['target']} 规则集...")
+    rules = get_rules(cfg["source"], cfg["target"])
     weights = load_weights()
 
     if args.verbose:
@@ -89,8 +133,8 @@ def main():
         metadata=metadata,
         rules=rules,
         category_weights=weights,
-        source_type="gp",
-        target_type="dws",
+        source_type=cfg["source"],
+        target_type=cfg["target"],
     )
     result = analyzer.analyze()
 
@@ -101,7 +145,7 @@ def main():
         print()
 
     # --- 4. 生成报告 ---
-    output_path = args.output or "GP到DWS迁移智能评估报告.docx"
+    output_path = args.output or cfg["default_output"]
     if not os.path.isabs(output_path):
         output_path = os.path.join(os.path.dirname(__file__), output_path)
 

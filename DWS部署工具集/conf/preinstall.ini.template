@@ -1,0 +1,63 @@
+# ============================================================
+# DWS FusionInsight 安装配置模板
+# 适用于 DWS 8.x / 9.x MPP 集群部署
+# ============================================================
+
+[CLUSTER]
+# 集群名称
+cluster_name = dws_cluster
+
+# 集群节点列表 (主管理节点 IP)
+master_node1_ip = 192.168.0.1
+# master_node2_ip = 192.168.0.2  # HA管理节点
+
+# 数据节点 IP 列表
+data_node1_ip = 192.168.0.11
+data_node2_ip = 192.168.0.12
+data_node3_ip = 192.168.0.13
+
+# CN 和 DN 分布策略
+cn_num = 3
+dn_num = 3
+dn_per_node = 1
+
+[INSTALL]
+# 安装包路径
+fusioninsight_package_path = /opt/FusionInsight_SetupTool
+
+# 安装目录
+install_path = /opt/huawei/Bigdata
+
+# 数据目录
+data_path = /srv/BigData/mppdb
+
+# 数据库管理员
+db_user = omm
+db_user_group = omm
+
+# 数据库端口
+db_port = 40080
+
+[OS]
+# 时区
+timezone = Asia/Shanghai
+
+# 字符集
+locale = en_US.UTF-8
+
+# Python 版本 (DWS 8.x 需要 Python 3.8.5)
+python_version = 3.8.5
+
+# 内核参数
+kernel_params =
+  net.ipv4.ip_local_port_range = 26000 65535
+  net.ipv4.tcp_tw_reuse = 1
+  net.core.somaxconn = 1024
+  vm.watermark_scale_factor = 100
+  kernel.numa_balancing = 0
+
+[NAS]
+# 备份存储设备
+nas_server_ip =
+nas_share_path =
+nas_mount_point = /srv/BigData/LocalBackup
