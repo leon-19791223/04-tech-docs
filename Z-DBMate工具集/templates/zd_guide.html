@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block page_title %}GaussDB 部署指南{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4CB;</span> TPOPS安装后的完整流程</span></div>
+  <p style="font-size:13px;color:var(--g500);margin-bottom:12px;">
+    Z-DBMate 完成 TPOPS 部署后，需按以下步骤在 TPOPS Web 界面完成 GaussDB 实例安装。共 5 个阶段：
+  </p>
+</div>
+
+<!-- Step 1 -->
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">1&#xFE0F&#x20E3;</span> License申请</span>
+    <span class="tag tg-blu">TPOPS Web界面</span>
+  </div>
+  <ol class="numl">
+    <li>登录 TPOPS：<strong>https://&lt;Web-IP&gt;:8002/gaussdb/</strong></li>
+    <li>默认账号：<code>admin / Gauss_246</code>（首次登录需修改密码）</li>
+    <li>进入 <strong>平台管理 → License管理 → 许可容量 → 申请试用</strong></li>
+    <li>试用有效期 60 天，到期后需申请正式 License</li>
+  </ol>
+  <div class="alert alert-warn mt12">&#x26A0; 未配置License无法安装实例，必须先申请试用或导入正式License</div>
+</div>
+
+<!-- Step 2 -->
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">2&#xFE0F&#x20E3;</span> 存储设备配置（可选）</span>
+    <span class="tag tg-blu">TPOPS Web界面</span>
+  </div>
+  <ol class="numl">
+    <li>进入 <strong>平台管理 → 存储设备 → 添加存储设备</strong></li>
+    <li>选择类型：<strong>NAS</strong></li>
+    <li>填写NAS服务器地址和共享目录路径（必须以 <code>/</code> 开头）</li>
+    <li>用于数据库备份存储，如不配置不影响实例安装</li>
+  </ol>
+  <div class="alert alert-ok mt12">&#x2705; 未添加存储设备不影响实例安装与使用，但建议生产环境配置</div>
+</div>
+
+<!-- Step 3 -->
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">3&#xFE0F&#x20E3;</span> 添加主机</span>
+    <span class="tag tg-blu">TPOPS Web界面</span>
+  </div>
+  <div style="margin-bottom:12px;padding:12px;background:var(--warning-bg, #FFF3E0);border-radius:var(--rs);font-size:13px;">
+    &#x26A0; 添加主机前确保 GaussDB 节点已完成磁盘分区（手动操作）
+  </div>
+  <h4 style="margin:12px 0 8px;color:var(--text);">3.1 GaussDB节点磁盘分区（手动）</h4>
+  <div class="tw"><table class="mt">
+    <thead><tr><th>LV名称</th><th>大小</th><th>挂载点</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>lv_ob_cluster</code></td><td>200G</td><td>/data/cluster</td><td>集群主目录</td></tr>
+      <tr><td><code>lv_ob_etcd</code></td><td>200G</td><td>/data/cluster/usr/local/etcd</td><td>ETCD数据</td></tr>
+      <tr><td><code>lv_ob_data</code></td><td>500G+</td><td>/data/cluster/var/lib/engine/data1/data</td><td>数据库数据</td></tr>
+      <tr><td><code>lv_ob_log</code></td><td>500G</td><td>/data/cluster/var/lib/log</td><td>数据库日志</td></tr>
+    </tbody>
+  </table></div>
+  <div style="margin-top:8px;font-size:13px;color:var(--g500);">
+    创建命令示例:
+  </div>
+  <pre style="background:#1a1d26;color:#e0e0e0;padding:12px;border-radius:var(--rs);font-size:12px;margin-top:4px;overflow-x:auto;">
+pvcreate /dev/nvme0n1 /dev/nvme1n1
+vgcreate vg_data /dev/nvme0n1
+lvcreate -L 200G --name lv_ob_cluster vg_data
+lvcreate -L 200G --name lv_ob_etcd vg_data
+lvcreate -L 500G --name lv_ob_data vg_data
+lvcreate -L 200G --name lv_ob_log vg_data
+mkfs.ext4 /dev/mapper/vg_data-lv_ob_cluster
+mkfs.ext4 /dev/mapper/vg_data-lv_ob_etcd
+mkfs.ext4 /dev/mapper/vg_data-lv_ob_data
+mkfs.ext4 /dev/mapper/vg_data-lv_ob_log
+mount /dev/mapper/vg_data-lv_ob_cluster /data/cluster
+mkdir -p /data/cluster/usr/local/etcd
+mkdir -p /data/cluster/var/lib/engine/data1/data
+mkdir -p /data/cluster/var/lib/log
+mount /dev/mapper/vg_data-lv_ob_etcd /data/cluster/usr/local/etcd
+mount /dev/mapper/vg_data-lv_ob_data /data/cluster/var/lib/engine/data1/data
+mount /dev/mapper/vg_data-lv_ob_log /data/cluster/var/lib/log
+echo "/dev/mapper/vg_data-lv_ob_cluster /data/cluster ext4 nodev,nosuid,noatime,nofail 0 1" >> /etc/fstab
+# ... 其他挂载点同理
+  </pre>
+
+  <h4 style="margin:16px 0 8px;color:var(--text);">3.2 TPOPS添加主机</h4>
+  <ol class="numl">
+    <li>登录 TPOPS → <strong>平台管理 → 数据中心管理 → 选择机房</strong></li>
+    <li>点击 <strong>添加主机</strong>，填写GaussDB节点信息</li>
+    <li>确认信息后点击 <strong>确定</strong>，等待 5-10 分钟</li>
+    <li>前往 <strong>任务中心</strong> 查看执行情况，失败可重试</li>
+  </ol>
+</div>
+
+<!-- Step 4 -->
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">4&#xFE0F&#x20E3;</span> 安装实例</span>
+    <span class="tag tg-blu">TPOPS Web界面</span>
+  </div>
+  <ol class="numl">
+    <li>实例安装前确保所有主机已添加成功并初始化完成</li>
+    <li>进入 <strong>实例管理 → 安装实例</strong></li>
+    <li>选择配置：
+      <ul style="padding-left:20px;margin-top:4px;">
+        <li><strong>实例类型</strong>：主备版（集中式）</li>
+        <li><strong>部署形态</strong>：3节点</li>
+        <li><strong>副本一致性协议</strong>：Paxos</li>
+        <li><strong>数据库端口</strong>：自定义（默认40080）</li>
+        <li><strong>管理员密码</strong>：设置 DBA(root)密码</li>
+        <li><strong>参数模板</strong>：可选（或安装后再修改参数）</li>
+      </ul>
+    </li>
+    <li>选择已添加的主机节点</li>
+    <li>确认信息后点击 <strong>立即申请</strong>，提交等待任务流完成</li>
+  </ol>
+  <div class="alert alert-ok mt12">&#x2705; 安装成功后，可通过 <code>gsql -d postgres -h {IP} -p {port} -U root</code> 连接数据库验证</div>
+</div>
+
+<!-- Step 5 -->
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">5&#xFE0F&#x20E3;</span> 部署后配置</span>
+    <span class="tag tg-grn">推荐执行</span>
+  </div>
+
+  <h4 style="margin:8px 0;color:var(--text);">5.1 备份策略配置</h4>
+  <ol class="numl">
+    <li><strong>实例管理 → 点击实例 → 备份恢复 → 修改备份策略</strong></li>
+    <li>根据业务需求配置备份周期和保留策略</li>
+    <li>⚠️ 备份策略开启后无法关闭，仅能修改参数</li>
+  </ol>
+
+  <h4 style="margin:16px 0 8px;color:var(--text);">5.2 实例参数优化（建议）</h4>
+  <div class="tw"><table class="mt">
+    <thead><tr><th>参数名</th><th>建议值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>enable_global_plancache</code></td><td>on</td><td>开启全局计划缓存</td></tr>
+      <tr><td><code>behavior_compat_options</code></td><td>'bind_procedure_searchpath,truncate_numeric_tail_zero,...'</td><td>兼容性选项</td></tr>
+      <tr><td><code>audit_enabled</code></td><td>on</td><td>开启审计日志</td></tr>
+      <tr><td><code>max_connections</code></td><td>按需</td><td>最大连接数</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:12px;color:var(--g500);margin-top:8px;">
+    可在 TPOPS → 实例管理 → 参数管理 中批量修改，建议每次修改小于30个参数。
+  </p>
+
+  <h4 style="margin:16px 0 8px;color:var(--text);">5.3 安装gsql客户端（可选）</h4>
+  <pre style="background:#1a1d26;color:#e0e0e0;padding:12px;border-radius:var(--rs);font-size:12px;margin-top:4px;overflow-x:auto;">
+# 从 DBS-GaussDB-driver 包中解压
+mkdir -p /usr/local/gsql
+cd /usr/local/gsql
+tar -zxvf GaussDB-Kernel_505.1.0_Kylin_64bit_Gsql.tar.gz
+# 配置环境变量
+echo 'export PATH=/usr/local/gsql/bin:$PATH' >> ~/.bashrc
+echo 'export LD_LIBRARY_PATH=/usr/local/gsql/lib:$LD_LIBRARY_PATH' >> ~/.bashrc
+source ~/.bashrc
+# 连接测试
+gsql -d postgres -h 192.168.0.11 -p 40080 -U root
+  </pre>
+
+  <h4 style="margin:16px 0 8px;color:var(--text);">5.4 监控与DBMind（可选）</h4>
+  <ol class="numl">
+    <li>如需安装DBMind分析服务器，在TPOPS → <strong>DBMind管理 → 创建DBMind实例</strong></li>
+    <li>DBMind支持ARM和X86服务器（24.1.31版本以上）</li>
+    <li>创建后可在 <strong>DBMind管理</strong> 中纳管数据库实例</li>
+  </ol>
+</div>
+
+<!-- 流程总览 -->
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4C8;</span> 完整部署流程</span></div>
+  <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;padding:16px;font-size:13px;">
+    <span class="tag tg-blu" style="font-size:14px;padding:10px 16px;">&#x1F680; Z-DBMate<br>TPOPS部署</span>
+    <span style="color:var(--g300);font-size:18px;">&rarr;</span>
+    <span class="tag tg-org" style="font-size:14px;padding:10px 16px;">1&#xFE0F&#x20E3; License<br>申请试用</span>
+    <span style="color:var(--g300);font-size:18px;">&rarr;</span>
+    <span class="tag tg-org" style="font-size:14px;padding:10px 16px;">2&#xFE0F&#x20E3; 存储设备<br>NAS配置</span>
+    <span style="color:var(--g300);font-size:18px;">&rarr;</span>
+    <span class="tag tg-org" style="font-size:14px;padding:10px 16px;">3&#xFE0F&#x20E3; 磁盘分区<br>+添加主机</span>
+    <span style="color:var(--g300);font-size:18px;">&rarr;</span>
+    <span class="tag tg-grn" style="font-size:14px;padding:10px 16px;">4&#xFE0F&#x20E3; 安装实例<br>GaussDB</span>
+    <span style="color:var(--g300);font-size:18px;">&rarr;</span>
+    <span class="tag tg-grn" style="font-size:14px;padding:10px 16px;">5&#xFE0F&#x20E3; 备份+参数<br>+gsql</span>
+  </div>
+</div>
+
+{% endblock %}

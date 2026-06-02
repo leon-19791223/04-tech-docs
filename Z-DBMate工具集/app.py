@@ -21,14 +21,18 @@ PRECHECK_ITEMS = [
     {"id": "ssh", "name": "SSH免密登录", "category": "network", "description": "SSH免密登录各节点"},
     {"id": "os_version", "name": "操作系统版本", "category": "system", "description": "检查是否为Kylin V10"},
     {"id": "disk_count", "name": "磁盘数量", "category": "storage", "description": "生产≥6块，测试≥2块"},
-    {"id": "disk_mount", "name": "数据盘挂载", "category": "storage", "description": "/data 分区已挂载"},
+    {"id": "disk_mount", "name": "9个目录挂载检查", "category": "storage", "description": "官方要求9目录独立LV挂载"},
     {"id": "disk_space", "name": "磁盘空间", "category": "storage", "description": "生产≥1000GB，测试≥300GB"},
-    {"id": "clock_sync", "name": "时钟同步", "category": "system", "description": "chronyd时钟同步状态"},
-    {"id": "memory", "name": "内存", "category": "system", "description": "生产≥32GB，测试≥8GB"},
+    {"id": "clock_sync", "name": "时钟同步+时区", "category": "system", "description": "chronyd同步+UTC时区"},
+    {"id": "memory", "name": "内存", "category": "system", "description": "生产≥32GB，测试≥16GB"},
     {"id": "cpu", "name": "CPU核心数", "category": "system", "description": "生产≥16核"},
     {"id": "yum", "name": "yum源可用性", "category": "system", "description": "yum makecache无报错"},
     {"id": "selinux", "name": "SELinux状态", "category": "system", "description": "Disabled或Permissive"},
-    {"id": "firewall", "name": "防火墙状态", "category": "system", "description": "关闭或已开放端口"},
+    {"id": "firewall", "name": "防火墙+iptables", "category": "system", "description": "firewalld关闭+iptables开启"},
+    {"id": "md5_check", "name": "安装包MD5校验", "category": "security", "description": "10个安装包MD5sum校验"},
+    {"id": "audit_version", "name": "audit版本检查", "category": "system", "description": "需升级至.se.08版本"},
+    {"id": "runc_check", "name": "runc服务检查", "category": "system", "description": "检测runc是否安装并删除"},
+    {"id": "libstdcpp", "name": "libstdc++版本", "category": "system", "description": "麒麟OS需降至7.3.0版本"},
 ]
 
 SCENARIOS = [
@@ -105,14 +109,18 @@ MOCK_PRECHECK = {
     "ssh": {"status": "pass", "detail": "所有节点免密登录成功"},
     "os_version": {"status": "pass", "detail": "Kylin Linux Advanced Server V10 (Sword)"},
     "disk_count": {"status": "warn", "detail": "节点1: 8块 / 节点2: 6块 / 节点3: 4块(⚠️)"},
-    "disk_mount": {"status": "pass", "detail": "/data 已挂载, 2.4TB可用"},
+    "disk_mount": {"status": "warn", "detail": "/data ✅ /opt/cloud ✅ /opt/gaussdb ✅ /opt/sftphome ⚠️未独立挂载 /opt/backup ⚠️未独立挂载"},
     "disk_space": {"status": "warn", "detail": "单盘1.2TB(满足测试要求, 生产需≥1000GB)"},
-    "clock_sync": {"status": "pass", "detail": "chronyd已同步, 偏移<1ms"},
+    "clock_sync": {"status": "pass", "detail": "chronyd已同步, 偏移<1ms, 时区UTC"},
     "memory": {"status": "pass", "detail": "节点1: 64GB / 节点2: 64GB / 节点3: 32GB"},
     "cpu": {"status": "pass", "detail": "32核/节点"},
     "yum": {"status": "fail", "detail": "节点3 yum源不可用（需要检查仓库配置）"},
     "selinux": {"status": "pass", "detail": "Permissive"},
-    "firewall": {"status": "warn", "detail": "firewalld active（需确认8002/40080端口已开放）"},
+    "firewall": {"status": "warn", "detail": "firewalld active（需开放8002/40080端口）, iptables未开启"},
+    "md5_check": {"status": "fail", "detail": "未找到source_md5_checksum.txt（需联系数据库团队获取）"},
+    "audit_version": {"status": "pass", "detail": "audit-3.0-5.se.08（满足要求）"},
+    "runc_check": {"status": "pass", "detail": "所有节点未安装runc"},
+    "libstdcpp": {"status": "warn", "detail": "节点2 libstdc++版本8.3.1（非推荐7.3.0）"},
 }
 
 
@@ -157,6 +165,12 @@ def checklist():
     return render_template("zd_checklist.html",
                            categories=CHECKLIST_CATEGORIES,
                            items=CHECKLIST_ITEMS)
+
+
+@app.route("/guide")
+def guide():
+    """GaussDB实例安装指南"""
+    return render_template("zd_guide.html")
 
 
 @app.route("/api/precheck")
