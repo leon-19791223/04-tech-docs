@@ -1,0 +1,86 @@
+"""
+DWS 部署后验证引擎
+"""
+
+VERIFY_ITEMS = [
+    {
+        "id": "v-tpops-web",
+        "name": "TPOPS Web访问",
+        "phase": "after_deploy",
+        "severity": "error",
+        "description": "https://IP:8002/gaussdb/ 可访问",
+        "check_cmd": "curl -sk https://localhost:8002/gaussdb/ 2>/dev/null | head -1",
+    },
+    {
+        "id": "v-gaussdb-proc",
+        "name": "GaussDB进程",
+        "phase": "after_deploy",
+        "severity": "error",
+        "description": "gaussdb进程运行中",
+        "check_cmd": "pgrep -x gaussdb && echo 'OK' || echo 'NOT RUNNING'",
+    },
+    {
+        "id": "v-docker-proc",
+        "name": "容器服务",
+        "phase": "after_deploy",
+        "severity": "warning",
+        "description": "TPOPS容器全部运行中",
+        "check_cmd": "docker ps --format '{{.Names}} {{.Status}}' 2>/dev/null | head -10",
+    },
+    {
+        "id": "v-gsql-conn",
+        "name": "gsql连接测试",
+        "phase": "after_deploy",
+        "severity": "error",
+        "description": "gsql -d postgres -p 40080 可连接",
+        "check_cmd": "which gsql 2>/dev/null || find /usr/local/gsql -name gsql 2>/dev/null",
+    },
+    {
+        "id": "v-sql-basic",
+        "name": "基本SQL功能",
+        "phase": "after_deploy",
+        "severity": "error",
+        "description": "建表/插入/查询/删除功能正常",
+        "check_cmd": "gsql -d postgres -p 40080 -c 'SELECT 1' 2>/dev/null || echo 'FAIL'",
+    },
+    {
+        "id": "v-disk-space",
+        "name": "磁盘空间",
+        "phase": "after_deploy",
+        "severity": "warning",
+        "description": "/data /opt关键目录使用率<80%",
+        "check_cmd": "df -h /data /opt 2>/dev/null | tail -2",
+    },
+    {
+        "id": "v-clock",
+        "name": "时钟同步",
+        "phase": "after_deploy",
+        "severity": "error",
+        "description": "chronyd已同步",
+        "check_cmd": "timedatectl show | grep 'ClockSynchronized=yes' || echo 'FAIL'",
+    },
+    {
+        "id": "v-fio",
+        "name": "fio磁盘性能",
+        "phase": "perf_test",
+        "severity": "warning",
+        "description": "fio顺序写≥800MB/s, 顺序读≥1200MB/s",
+        "check_cmd": "which fio && echo 'fio已安装' || echo 'fio未安装'",
+    },
+    {
+        "id": "v-network",
+        "name": "网络带宽",
+        "phase": "perf_test",
+        "severity": "warning",
+        "description": "10GE网络带宽≥800MB/s, 重传率<0.01%",
+        "check_cmd": "which speed_test && echo 'speed_test已安装' || echo 'speed_test未安装'",
+    },
+    {
+        "id": "v-backup",
+        "name": "备份策略",
+        "phase": "acceptance",
+        "severity": "warning",
+        "description": "检查备份策略是否已配置",
+        "check_cmd": "gsql -d postgres -p 40080 -c 'SELECT * FROM pgxc_node' 2>/dev/null | head -3 || echo '需登录TPOPS查看'",
+    },
+]

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block page_title %}部署引导{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F680;</span> DWS 部署引导</span></div>
+  <p style="font-size:13px;color:var(--g500);margin-bottom:16px;">按阶段逐步执行，每阶段完成预检后方可继续。共7个阶段。</p>
+  <div id="deploy-plan"></div>
+</div>
+
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> 操作指引</span></div>
+  <div id="step-guide" style="line-height:1.8;font-size:14px;">
+    点击左侧阶段查看详细操作步骤
+  </div>
+</div>
+
+<script>
+var phases = [
+  {
+    name: "Phase 1: 环境准备", status: "done", steps: [
+      "确认RAID策略: Read Ahead + Write Back With BBU",
+      "检查网卡MTU=1500, Hi1822需hinicconfig增加中断",
+      "确认ISO镜像存在 /Kylin-*.iso",
+      "确认所有节点root密码一致",
+      "设置主机名 hostnamectl set-hostname"
+    ]
+  },
+  {
+    name: "Phase 2: OS配置", status: "done", steps: [
+      "关闭audit: systemctl disable auditd",
+      "关闭防火墙: systemctl disable firewalld iptables",
+      "SELinux=disabled: sed -i 's/enforcing/disabled/' /etc/selinux/config",
+      "关闭swap: swapoff -a; 注释fstab中swap行",
+      "关闭透明大页: grub2追加transparent_hugepage=never",
+      "时区: timedatectl set-timezone Asia/Shanghai",
+      "字符集: LANG=en_US.UTF-8",
+      "内核参数: watermark_scale_factor=100, numa_balancing=0"
+    ]
+  },
+  {
+    name: "Phase 3: 磁盘分区", status: "ready", steps: [
+      "lsblk 确认磁盘设备",
+      "parted GPT分区: parted -s /dev/sdb mklabel gpt",
+      "mkfs.xfs 格式化",
+      "创建挂载目录并写入 /etc/fstab",
+      "mount -a 验证",
+      "chown root:root 设置权限"
+    ]
+  },
+  {
+    name: "Phase 4: 软件安装", status: "ready", steps: [
+      "Python 3.8.5 编译安装: ./configure --enable-optimizations --prefix=/usr/local && make -j4 && make altinstall",
+      "安装依赖: yum install -y gcc libffi-devel python-devel ...",
+      "挂载ISO: mount /opt/Kylin-*.iso /media -o loop",
+      "配置local yum源, 上传fio/speed_test工具"
+    ]
+  },
+  {
+    name: "Phase 5: 集群部署", status: "pending", steps: [
+      "配置 preinstall.ini (使用配置生成页面)",
+      "执行 FusionInsight SetupTool 安装",
+      "安装完成后验证集群状态",
+      "登录TPOPS: https://IP:8002/gaussdb/",
+      "申请License试用"
+    ]
+  },
+  {
+    name: "Phase 6: 性能测试", status: "pending", steps: [
+      "fio 磁盘压测: 顺序写≥800MB/s, 顺序读≥1200MB/s",
+      "dd 多块并发读写测试",
+      "网络带宽压测: ≥800MB/s (10GE)",
+      "网络重传率: <0.01%"
+    ]
+  },
+  {
+    name: "Phase 7: 验收交付", status: "pending", steps: [
+      "gsql 连接测试: gsql -d postgres -p 40080 -U root",
+      "实例运行状态检查",
+      "备份策略配置",
+      "参数优化: cstore_buffers/并行参数/性能参数",
+      "交付文档归档"
+    ]
+  }
+];
+
+function renderPlan(){
+  var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+  phases.forEach(function(p, i){
+    var icons = {done: '✅', ready: '⏳', pending: '⬜'};
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--g100);cursor:pointer;" onclick="showSteps('+i+')">' +
+      '<span style="font-size:18px;">' + (icons[p.status] || '⬜') + '</span>' +
+      '<span style="font-weight:600;font-size:14px;flex:1;">' + p.name + '</span>' +
+      '<span class="tag ' + (p.status === 'done' ? 'tg-grn' : p.status === 'ready' ? 'tg-org' : 'tg-gry') + '">' +
+      (p.status === 'done' ? '已完成' : p.status === 'ready' ? '待执行' : '未开始') + '</span></div>';
+  });
+  html += '</div>';
+  document.getElementById('deploy-plan').innerHTML = html;
+}
+
+function showSteps(idx){
+  var p = phases[idx];
+  var html = '<h3 style="margin-bottom:12px;font-size:15px;">' + p.name + '</h3><ol style="padding-left:20px;">';
+  p.steps.forEach(function(s){
+    html += '<li style="padding:4px 0;font-size:13px;line-height:1.6;">' + s + '</li>';
+  });
+  html += '</ol>';
+  document.getElementById('step-guide').innerHTML = html;
+}
+
+renderPlan();
+showSteps(0);
+</script>
+{% endblock %}

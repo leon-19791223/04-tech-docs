@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block page_title %}环境预检{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x2705;</span> DWS 部署预检 (17项)</span>
+    <div class="fsbc">
+      <span class="tag tg-grn" id="pc-pass">0 通过</span>
+      <span class="tag tg-org" id="pc-warn">0 警告</span>
+      <span class="tag tg-red" id="pc-fail">0 失败</span>
+    </div>
+  </div>
+</div>
+
+{% for phase_id, phase in phases.items() %}
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">{{ phase.icon }}</span> {{ phase.name }} ({{ phase.count }}项)</span>
+  </div>
+  {% for item in items if item.category == phase_id %}
+  {% set r = mock_data.get(item.id, {"status":"pass","detail":""}) %}
+  <div class="pc-item" data-id="{{ item.id }}" style="display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--g100);">
+    <div class="pc-icon" style="font-size:18px;min-width:24px;text-align:center;">
+      {% if r.status == "pass" %}✅{% elif r.status == "warn" %}⚠️{% else %}❌{% endif %}
+    </div>
+    <div style="flex:1;">
+      <div style="font-weight:600;font-size:13px;">{{ item.name }}</div>
+      <div style="font-size:12px;color:var(--g500);">{{ item.description }}</div>
+      <div class="pc-detail" style="font-size:11px;color:var(--g400);margin-top:2px;">{{ r.detail }}</div>
+    </div>
+    <div>
+      <span class="tag {% if r.status == 'pass' %}tg-grn{% elif r.status == 'warn' %}tg-org{% else %}tg-red{% endif %}">
+        {% if r.status == "pass" %}通过{% elif r.status == "warn" %}警告{% else %}失败{% endif %}
+      </span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+
+<div style="text-align:center;">
+  <a href="/deploy" class="btn btn-pri">&#x1F680; 通过预检，开始部署</a>
+</div>
+
+<script>
+  (function(){
+    var pass=0,warn=0,fail=0;
+    document.querySelectorAll('.pc-item').forEach(function(el){
+      var t = el.querySelector('.tag');
+      if(t.classList.contains('tg-grn')) pass++;
+      else if(t.classList.contains('tg-org')) warn++;
+      else fail++;
+    });
+    document.getElementById('pc-pass').textContent = pass + ' 通过';
+    document.getElementById('pc-warn').textContent = warn + ' 警告';
+    document.getElementById('pc-fail').textContent = fail + ' 失败';
+  })();
+</script>
+{% endblock %}

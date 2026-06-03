@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block page_title %}部署验证{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x1F50D;</span> DWS 部署后验证 ({{ items|length }}项)</span>
+  </div>
+</div>
+
+{% set phases_map = {
+  "after_deploy": {"name": "部署后验证", "icon": "&#x1F504;"},
+  "perf_test": {"name": "性能测试", "icon": "&#x26A1;"},
+  "acceptance": {"name": "验收", "icon": "&#x1F4CB;"}
+} %}
+
+{% for phase_id, phase in phases_map.items() %}
+{% set phase_items = items|selectattr("phase", "equalto", phase_id)|list %}
+{% if phase_items %}
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><span class="ti">{{ phase.icon }}</span> {{ phase.name }}</span></div>
+  {% for item in phase_items %}
+  <div class="vf-item" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--g100);">
+    <span style="font-size:16px;min-width:20px;">✅</span>
+    <div style="flex:1;">
+      <div style="font-weight:600;font-size:13px;">{{ item.name }}</div>
+      <div style="font-size:12px;color:var(--g500);">{{ item.description }}</div>
+    </div>
+    <span class="tag tg-grn">通过</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endfor %}
+
+{% endblock %}

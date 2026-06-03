@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block page_title %}配置生成{% endblock %}
+{% block content %}
+
+<div class="two">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x2699;</span> FusionInsight 配置</span></div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:13px;font-weight:600;">集群名称</label>
+      <input id="cfg-name" value="dws_cluster" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:13px;font-weight:600;">管理节点IP</label>
+      <input id="cfg-m1" placeholder="192.168.0.1" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:13px;font-weight:600;">管理节点2(HA选填)</label>
+      <input id="cfg-m2" placeholder="192.168.0.2" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:13px;font-weight:600;">数据节点IP(s)</label>
+      <input id="cfg-dn" placeholder="192.168.0.11,192.168.0.12,192.168.0.13" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
+    </div>
+    <div class="two" style="gap:10px;">
+      <div>
+        <label style="font-size:13px;font-weight:600;">CN数量</label>
+        <input id="cfg-cn" value="3" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:600;">DN数量</label>
+        <input id="cfg-dn-num" value="3" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:13px;font-weight:600;">数据库端口</label>
+      <input id="cfg-port" value="40080" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
+    </div>
+    <button class="btn btn-pri" style="width:100%;justify-content:center;" onclick="genConfig()">&#x2699; 生成 preinstall.ini</button>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> 生成预览</span></div>
+    <pre id="cfg-output" style="background:#1a1d26;color:#e0e0e0;padding:16px;border-radius:var(--rs);font-size:12px;max-height:400px;overflow-y:auto;white-space:pre-wrap;">等待生成...</pre>
+    <button class="btn btn-ghost btn-sm mt12" onclick="copyConfig()">&#x1F4CB; 复制</button>
+  </div>
+</div>
+
+<script>
+function genConfig(){
+  var data = {
+    cluster_name: document.getElementById('cfg-name').value,
+    master_node1_ip: document.getElementById('cfg-m1').value,
+    master_node2_ip: document.getElementById('cfg-m2').value,
+    data_node_ips: document.getElementById('cfg-dn').value,
+    cn_num: document.getElementById('cfg-cn').value,
+    dn_num: document.getElementById('cfg-dn-num').value,
+    db_port: document.getElementById('cfg-port').value,
+  };
+  fetch('/api/config/generate', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  }).then(function(r){return r.json();}).then(function(d){
+    document.getElementById('cfg-output').textContent = d.content;
+  });
+}
+function copyConfig(){
+  var t = document.getElementById('cfg-output').textContent;
+  navigator.clipboard.writeText(t).then(function(){ alert('已复制!'); });
+}
+</script>
+{% endblock %}

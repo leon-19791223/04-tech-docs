@@ -91,6 +91,19 @@ table.mt tbody tr:hover td { background:linear-gradient(135deg,var(--g50),#fff);
       <span class="ni">&#x1F4CA;</span> 仪表盘
     </a>
     <a href="/flow" class="{% if request.path == '/flow' %}active{% endif %}">
+    <a href="/precheck" class="{% if request.path == '/precheck' %}active{% endif %}">
+      <span class="ni">&#x2705;</span> 环境预检
+    </a>
+    <a href="/config" class="{% if request.path == '/config' %}active{% endif %}">
+      <span class="ni">&#x2699;</span> 配置生成
+    </a>
+    <a href="/deploy" class="{% if request.path == '/deploy' %}active{% endif %}">
+      <span class="ni">&#x1F680;</span> 部署引导
+    </a>
+    <a href="/verify" class="{% if request.path == '/verify' %}active{% endif %}">
+      <span class="ni">&#x1F50D;</span> 部署验证
+    </a>
+    <div class="sb-label">&#x53C2;&#x8003;</div>
       <span class="ni">&#x1F4C5;</span> 部署流程
     </a>
     <a href="/checklist" class="{% if request.path == '/checklist' %}active{% endif %}">
