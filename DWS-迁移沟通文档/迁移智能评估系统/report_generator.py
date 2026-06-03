@@ -133,18 +133,23 @@ class ReportGenerator:
         self._add_compatibility_detail(doc)
         self._add_critical_issues(doc)
         self._add_workload_estimate(doc)
+        self._add_phase_breakdown(doc)
         self._add_phase_timeline(doc)
+        self._add_capacity_planning(doc)
+        self._add_batch_strategy(doc)
         self._add_recommendations(doc)
         self._add_appendix(doc)
         doc.save(self.output_path)
         return self.output_path
 
     def _add_cover(self, doc):
+        r = self.result
+        path_label = f"{r.source_type.upper() if r.source_type else 'GP'} → GaussDB(DWS)"
         for _ in range(6):
             doc.add_paragraph()
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("GP → GaussDB(DWS)")
+        run = p.add_run(path_label)
         run.font.size = Pt(28)
         run.font.color.rgb = BLUE_DARK
         run.bold = True
@@ -160,12 +165,12 @@ class ReportGenerator:
         run3.font.size = Pt(12)
         doc.add_paragraph()
         doc.add_paragraph()
-        meta = self.result
         for item in [
-            f"源端数据库: {meta.db_version or 'Greenplum'}",
+            f"源端数据库: {r.db_version or '—'}",
             f"目标数据库: GaussDB(DWS) 8.2.1",
-            f"集群规模: {meta.cluster_scale or '—'}",
-            f"数据总量: {meta.total_capacity or '—'}",
+            f"集群规模: {r.cluster_scale or '—'}",
+            f"数据总量: {r.total_capacity or '—'}",
+            f"源库字符集: {self._get_meta('source_charset', '—')}",
             f"评估日期: {datetime.now().strftime('%Y-%m-%d')}",
             f"文档版本: v1.0",
         ]:
@@ -175,6 +180,11 @@ class ReportGenerator:
             run.font.size = Pt(12)
             run.font.color.rgb = GRAY
         doc.add_page_break()
+
+    def _get_meta(self, key, default=""):
+        """获取元数据属性"""
+        from core.models import MigrationMetadata
+        return getattr(self.result, key, default)
 
     def _add_summary(self, doc):
         add_heading(doc, "1  评估概要", level=1)
@@ -193,10 +203,20 @@ class ReportGenerator:
             "data_type": "数据类型兼容性",
             "function": "函数兼容性",
             "udf_language": "UDF语言兼容性",
+            "plsql": "PL/SQL语法兼容性",
+            "sqlpl": "SQL PL存储过程兼容性",
+            "trigger": "触发器兼容性",
             "extension": "扩展兼容性",
+            "exadata": "Oracle Exadata特性兼容性",
             "etl_tool": "ETL工具兼容性",
             "scheduler": "调度工具兼容性",
             "bi_tool": "BI工具兼容性",
+            "security": "安全与权限兼容性",
+            "charset": "字符集与编码兼容性",
+            "app_layer": "应用层兼容性",
+            "transaction": "事务与并发兼容性",
+            "cdc": "CDC增量同步兼容性",
+            "performance": "性能与容量兼容性",
         }
         for cat_id, cat_name in summary_map.items():
             cat = cat_scores.get(cat_id)
@@ -217,17 +237,18 @@ class ReportGenerator:
         doc.add_paragraph()
         add_heading(doc, "1.2  总体结论", level=2)
         score = self.result.overall_score
+        src_type = self.result.source_type.upper() if self.result.source_type else "源端"
         if score >= 85:
             conclusion = (
                 f"评估综合得分 {score} 分，迁移风险等级为【低风险】。"
-                f"源端GP与DWS整体兼容性良好，主要差异集中在DDL语法微调和少数不兼容功能。"
-                f"建议按标准迁移流程分四个阶段推进，预计总工期4-6个月。"
+                f"{src_type}与DWS整体兼容性良好，主要差异集中在DDL语法微调和少数不兼容功能。"
+                f"建议按标准迁移流程分阶段推进。"
             )
         elif score >= 65:
             conclusion = (
                 f"评估综合得分 {score} 分，迁移风险等级为【中风险】。"
                 f"存在{len(self.result.critical_issues)}项不兼容问题和若干需关注项，"
-                f"主要风险集中在UDF语言兼容性和扩展替代。建议在POC阶段充分验证后推进。"
+                f"主要风险集中在存储过程/UDF语言兼容性和扩展替代。建议在POC阶段充分验证后推进。"
             )
         else:
             conclusion = (
@@ -360,10 +381,25 @@ class ReportGenerator:
         ])
         if wl.get("note"):
             add_para(doc, f"注: {wl['note']}", color=GRAY, size=9)
+        doc.add_paragraph()
+
+        # 补充工作量明细(安全/字符集/应用层/事务/CDC)
+        add_heading(doc, "5.1  补充评估工作量", level=2)
+        table2 = doc.add_table(rows=1, cols=3)
+        table2.style = 'Table Grid'
+        make_header_row(table2, ["评估维度", "预估天数", "说明"])
+        for name, days, note in [
+            ("安全与权限改造", wl.get("security_audit_days", "—"), "权限迁移/LBAC改造/审计迁移"),
+            ("字符集转换", wl.get("charset_conversion_days", "—"), "VARCHAR长度调整/编码转换/字符集测试"),
+            ("应用层适配", wl.get("app_layer_adapt_days", "—"), "JDBC驱动替换/ORM方言变更/连接池调整"),
+            ("事务改造", wl.get("transaction_adapt_days", "—"), "XA替代/自治事务改造/隔离级别验证"),
+            ("CDC增量同步", wl.get("cdc_sync_days", "—"), "CDC工具配置/增量链路搭建/延迟监控"),
+        ]:
+            add_data_row(table2, [name, str(days), note])
         doc.add_page_break()
 
     def _add_phase_timeline(self, doc):
-        add_heading(doc, "6  迁移阶段规划", level=1)
+        add_heading(doc, "8  迁移阶段规划", level=1)
         doc.add_paragraph()
         phases = self.result.estimated_phases
         table = doc.add_table(rows=1, cols=4)
@@ -387,8 +423,109 @@ class ReportGenerator:
             ])
         doc.add_page_break()
 
+    def _add_phase_breakdown(self, doc):
+        """阶段级工作量明细"""
+        wl = self.result.workload_estimate
+        breakdown = wl.get("phase_breakdown", {})
+        if not breakdown:
+            return
+        add_heading(doc, "5.1  阶段级工作量明细", level=2)
+        doc.add_paragraph()
+        table = doc.add_table(rows=1, cols=4)
+        table.style = 'Table Grid'
+        make_header_row(table, ["阶段", "占比", "人月", "主要工作"])
+        for key in sorted(breakdown.keys()):
+            ph = breakdown[key]
+            add_data_row(table, [
+                ph["name"],
+                f"{ph['pct']}%",
+                f"{round(ph['days']/22, 1)}",
+                ph["detail"],
+            ])
+        doc.add_paragraph()
+        doc.add_page_break()
+
+    def _add_capacity_planning(self, doc):
+        """容量规划与硬件配置建议"""
+        cap = self.result.capacity_planning
+        if not cap or "error" in cap:
+            return
+        add_heading(doc, "6  容量规划与硬件配置建议", level=1)
+        doc.add_paragraph()
+        add_heading(doc, "6.1  推荐集群配置", level=2)
+        table = doc.add_table(rows=1, cols=2)
+        table.style = 'Table Grid'
+        make_header_row(table, ["项目", "推荐方案"])
+        for k, v in [
+            ("推荐规格", cap.get("spec", "—")),
+            ("CPU", cap.get("cpu", "—")),
+            ("内存", cap.get("memory", "—")),
+            ("磁盘", cap.get("disk", "—")),
+            ("数据节点数", str(cap.get("data_nodes", "—"))),
+            ("管理节点数", str(cap.get("manager_nodes", "—"))),
+            ("备用节点数", str(cap.get("standby_nodes", "—"))),
+            ("总节点数", str(cap.get("total_nodes", "—"))),
+        ]:
+            add_data_row(table, [k, v])
+        doc.add_paragraph()
+
+        add_heading(doc, "6.2  存储估算", level=2)
+        sd = cap.get("storage_detail", {})
+        table2 = doc.add_table(rows=1, cols=2)
+        table2.style = 'Table Grid'
+        make_header_row(table2, ["项目", "估算值"])
+        for k, v in [
+            ("当前数据量", f"{sd.get('current_tb', '—')} TB"),
+            ("5年后数据量", f"{sd.get('future_5yr_tb', '—')} TB"),
+            ("压缩后(5:1)", f"{sd.get('compressed_tb', '—')} TB"),
+            ("含系统开销(总需求)", f"{sd.get('total_with_overhead_tb', '—')} TB"),
+        ]:
+            add_data_row(table2, [k, v])
+        doc.add_paragraph()
+
+        if cap.get("concurrency_advice"):
+            add_heading(doc, "6.3  并发建议", level=2)
+            add_para(doc, cap["concurrency_advice"], size=10)
+
+        if cap.get("notes"):
+            add_heading(doc, "6.4  说明", level=2)
+            for note in cap["notes"]:
+                add_para(doc, f"• {note}", color=GRAY, size=9)
+        doc.add_page_break()
+
+    def _add_batch_strategy(self, doc):
+        """分批迁移策略建议"""
+        bs = self.result.batch_strategy
+        if not bs:
+            return
+        add_heading(doc, "7  分批迁移策略", level=1)
+        doc.add_paragraph()
+        add_para(doc, f"策略: {bs.get('strategy', '—')}", bold=True, size=11)
+        doc.add_paragraph()
+
+        batches = bs.get("batches", [])
+        if batches:
+            add_heading(doc, "7.1  分批方案", level=2)
+            table = doc.add_table(rows=1, cols=3)
+            table.style = 'Table Grid'
+            make_header_row(table, ["批次", "迁移范围", "窗口"])
+            for b in batches:
+                add_data_row(table, [
+                    f"第{b['batch']}批",
+                    b.get("scope", "—"),
+                    b.get("window", "—"),
+                ])
+            doc.add_paragraph()
+
+        precheck = bs.get("precheck", [])
+        if precheck:
+            add_heading(doc, "7.2  执行前检查清单", level=2)
+            for item in precheck:
+                add_para(doc, f"☐ {item}", size=9)
+        doc.add_page_break()
+
     def _add_recommendations(self, doc):
-        add_heading(doc, "7  建议与推荐", level=1)
+        add_heading(doc, "9  建议与推荐", level=1)
         doc.add_paragraph()
         recs = self.result.recommendations
         if not recs:
@@ -400,17 +537,40 @@ class ReportGenerator:
         for i, rec in enumerate(recs, 1):
             add_data_row(table, [str(i), rec])
         doc.add_paragraph()
-        add_heading(doc, "7.1  推荐迁移工具链", level=2)
+        add_heading(doc, "9.1  推荐迁移工具链", level=2)
         t2 = doc.add_table(rows=1, cols=3)
         t2.style = 'Table Grid'
         make_header_row(t2, ["领域", "推荐工具", "说明"])
         for domain, tool, note in [
-            ("DDL转换", "华为UGO + 脚本批量转换", "自动语法分析+人工复核"),
-            ("数据迁移", "华为DRS / DataX", "全量+增量实时同步"),
-            ("ETL调度", "DolphinScheduler", "统一调度平台，支持DWS原生"),
-            ("数据校验", "MD5校验 + 行数对比", "确保数据一致性"),
+            ("DDL转换", "华为UGO + DSC + 脚本批量转换", "自动语法分析+人工复核"),
+            ("数据迁移(全量)", "华为DRS / DataX / GDS", "DRS在线全量; DataX灵活配置; GDS百GB级并行导入"),
+            ("数据迁移(增量)", "华为DRS / Debezium + Kafka + Flink", "DRS实时同步; CDC实时入仓"),
+            ("ETL调度", "DolphinScheduler / TaskCTL", "统一调度平台，支持DWS原生"),
+            ("数据校验(L1-L4)", "MD5校验 + 行数对比 + 业务逻辑验证", "L1结构/L2数据量/L3内容/L4业务"),
+            ("安全审计迁移", "华为云KMS + DWS安全策略", "TDE密钥迁移/RLS策略重写/AUDIT配置"),
+            ("应用层适配", "JDBC/ODBC驱动替换 + ORM方言配置", "Npgsql/EF Core/MyBatis方言适配"),
         ]:
             add_data_row(t2, [domain, tool, note])
+        doc.add_paragraph()
+
+        # L1-L4数据一致性校验框架
+        add_heading(doc, "9.2  L1-L4四级数据一致性校验框架", level=2)
+        t3 = doc.add_table(rows=1, cols=5)
+        t3.style = 'Table Grid'
+        make_header_row(t3, ["层级", "名称", "校验方法", "范围", "时机"])
+        verifications = [
+            ("L1", "结构校验", "DDL自动比对: 字段数量/类型/约束/索引", "全部对象", "全量迁移后"),
+            ("L2", "数据量校验", "SELECT COUNT(*)/COUNT(DISTINCT PK)", "全部表", "全量+增量后"),
+            ("L3", "数据内容校验", "数值SUM/AVG/MIN/MAX + MD5分块抽样", "核心业务表", "全量+定期增量后"),
+            ("L4", "业务逻辑校验", "资产总值核对/份额勾稽/T+1清算验证", "按业务场景定制", "试运行1-2周"),
+        ]
+        for v in verifications:
+            add_data_row(t3, list(v))
+        doc.add_paragraph()
+        add_para(doc, (
+            "说明: 建议在迁移全过程中严格执行L1→L2→L3→L4逐级校验体系，"
+            "每级校验通过后方可进入下一阶段。L4业务校验是金融行业验收的核心标准。"
+        ), color=GRAY, size=9)
         doc.add_page_break()
 
     def _add_appendix(self, doc):
@@ -423,9 +583,15 @@ class ReportGenerator:
             "• 70-89分: 中风险，存在少量需改造项\n"
             "• 50-69分: 高风险，存在较多不兼容项\n"
             "• <50分: 极高风险，建议谨慎评估迁移可行性\n\n"
-            "评分维度权重: DDL兼容性(25%)、数据类型(15%)、"
-            "函数兼容性(20%)、UDF语言(20%)、扩展兼容性(10%)、"
-            "ETL(5%)、BI(5%)"
+            "评分维度权重会根据迁移路径动态分配，核心维度包括: "
+            "DDL兼容性、数据类型兼容性、函数兼容性、UDF/存储过程语言兼容性、"
+            "扩展兼容性、安全与权限、字符集与编码、应用层兼容性、事务与并发、"
+            "CDC增量同步、性能与容量、ETL/调度/BI工具兼容性。\n\n"
+            "为确保评估全面性，系统还提供L1-L4四级数据一致性校验框架建议:"
+            "\n• L1结构校验: 表数量/字段/约束/索引一致性\n"
+            "• L2数据量校验: 行数对比/主键唯一性\n"
+            "• L3数据内容校验: MD5抽样/SUM/AVG/MAX/MIN对比\n"
+            "• L4业务逻辑校验: 行业特定业务规则验证"
         ), size=9)
         doc.add_paragraph()
         add_heading(doc, "附录B  声明", level=2)

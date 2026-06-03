@@ -34,6 +34,10 @@ MIGRATION_PATHS = {
         "label": "SQL Server -> DWS", "source": "mssql", "target": "dws",
         "rules_module": "rules.mssql_to_dws", "default_output": "SQLServer到DWS迁移智能评估报告.docx",
     },
+    "db2_dws": {
+        "label": "DB2 LUW -> DWS", "source": "db2", "target": "dws",
+        "rules_module": "rules.db2_to_dws", "default_output": "DB2到DWS迁移智能评估报告.docx",
+    },
 }
 
 
@@ -70,6 +74,7 @@ def main():
         "oracle": ("scanners.oracle_scanner", "OracleScanner"),
         "mysql": ("scanners.mysql_scanner", "MySQLScanner"),
         "mssql": ("scanners.mssql_scanner", "MSSQLScanner"),
+        "db2": ("scanners.db2_scanner", "DB2Scanner"),
     }
     from scanners.sample_scanner import SampleScanner
     from core.engine import MigrationAnalyzer

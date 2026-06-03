@@ -7,10 +7,12 @@
   <div class="tw"><table class="mt">
     <thead><tr><th style="width:200px;">项目</th><th>内容</th></tr></thead>
     <tbody>
-      <tr><td>数据库版本</td><td>{{ result.db_version or "Greenplum" }}</td></tr>
+      <tr><td>数据库版本</td><td>{{ result.db_version or "—" }}</td></tr>
       <tr><td>内核版本</td><td>{{ result.kernel_version or "—" }}</td></tr>
       <tr><td>集群规模</td><td>{{ result.cluster_scale or "—" }}</td></tr>
       <tr><td>总数据容量</td><td>{{ result.total_capacity or "—" }}</td></tr>
+      <tr><td>源库字符集</td><td>{{ result.source_charset or "—" }}</td></tr>
+      <tr><td>安全模型</td><td>{{ result.security_model or "—" }}</td></tr>
       <tr><td>ETL工具</td><td>{{ result.etl_tool or "—" }}</td></tr>
       <tr><td>调度工具</td><td>{{ result.scheduler_tool or "—" }}</td></tr>
       <tr><td>BI工具</td><td>{{ result.bi_tools|join(", ") if result.bi_tools else "—" }}</td></tr>
@@ -27,6 +29,8 @@
         <tr><td>表 (Table)</td><td><strong>{{ result.table_count }}</strong> {% if result.partition_table_count %}<span class="c-secondary">(分区表 {{ result.partition_table_count }})</span>{% endif %}</td></tr>
         <tr><td>视图 (View)</td><td><strong>{{ result.view_count }}</strong></td></tr>
         <tr><td>函数 / UDF</td><td><strong>{{ result.function_count }}</strong></td></tr>
+        <tr><td>源库字符集</td><td>{{ result.source_charset or "—" }}</td></tr>
+        <tr><td>源平台</td><td>{{ result.source_platform or "—" }}</td></tr>
       </tbody>
     </table></div>
   </div>
@@ -40,7 +44,7 @@
       <tr>
         <td><code>{{ lang }}</code></td>
         <td><strong>{{ cnt }}</strong></td>
-        <td>{% if lang in ('plpgsql','sql') %}<span class="tag tg-grn">&#x2705; 兼容</span>{% else %}<span class="tag tg-red">&#x274C; 不兼容</span>{% endif %}</td>
+        <td><span class="tag {% if lang in ('plpgsql','sql') %}tg-grn{% else %}tg-red{% endif %}">{% if lang in ('plpgsql','sql') %}&#x2705; 兼容{% else %}&#x274C; 需改造{% endif %}</span></td>
       </tr>
       {% endfor %}
       </tbody>
@@ -52,22 +56,18 @@
 <div class="card">
   <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F504;</span> 数据流向概览</span></div>
   <div class="flow">
-    <span class="fn" style="background:linear-gradient(135deg,#E3F0FA,#F0F7FF);color:var(--accent);">Oracle</span>
-    <span class="fa">&#x2192;</span>
-    <span class="fn" style="background:linear-gradient(135deg,#E3F0FA,#F0F7FF);color:var(--accent);">MySQL</span>
+    <span class="fn" style="background:linear-gradient(135deg,#FFEBEE,#FFF5F6);color:var(--danger);">{{ result.db_version or "源端数据库" }}</span>
     <span class="fa">&#x2192;</span>
     <span class="fn" style="background:linear-gradient(135deg,#FFF3E0,#FFF8E8);color:var(--warning);">{{ result.etl_tool or "ETL" }}</span>
-    <span class="fa">&#x2192;</span>
-    <span class="fn" style="background:linear-gradient(135deg,#FFEBEE,#FFF5F6);color:var(--danger);">Greenplum</span>
     <span class="fa">&#x2192;</span>
     <span class="fn" style="background:linear-gradient(135deg,#E6F7EE,#F0FBF4);color:var(--success);">GaussDB(DWS)</span>
   </div>
   <div class="flow">
     <span class="fn" style="background:linear-gradient(135deg,var(--g100),#fff);color:var(--g500);">{{ result.scheduler_tool or "调度" }}</span>
     <span class="fa">&#x2192;</span>
-    <span class="fn" style="background:linear-gradient(135deg,#E3F0FA,#F0F7FF);color:var(--accent);">FineReport</span>
-    <span class="fn" style="background:linear-gradient(135deg,#E3F0FA,#F0F7FF);color:var(--accent);">API服务</span>
     <span class="fn" style="background:linear-gradient(135deg,#E3F0FA,#F0F7FF);color:var(--accent);">BI工具</span>
+    <span class="fn" style="background:linear-gradient(135deg,#E3F0FA,#F0F7FF);color:var(--accent);">API服务</span>
+    <span class="fn" style="background:linear-gradient(135deg,#E3F0FA,#F0F7FF);color:var(--accent);">数据应用</span>
   </div>
 </div>
 {% endblock %}

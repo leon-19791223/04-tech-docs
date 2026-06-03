@@ -1,5 +1,5 @@
 """
-SQL Server -> DWS 规则集
+DB2 -> DWS 规则集
 聚合所有子模块规则并注册到规则注册表
 """
 from rules.registry import register
@@ -7,27 +7,27 @@ from rules.registry import register
 from .data_type_rules import DATA_TYPE_RULES
 from .ddl_rules import DDL_RULES
 from .function_rules import FUNCTION_RULES
+from .sqlpl_rules import SQLPL_RULES
 from .common_rules import ETL_RULES, SCHEDULER_RULES, BI_RULES
 from .supplement_rules import SUPPLEMENT_RULES
-from .tsql_rules import TSQL_RULES
 from .extension_rules import EXTENSION_RULES
 
 _CATEGORY_WEIGHTS = {
-    "ddl": 12, "data_type": 10, "function": 16,
-    "udf_language": 6, "extension": 5,  # T-SQL + SQL Server扩展
-    "etl_tool": 6, "scheduler": 6, "bi_tool": 5,
-    "security": 7, "charset": 5,
-    "app_layer": 5, "transaction": 4, "cdc": 5, "performance": 4,
+    "ddl": 13, "data_type": 13, "function": 13,
+    "sqlpl": 13, "extension": 5,  # DB2扩展
+    "etl_tool": 5, "scheduler": 5, "bi_tool": 4,
+    "security": 7, "charset": 6,
+    "app_layer": 4, "transaction": 3, "cdc": 4, "performance": 3,
 }
 
 
 def load_rules() -> dict:
-    """加载SQL Server->DWS完整规则集"""
+    """加载DB2->DWS完整规则集"""
     rules = {
         "ddl": DDL_RULES,
         "data_type": DATA_TYPE_RULES,
         "function": FUNCTION_RULES,
-        "udf_language": TSQL_RULES,
+        "sqlpl": SQLPL_RULES,
         "extension": EXTENSION_RULES,
         "etl_tool": ETL_RULES,
         "scheduler": SCHEDULER_RULES,
@@ -45,11 +45,10 @@ def load_weights() -> dict:
 # UDF语言映射表(引擎依赖此生成建议和工作量估算)
 # ============================================================
 UDF_LANGUAGE_MAP = {
-    "tsql": ("T-SQL存储过程迁移为PL/pgSQL，重点关注游标、异常处理(TRY..CATCH)和动态SQL差异", "高"),
+    "sql_pl": ("DB2 SQL PL存储过程迁移为plpgsql，重点关注异常处理(HANDLER→EXCEPTION)和游标语义的改造", "高"),
 }
 
 
 # 自动注册到规则注册表
-register("mssql", "dws", load_rules)
-register("sqlserver", "dws", load_rules)
-register("sql_server", "dws", load_rules)
+register("db2", "dws", load_rules)
+register("db2_luw", "dws", load_rules)

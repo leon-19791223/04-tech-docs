@@ -11,11 +11,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask, render_template, request, jsonify, send_file
 
 from rules.registry import get_rules, list_registered
-from rules import gp_to_dws, oracle_to_dws, mysql_to_dws, mssql_to_dws
+from rules import gp_to_dws, oracle_to_dws, mysql_to_dws, mssql_to_dws, db2_to_dws, teradata_to_dws
 from scanners.gp_scanner import GPScanner
 from scanners.oracle_scanner import OracleScanner
 from scanners.mysql_scanner import MySQLScanner
 from scanners.mssql_scanner import MSSQLScanner
+from scanners.db2_scanner import DB2Scanner
+from scanners.teradata_scanner import TeradataScanner
 from scanners.sample_scanner import SampleScanner
 from core.engine import MigrationAnalyzer
 from core.models import MigrationMetadata, AssessmentResult
@@ -43,6 +45,16 @@ MIGRATION_PATHS = {
         "label": "SQL Server -> DWS", "source": "mssql", "target": "dws",
         "rules_module": mssql_to_dws, "scanner": MSSQLScanner,
         "icon": "&#x1F4CB;"
+    },
+    "db2_dws": {
+        "label": "DB2 LUW -> DWS", "source": "db2", "target": "dws",
+        "rules_module": db2_to_dws, "scanner": DB2Scanner,
+        "icon": "&#x1F4E0;"
+    },
+    "teradata_dws": {
+        "label": "Teradata -> DWS", "source": "teradata", "target": "dws",
+        "rules_module": teradata_to_dws, "scanner": TeradataScanner,
+        "icon": "&#x1F4E6;"
     },
 }
 
@@ -154,6 +166,10 @@ def api_data():
         "function_count": result.function_count,
         "total_capacity": result.total_capacity,
         "db_version": result.db_version,
+        # 新字段
+        "capacity_planning": result.capacity_planning,
+        "batch_strategy": result.batch_strategy,
+        "workload_estimate": result.workload_estimate,
     })
 
 

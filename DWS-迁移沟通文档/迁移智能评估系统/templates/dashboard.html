@@ -36,7 +36,7 @@
   <div class="card">
     <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F5A5;</span> 源端环境概览</span></div>
     <div class="st-grid">
-      <div class="st-card"><div class="stl">数据库版本</div><div class="stv" style="font-size:14px;">{{ result.db_version or "Greenplum" }}</div></div>
+      <div class="st-card"><div class="stl">数据库版本</div><div class="stv" style="font-size:14px;">{{ result.db_version or "—" }}</div></div>
       <div class="st-card"><div class="stl">数据容量</div><div class="stv">{{ result.total_capacity or "—" }}</div></div>
       <div class="st-card"><div class="stl">表 / 视图</div><div class="stv">{{ result.table_count }} / {{ result.view_count }}</div></div>
       <div class="st-card"><div class="stl">函数/UDF</div><div class="stv">{{ result.function_count }}</div></div>

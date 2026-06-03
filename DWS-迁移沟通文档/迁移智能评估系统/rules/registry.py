@@ -38,5 +38,14 @@ def get_category_name(category: str, source: str = "", target: str = "") -> str:
         "bi_tool": "BI工具兼容性",
         "plsql": "PL/SQL语法兼容性",     # Oracle特有
         "trigger": "触发器兼容性",        # Oracle特有
+        "sqlpl": "SQL PL存储过程兼容性",  # DB2特有
+        "exadata": "Oracle Exadata特性兼容性",  # Oracle Exadata特有
+        # 新增分类
+        "security": "安全与权限兼容性",
+        "charset": "字符集与编码兼容性",
+        "app_layer": "应用层兼容性",
+        "transaction": "事务与并发兼容性",
+        "cdc": "CDC增量同步兼容性",
+        "performance": "性能与容量兼容性",
     }
     return names.get(category, category)

@@ -37,35 +37,126 @@
 </div>
 {% endif %}
 
-<div class="two">
+<div class="split-panel" id="splitPanel">
+  {# 动态UDF语言兼容性矩阵 #}
+  {% set udf_cat = result.category_results|selectattr('category', 'in', ['udf_language', 'plsql', 'sqlpl'])|first %}
+  <div class="split-left" id="splitLeft">
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> UDF语言兼容性矩阵</span></div>
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> {{ udf_cat.category_name if udf_cat else 'UDF语言' }}兼容性矩阵</span></div>
     <div class="tw"><table class="mt">
-      <thead><tr><th>语言</th><th>GP</th><th>DWS</th><th>迁移策略</th><th>难度</th></tr></thead>
+      <thead><tr><th>语言</th><th>源端</th><th>DWS</th><th>迁移策略</th><th>难度</th></tr></thead>
       <tbody>
-        <tr><td>SQL</td><td>&#x2705;</td><td>&#x2705;</td><td>无需改造</td><td><span class="tag tg-grn">低</span></td></tr>
-        <tr><td>PL/pgSQL</td><td>&#x2705;</td><td>&#x2705;</td><td>无需改造</td><td><span class="tag tg-grn">低</span></td></tr>
-        <tr><td>PL/Pythonu</td><td>&#x2705;</td><td>&#x274C;</td><td>重写为plpgsql或Java UDF</td><td><span class="tag tg-red">高</span></td></tr>
-        <tr><td>PL/Perl</td><td>&#x2705;</td><td>&#x274C;</td><td>重写为plpgsql</td><td><span class="tag tg-red">高</span></td></tr>
-        <tr><td>PL/Java</td><td>&#x2705;</td><td>&#x26A0;</td><td>迁移为DWS FGC</td><td><span class="tag tg-org">中</span></td></tr>
-        <tr><td>PL/R</td><td>&#x2705;</td><td>&#x274C;</td><td>迁移到Spark MLlib</td><td><span class="tag tg-red">高</span></td></tr>
-        <tr><td>C</td><td>&#x2705;</td><td>&#x274C;</td><td>迁移到应用层</td><td><span class="tag tg-red">高</span></td></tr>
+      {% if udf_cat and udf_cat.details %}
+        {% for d in udf_cat.details %}
+        <tr>
+          <td><code>{{ d.name }}</code></td>
+          <td>&#x2705;</td>
+          <td>{% if d.compatible or d.severity == 'info' %}&#x2705;{% elif d.severity == 'warning' %}&#x26A0;{% else %}&#x274C;{% endif %}</td>
+          <td style="font-size:13px;">{{ d.suggestion or d.note or d.target_solution[:60] }}</td>
+          <td><span class="tag {% if d.migration_difficulty == '高' %}tg-red{% elif d.migration_difficulty == '中' %}tg-org{% else %}tg-grn{% endif %}">{{ d.migration_difficulty or '—' }}</span></td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="5" style="text-align:center;color:var(--g400);padding:24px;">该路径无UDF/存储过程语言规则</td></tr>
+      {% endif %}
       </tbody>
     </table></div>
+    {% if udf_cat and (udf_cat.errors > 0 or udf_cat.warnings > 0) %}
+    <div class="alert alert-warn mt12">&#x26A0; {{ udf_cat.errors }} 项不兼容、{{ udf_cat.warnings }} 项需注意</div>
+    {% elif udf_cat %}
+    <div class="alert alert-ok mt12">&#x2705; 所有语言兼容</div>
+    {% endif %}
   </div>
+  </div>
+
+  <div class="split-divider" id="splitDivider"></div>
+
+  {# 动态扩展兼容性矩阵 #}
+  {% set ext_cat = result.category_results|selectattr('category', 'equalto', 'extension')|first %}
+  <div class="split-right" id="splitRight">
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4E6;</span> 扩展兼容性矩阵</span></div>
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4E6;</span> {{ ext_cat.category_name if ext_cat else '扩展' }}兼容性矩阵</span></div>
     <div class="tw"><table class="mt">
-      <thead><tr><th>扩展</th><th>GP</th><th>DWS</th><th>替代方案</th><th>难度</th></tr></thead>
+      <thead><tr><th>扩展</th><th>源端</th><th>DWS</th><th>替代方案</th><th>难度</th></tr></thead>
       <tbody>
-        <tr><td>madlib</td><td>&#x2705;</td><td>&#x274C;</td><td>DWS ML/Spark</td><td><span class="tag tg-red">高</span></td></tr>
-        <tr><td>PostGIS</td><td>&#x2705;</td><td>&#x26A0;</td><td>DWS PostGIS子集</td><td><span class="tag tg-org">中</span></td></tr>
-        <tr><td>hstore</td><td>&#x2705;</td><td>&#x274C;</td><td>JSONB替代</td><td><span class="tag tg-grn">低</span></td></tr>
-        <tr><td>pgcrypto</td><td>&#x2705;</td><td>&#x2705;</td><td>无需改造</td><td><span class="tag tg-grn">低</span></td></tr>
-        <tr><td>uuid-ossp</td><td>&#x2705;</td><td>&#x2705;</td><td>无需改造</td><td><span class="tag tg-grn">低</span></td></tr>
-        <tr><td>tablefunc</td><td>&#x2705;</td><td>&#x274C;</td><td>CASE WHEN替代</td><td><span class="tag tg-org">中</span></td></tr>
+      {% if ext_cat and ext_cat.details %}
+        {% for d in ext_cat.details %}
+        <tr>
+          <td><code>{{ d.name }}</code></td>
+          <td>&#x2705;</td>
+          <td>{% if d.compatible or d.severity == 'info' %}&#x2705;{% elif d.severity == 'warning' %}&#x26A0;{% else %}&#x274C;{% endif %}</td>
+          <td style="font-size:13px;">{{ d.note or d.target_solution[:60] }}</td>
+          <td><span class="tag {% if d.migration_difficulty == '高' %}tg-red{% elif d.migration_difficulty == '中' %}tg-org{% else %}tg-grn{% endif %}">{{ d.migration_difficulty or '—' }}</span></td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="5" style="text-align:center;color:var(--g400);padding:24px;">该路径无扩展规则</td></tr>
+      {% endif %}
       </tbody>
     </table></div>
+    {% if ext_cat and (ext_cat.errors > 0 or ext_cat.warnings > 0) %}
+    <div class="alert alert-warn mt12">&#x26A0; {{ ext_cat.errors }} 项不兼容、{{ ext_cat.warnings }} 项需注意</div>
+    {% elif ext_cat %}
+    <div class="alert alert-ok mt12">&#x2705; 所有扩展兼容</div>
+    {% endif %}
+  </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var panel = document.getElementById('splitPanel');
+  var divider = document.getElementById('splitDivider');
+  var leftPane = document.getElementById('splitLeft');
+  if (!divider || !leftPane || !panel) return;
+
+  var isDragging = false;
+  var storageKey = 'splitPanelWidths_' + '{{ result.source_type or "gp" }}';
+
+  // 恢复持久化的宽度
+  var saved = sessionStorage.getItem(storageKey);
+  if (saved) {
+    leftPane.style.width = saved;
+  } else {
+    leftPane.style.width = '50%';
+  }
+
+  divider.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    panel.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    var rect = panel.getBoundingClientRect();
+    var offset = e.clientX - rect.left;
+    var pct = Math.max(20, Math.min(80, (offset / rect.width) * 100));
+    leftPane.style.width = pct + '%';
+    sessionStorage.setItem(storageKey, pct + '%');
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (isDragging) {
+      isDragging = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      panel.classList.remove('dragging');
+    }
+  });
+
+  // 跟随迁移路径变化刷新持久化key
+  var target = document.getElementById('sidebar-path-label');
+  if (target) {
+    var obs = new MutationObserver(function() {
+      // 路径切换后清空缓存，下次用新key
+    });
+    obs.observe(target, { childList: true, characterData: true, subtree: true });
+  }
+})();
+</script>
 {% endblock %}

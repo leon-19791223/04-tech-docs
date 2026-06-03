@@ -516,6 +516,96 @@ table.mt tbody tr:first-child td { border-top:none; }
 .numl li { padding:7px 0; font-size:14px; line-height:1.6; color:var(--text); }
 .numl li::marker { color:var(--accent); font-weight:600; }
 
+/* ============================================================
+   Split Panel (可拖拽分栏)
+   ============================================================ */
+.split-panel {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  position: relative;
+  min-height: 300px;
+}
+.split-panel.dragging {
+  pointer-events: none;
+}
+.split-panel.dragging .split-divider {
+  border-color: var(--accent);
+  background: var(--grad-primary);
+}
+.split-left {
+  flex: 0 0 auto;
+  width: 50%;
+  min-width: 20%;
+  max-width: 80%;
+  overflow: hidden;
+  padding-right: 4px;
+}
+.split-right {
+  flex: 1 1 auto;
+  min-width: 20%;
+  overflow: hidden;
+  padding-left: 4px;
+}
+.split-right .card,
+.split-left .card {
+  margin-bottom: 0;
+  height: 100%;
+}
+.split-divider {
+  flex: 0 0 7px;
+  cursor: col-resize;
+  background: transparent;
+  border-left: 2px solid var(--g200);
+  border-right: 2px solid var(--g200);
+  background-clip: content-box;
+  transition: all 0.2s ease;
+  position: relative;
+  margin: 0 2px;
+  border-radius: 2px;
+}
+.split-divider:hover {
+  border-color: var(--accent);
+  background: rgba(0,119,204,0.06);
+}
+.split-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 32px;
+  background: var(--g300);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.split-divider:hover::after {
+  opacity: 1;
+  background: var(--accent);
+}
+
+@media (max-width: 1024px) {
+  .split-panel {
+    flex-direction: column;
+  }
+  .split-left, .split-right {
+    width: 100% !important;
+    min-width: 100%;
+    max-width: 100%;
+    padding: 0;
+  }
+  .split-divider {
+    display: none;
+  }
+  .split-right .card,
+  .split-left .card {
+    margin-bottom: 16px;
+  }
+}
+
 /* Responsive */
 @media (max-width:1024px) { .two { grid-template-columns:1fr; } }
 @media (max-width:768px) {
@@ -546,7 +636,7 @@ table.mt tbody tr:first-child td { border-top:none; }
       <span>v1.0</span>
     </div>
     <h1>迁移评估系统</h1>
-    <p id="sidebar-path-label">{{ paths.get(current_path, {}).get("label", "GP -> DWS") }}</p>
+    <p id="sidebar-path-label">{{ paths.get(current_path, {}).get("label", "迁移评估") }}</p>
   </div>
     <!-- 迁移路径切换 -->
     <div style="padding:8px 16px 4px;border-bottom:1px solid rgba(255,255,255,0.06);">
