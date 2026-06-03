@@ -2,6 +2,12 @@
 Teradata -> DWS 规则集
 聚合所有子模块规则并注册到规则注册表
 """
+
+# ============================================================
+# 迁移路径元信息 (用于Web UI自动发现)
+# ============================================================
+MIGRATION_INFO = {'label': 'Teradata -> DWS', 'icon': '&#x1F4E6;', 'description': 'Teradata到DWS迁移兼容性评估 (65条规则)'}
+
 from rules.registry import register
 
 from .ddl_rules import DDL_RULES
@@ -47,5 +53,5 @@ def get_guc_params() -> list:
 
 
 # 自动注册到规则注册表
-register("teradata", "dws", load_rules)
-register("td", "dws", load_rules)
+register("teradata", "dws", load_rules, info=MIGRATION_INFO)
+register("td", "dws", load_rules, info=MIGRATION_INFO)

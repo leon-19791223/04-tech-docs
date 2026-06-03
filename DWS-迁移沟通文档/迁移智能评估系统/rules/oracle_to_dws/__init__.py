@@ -2,6 +2,12 @@
 Oracle -> DWS 规则集
 聚合所有子模块规则并注册到规则注册表
 """
+
+# ============================================================
+# 迁移路径元信息 (用于Web UI自动发现)
+# ============================================================
+MIGRATION_INFO = {'label': 'Oracle -> DWS', 'icon': '&#x1F534;', 'description': 'Oracle到DWS迁移兼容性评估 (110条规则)'}
+
 from rules.registry import register
 
 from .ddl_rules import DDL_RULES
@@ -67,5 +73,5 @@ UDF_LANGUAGE_MAP = {
 
 
 # 自动注册到规则注册表
-register("oracle", "dws", load_rules)
-register("oracle", "gaussdb", load_rules)
+register("oracle", "dws", load_rules, info=MIGRATION_INFO)
+register("oracle", "gaussdb", load_rules, info=MIGRATION_INFO)

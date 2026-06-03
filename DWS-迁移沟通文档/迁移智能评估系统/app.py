@@ -1,6 +1,6 @@
 """
 迁移智能评估系统 - Web UI (Flask)
-支持多源-目标迁移路径选择
+迁移路径自动发现: 只需 import 规则模块，自动注册到侧边栏
 """
 
 import os
@@ -10,8 +10,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, render_template, request, jsonify, send_file
 
-from rules.registry import get_rules, list_registered
-from rules import gp_to_dws, oracle_to_dws, mysql_to_dws, mssql_to_dws, db2_to_dws, teradata_to_dws
+# ================================================================
+# 1. 导入规则包（自动注册所有迁移路径到规则注册表）
+# ================================================================
+import rules
+from rules.registry import get_rules, get_registered_paths
 from scanners.gp_scanner import GPScanner
 from scanners.oracle_scanner import OracleScanner
 from scanners.mysql_scanner import MySQLScanner
@@ -24,68 +27,65 @@ from core.models import MigrationMetadata, AssessmentResult
 
 app = Flask(__name__)
 
-# 迁移路径配置
-MIGRATION_PATHS = {
-    "gp_dws": {
-        "label": "Greenplum -> DWS", "source": "gp", "target": "dws",
-        "rules_module": gp_to_dws, "scanner": GPScanner,
-        "icon": "&#x1F7E2;"
-    },
-    "oracle_dws": {
-        "label": "Oracle -> DWS", "source": "oracle", "target": "dws",
-        "rules_module": oracle_to_dws, "scanner": OracleScanner,
-        "icon": "&#x1F534;"
-    },
-    "mysql_dws": {
-        "label": "MySQL -> DWS", "source": "mysql", "target": "dws",
-        "rules_module": mysql_to_dws, "scanner": MySQLScanner,
-        "icon": "&#x1F431;"
-    },
-    "mssql_dws": {
-        "label": "SQL Server -> DWS", "source": "mssql", "target": "dws",
-        "rules_module": mssql_to_dws, "scanner": MSSQLScanner,
-        "icon": "&#x1F4CB;"
-    },
-    "db2_dws": {
-        "label": "DB2 LUW -> DWS", "source": "db2", "target": "dws",
-        "rules_module": db2_to_dws, "scanner": DB2Scanner,
-        "icon": "&#x1F4E0;"
-    },
-    "teradata_dws": {
-        "label": "Teradata -> DWS", "source": "teradata", "target": "dws",
-        "rules_module": teradata_to_dws, "scanner": TeradataScanner,
-        "icon": "&#x1F4E6;"
-    },
+# ================================================================
+# 2. 扫描器映射 (source -> scanner_class)
+#    只需在此维护，加新的迁移路径只需加一行
+# ================================================================
+SCANNER_MAP = {
+    "gp": GPScanner,
+    "greenplum": GPScanner,
+    "oracle": OracleScanner,
+    "mysql": MySQLScanner,
+    "mssql": MSSQLScanner,
+    "sqlserver": MSSQLScanner,
+    "sql_server": MSSQLScanner,
+    "db2": DB2Scanner,
+    "db2_luw": DB2Scanner,
+    "teradata": TeradataScanner,
+    "td": TeradataScanner,
 }
+
+# ================================================================
+# 3. 自动发现所有已注册迁移路径
+#    get_registered_paths() 读取各规则模块的 MIGRATION_INFO
+# ================================================================
+MIGRATION_PATHS = get_registered_paths()
+AVAILABLE_KEYS = set(MIGRATION_PATHS.keys())
 
 # 全局缓存
 _current_result: AssessmentResult = None
 _metadata: MigrationMetadata = None
-_current_path: str = "gp_dws"  # 当前选中的迁移路径
+_current_path: str = next(iter(AVAILABLE_KEYS)) if AVAILABLE_KEYS else "gp_dws"
 
 
 def get_or_create_result(path_key: str = None):
     global _current_result, _metadata, _current_path
 
-    if path_key and path_key != _current_path:
+    if path_key and path_key in AVAILABLE_KEYS and path_key != _current_path:
         _current_path = path_key
         _current_result = None
 
     if _current_result is None:
         cfg = MIGRATION_PATHS[_current_path]
-        scanner_cls = cfg["scanner"]
-        if scanner_cls == GPScanner:
-            scanner = scanner_cls()
-        else:
-            scanner = scanner_cls()
+        source = cfg["source"]
+        target = cfg["target"]
 
+        scanner_cls = SCANNER_MAP.get(source, SampleScanner)
+        scanner = scanner_cls() if scanner_cls != GPScanner else scanner_cls()
         _metadata = scanner.scan()
-        rules = get_rules(cfg["source"], cfg["target"])
-        weights = cfg["rules_module"].load_weights()
+
+        rules = get_rules(source, target)
+        rules_mod_name = f"rules.{source}_to_dws" if source != "sqlserver" else "rules.mssql_to_dws"
+        try:
+            mod = __import__(rules_mod_name, fromlist=["load_weights"])
+            weights = mod.load_weights()
+        except (ImportError, AttributeError):
+            weights = {}
+
         analyzer = MigrationAnalyzer(
             metadata=_metadata, rules=rules,
             category_weights=weights,
-            source_type=cfg["source"], target_type=cfg["target"],
+            source_type=source, target_type=target,
         )
         _current_result = analyzer.analyze()
     return _current_result
@@ -94,7 +94,9 @@ def get_or_create_result(path_key: str = None):
 @app.route("/")
 def index():
     path_key = request.args.get("path", _current_path)
-    result = get_or_create_result(path_key=path_key if path_key in MIGRATION_PATHS else None)
+    if path_key not in AVAILABLE_KEYS:
+        path_key = _current_path
+    result = get_or_create_result(path_key=path_key)
     return render_template("dashboard.html", result=result,
                            current_path=_current_path, paths=MIGRATION_PATHS)
 
@@ -136,7 +138,7 @@ def recommendations():
 
 @app.route("/switch-path/<path_key>")
 def switch_path(path_key):
-    if path_key in MIGRATION_PATHS:
+    if path_key in AVAILABLE_KEYS:
         get_or_create_result(path_key=path_key)
     return index()
 
@@ -166,7 +168,6 @@ def api_data():
         "function_count": result.function_count,
         "total_capacity": result.total_capacity,
         "db_version": result.db_version,
-        # 新字段
         "capacity_planning": result.capacity_planning,
         "batch_strategy": result.batch_strategy,
         "workload_estimate": result.workload_estimate,
@@ -188,11 +189,13 @@ def reanalyze():
     global _current_result, _metadata, _current_path
 
     path_key = request.form.get("path", _current_path)
-    if path_key in MIGRATION_PATHS:
+    if path_key in AVAILABLE_KEYS:
         _current_path = path_key
 
     cfg = MIGRATION_PATHS[_current_path]
-    scanner_cls = cfg["scanner"]
+    source = cfg["source"]
+    target = cfg["target"]
+    scanner_cls = SCANNER_MAP.get(source, SampleScanner)
     scanner = scanner_cls()
     _metadata = scanner.scan()
 
@@ -204,12 +207,18 @@ def reanalyze():
                 val = int(val)
             setattr(_metadata, field, val)
 
-    rules = get_rules(cfg["source"], cfg["target"])
-    weights = cfg["rules_module"].load_weights()
+    rules = get_rules(source, target)
+    rules_mod_name = f"rules.{source}_to_dws" if source != "sqlserver" else "rules.mssql_to_dws"
+    try:
+        mod = __import__(rules_mod_name, fromlist=["load_weights"])
+        weights = mod.load_weights()
+    except (ImportError, AttributeError):
+        weights = {}
+
     analyzer = MigrationAnalyzer(
         metadata=_metadata, rules=rules,
         category_weights=weights,
-        source_type=cfg["source"], target_type=cfg["target"],
+        source_type=source, target_type=target,
     )
     _current_result = analyzer.analyze()
     return jsonify({"status": "ok", "score": _current_result.overall_score,
@@ -219,6 +228,9 @@ def reanalyze():
 if __name__ == "__main__":
     print("=" * 50)
     print("  迁移智能评估系统 - Web UI")
+    print(f"  自动发现 {len(AVAILABLE_KEYS)} 条迁移路径")
+    for key, cfg in sorted(MIGRATION_PATHS.items()):
+        print(f"    {cfg.get('icon', '')} {cfg['label']}")
     print("=" * 50)
     print("  访问地址: http://127.0.0.1:5010")
     print("=" * 50)

@@ -936,6 +936,88 @@ CH6_MULTI = [
     }
 ]
 
+# ---------- 第一章补充题 ----------
+CH1_JUDGE_EXT = [
+    {
+        "id": "J1-6",
+        "question": "GaussDB集中式架构中，节点间通过IB（InfiniBand）高速互连。",
+        "answer": "√",
+        "analysis": "集中式节点间采用IB高速互连，IB网络具备低时延、高带宽特性，适用于集中式架构的节点间通信。"
+    },
+    {
+        "id": "J1-7",
+        "question": "HCS形态下，GaussDB仅能部署在裸金属服务器上。",
+        "answer": "×",
+        "analysis": "GaussDB在HCS形态下不仅可部署在裸金属服务器，还支持部署在弹性云服务器（ECS）上，支持裸金属、虚拟化多种部署方式。"
+    },
+    {
+        "id": "J1-8",
+        "question": "GaussDB采用单进程多线程架构，相比多进程架构，线程启动开销更小。",
+        "answer": "√",
+        "analysis": "单进程多线程架构的优势：线程启动/切换开销小、线程间通信便捷（共享内存）、支持NUMA绑核优化。"
+    },
+    {
+        "id": "J1-9",
+        "question": "GaussDB仅支持AStore和UStore行存引擎，不支持列存或时序存储引擎。",
+        "answer": "×",
+        "analysis": "GaussDB除AStore和UStore行存引擎外，还支持LSM-tree列存引擎（用于时序场景和OLAP分析）。"
+    }
+]
+
+CH1_SINGLE_EXT = [
+    {
+        "id": "D1-11",
+        "question": "GaussDB单节点最大tpmC性能指标为？",
+        "options": ["A. 100万", "B. 150万", "C. 200万", "D. 500万"],
+        "answer": "B",
+        "analysis": "GaussDB自研内核优化后，单节点最大tpmC性能指标为150万。"
+    },
+    {
+        "id": "D1-12",
+        "question": "GaussDB分布式架构32节点最大tpmC性能指标为？",
+        "options": ["A. 1000万", "B. 1500万", "C. 2000万", "D. 3000万"],
+        "answer": "B",
+        "analysis": "GaussDB分布式架构支持性能线性扩容，32节点最大tpmC可达1500万。"
+    },
+    {
+        "id": "D1-13",
+        "question": "GaussDB的CN轻量化执行计划中，判断SQL是否满足轻量化执行条件的依据是？",
+        "options": ["A. 语法解析阶段的模式识别", "B. 优化器的代价估算结果", "C. 执行器的运行时反馈", "D. 用户手动指定"],
+        "answer": "A",
+        "analysis": "SQL Bypass在语法解析（parse）层完成模式识别，判断SQL是否满足轻量化执行条件，直接调用存储接口跳过经典执行器框架。"
+    },
+    {
+        "id": "D1-14",
+        "question": "某表有2000万行数据，每行实际占用100字节，页面填充因子100%。使用AStore引擎，页面大小8KB（页面头40B，元组指针4B，元组头24B），估算该表数据文件大小约为？",
+        "options": ["A. 1.2GB", "B. 2.5GB", "C. 3.8GB", "D. 5.1GB"],
+        "answer": "C",
+        "analysis": "单条总占用=4+24+100=128B；单页可用=8192-40=8152B；单页行数=8152÷128≈63行；总页数=2000万÷63≈317460页；总大小=317460×8192B≈3.8GB。"
+    }
+]
+
+CH1_MULTI_EXT = [
+    {
+        "id": "M1-6",
+        "question": "GaussDB单进程多线程架构的优势包括？",
+        "options": ["A. 线程启动开销小", "B. 线程间通信便捷（共享内存）", "C. 线程切换开销低", "D. 支持NUMA绑核优化", "E. 可避免线程间的内存泄漏"],
+        "answer": "ABCD",
+        "analysis": "多线程优势：启动/切换开销小、共享内存通信快、支持NUMA绑核。内存泄漏防护是内存上下文管理的功能，非多线程架构直接优势。"
+    },
+    {
+        "id": "M1-7",
+        "question": "GaussDB的CN轻量化执行计划（SQL Bypass）的优势包括？",
+        "options": ["A. 直接下发语句到DN执行，无需经过优化器", "B. 减少CN节点计算压力", "C. 执行延迟低", "D. 支持复杂分布式查询", "E. 降低内存消耗"],
+        "answer": "ABCE",
+        "analysis": "CN轻量化执行计划跳过优化器，直接下发简单SQL到DN，减少CN压力、降低延迟和内存消耗。不支持复杂分布式查询（D错误）。"
+    },
+    {
+        "id": "M1-8",
+        "question": "GaussDB支持的存储引擎类型包括？",
+        "options": ["A. AStore行存引擎", "B. UStore行存引擎", "C. InnoDB引擎", "D. MyISAM引擎", "E. LSM-tree列存引擎"],
+        "answer": "ABE",
+        "analysis": "GaussDB自研核心存储引擎为AStore和UStore，同时支持LSM-tree列存引擎。InnoDB和MyISAM是MySQL的存储引擎。"
+    }
+]
 
 # ============================================================
 # PDF参考资料补充题目（根据考试回忆题目整理）
@@ -954,6 +1036,43 @@ CH2_JUDGE_EXT = [
         "answer": "√",
         "analysis": "集中式部署适用于：SQL复杂（涉及大量JOIN/子查询）、存量存储过程多、数据量<2TB的场景；而分布式适合大容量(>=2TB)、高并发场景。"
     },
+    {
+        "id": "J2-8",
+        "question": "新建Region建议采用增强型裸机网关，存量Region建议继续使用集中式裸机网关。",
+        "answer": "√",
+        "analysis": "增强型裸机网关具备线速转发、硬件级高可用、多平面隔离的优势，新建Region建议采用；存量Region因兼容限制继续使用集中式裸机网关。"
+    }
+,
+    {
+        "id": "J2-9",
+        "question": "GaussDB性能稳定是选择集中式部署形态的理由，不是选择分布式的理由。",
+        "answer": "×",
+        "analysis": "集中式和分布式均可实现性能稳定。性能稳定不是区分两者的依据，集中式的优势在于SQL复杂、存储过程多、改造困难等场景。"
+    }
+,
+    {
+        "id": "D2-15",
+        "question": "HCS集中式裸机网关三层互通IP规划中，每个DN节点分配的业务虚IP（VIP）个数为？",
+        "options": ["A. 1个", "B. 2个", "C. 3个", "D. 按需分配"],
+        "answer": "A",
+        "analysis": "HCS集中式裸机网关三层互通规划中，每个DN节点仅分配1个业务虚IP（VIP），VIP随主节点漂移。"
+    }
+,
+    {
+        "id": "D2-16",
+        "question": "在GaussDB计算资源容量规划中，金融核心业务的复杂度折算系数通常？",
+        "options": ["A. 小于1", "B. 等于1", "C. 大于1（常见1.2-1.5）", "D. 无固定系数"],
+        "answer": "C",
+        "analysis": "金融核心业务交易逻辑复杂，复杂度折算系数通常大于1（常见1.2-1.5），用于估算实际CPU需求。"
+    }
+,
+    {
+        "id": "D2-17",
+        "question": "GaussDB安全规划中，应用层安全建议采用的SQL审核工具是？",
+        "options": ["A. UGO工具", "B. DRS工具", "C. DBS工具", "D. OBS工具"],
+        "answer": "A",
+        "analysis": "应用层安全推荐采用UGO工具进行SQL审核，UGO提供SQL审核和优化建议。"
+    }
 ]
 
 CH2_SINGLE_EXT = [
@@ -971,6 +1090,66 @@ CH2_SINGLE_EXT = [
         "answer": "C",
         "analysis": "tpmC（Transaction Processing Benchmark C）是衡量服务器在线事务处理能力的基准指标，用于评估CPU处理能力和服务器规格选型。"
     },
+    {
+        "id": "D3-16",
+        "question": "关于GaussDB的Checkpointer检查点机制，以下说法正确的是？",
+        "options": ["A. Checkpointer仅支持全量检查点", "B. Checkpointer同时支持增量检查点和全量检查点", "C. Checkpointer仅支持增量检查点", "D. 检查点由用户线程触发，无需Checkpointer进程"],
+        "answer": "B",
+        "analysis": "Checkpointer支持增量检查点和全量检查点两种模式。'仅支持全量检查点'是错误说法。"
+    }
+,
+    {
+        "id": "D3-17",
+        "question": "GaussDB中，以下哪种情况会强制生成Custom Plan（cplan）而非Generic Plan（gplan）？",
+        "options": ["A. 使用参数化SQL且执行次数较少", "B. SQL语句包含非常量条件", "C. 使用PREPARE语句预编译且执行次数超过阈值", "D. 手动指定plan_hint时"],
+        "answer": "D",
+        "analysis": "使用plan_hint时，优化器无法将hint中的信息通用化，必须为每次执行生成cplan。"
+    }
+,
+    {
+        "id": "D3-18",
+        "question": "GaussDB中，以下哪个参数不能消除锁资源阻塞问题？",
+        "options": ["A. lockwait_timeout", "B. deadlock_timeout", "C. session_timeout", "D. update_lockwait_timeout"],
+        "answer": "C",
+        "analysis": "session_timeout控制空闲会话超时断开，不直接处理锁资源阻塞问题。其他三个参数均与锁管理直接相关。"
+    }
+,
+    {
+        "id": "D3-19",
+        "question": "GaussDB的SPM（SQL Plan Management）功能中，以下哪项不属于SPM的核心能力？",
+        "options": ["A. 计划捕获（Plan Capture）", "B. 计划选择（Plan Selection）", "C. 计划演进（Plan Evolution）", "D. 计划生成（Plan Generation）"],
+        "answer": "D",
+        "analysis": "SPM核心功能包括计划捕获、计划选择和计划演进。计划生成属于优化器的功能，不属于SPM的管理范畴。"
+    }
+,
+    {
+        "id": "D3-20",
+        "question": "GaussDB两地三中心容灾架构中，同城AZ间距要求为？",
+        "options": ["A. 大于10km", "B. 大于50km", "C. 大于100km", "D. 大于200km"],
+        "answer": "B",
+        "analysis": "同城AZ间距要求大于50km，异地AZ间距要求大于200km。"
+    },
+    {
+        "id": "D2-18",
+        "question": "GaussDB三层网络规划中，高速平面（High-Speed Plane）的主要作用是？",
+        "options": ["A. 用于业务应用访问数据库", "B. 用于节点间数据交换和WAL日志同步", "C. 用于带外管理", "D. 用于云管理平台通信"],
+        "answer": "B",
+        "analysis": "高速平面（也称存储面/数据面）用于节点间的数据交换和WAL日志同步，要求高带宽低时延（通常25GE/100GE）。业务平面用于应用访问数据库，管理面用于运维管理。"
+    },
+    {
+        "id": "D2-19",
+        "question": "GaussDB手工备份（Manual Backup）与自动备份相比，以下描述正确的是？",
+        "options": ["A. 手工备份默认保留30天后自动清理", "B. 手工备份需要用户自行管理清理策略", "C. 手工备份不支持全量备份", "D. 手工备份会覆盖自动备份的保留策略"],
+        "answer": "B",
+        "analysis": "手工备份需要用户自行管理清理策略，系统不会自动删除手工备份文件。自动备份默认保留30天，超期自动清理。"
+    },
+    {
+        "id": "D2-20",
+        "question": "金融某行HCS云数据库GaussDB，备份带宽的默认限制为？",
+        "options": ["A. 100MB/s", "B. 200MB/s", "C. 250MB/s", "D. 500MB/s"],
+        "answer": "C",
+        "analysis": "HCS云数据库GaussDB默认备份带宽限制为250MB/s，在备份恢复规划中需考虑此限制对备份窗口的影响。"
+    }
 ]
 
 CH2_MULTI_EXT = [
@@ -981,6 +1160,34 @@ CH2_MULTI_EXT = [
         "answer": "ABD",
         "analysis": "集中式适合SQL复杂、存储过程多、<2TB；分布式适合>=2TB、高并发、扩展性要求高的场景。集中式也支持主备高可用，E选项过于绝对。"
     },
+    {
+        "id": "M2-7",
+        "question": "国标GB/T 20988-2007容灾等级中，以下关于各级RPO/RTO的描述正确的有？",
+        "options": ["A. 1级：RTO<=2天，RPO=1~7天", "B. 2级和3级：RTO均<=12小时", "C. 4级：RTO<=6小时，RPO<15分钟", "D. 5级：RPO=0~30分钟，RTO=数分钟~2天", "E. 6级：RPO=0，RTO=秒级"],
+        "answer": "ACDE",
+        "analysis": "2级RTO<=24小时，3级RTO<=12小时。B选项中2级和3级RTO并不同。"
+    },
+    {
+        "id": "M2-8",
+        "question": "使用本地盘规划GaussDB存储时，推荐的RAID方案为？",
+        "options": ["A. 系统盘RAID1", "B. 数据盘RAID10", "C. 系统盘RAID5", "D. 数据盘RAID6", "E. 数据盘RAID-TP"],
+        "answer": "AB",
+        "analysis": "系统盘RAID1（镜像冗余），数据盘RAID10（条带+镜像）。"
+    },
+    {
+        "id": "M2-9",
+        "question": "GaussDB数据压缩与性能的关系，以下说法正确的有？",
+        "options": ["A. TP业务表典型压缩率2:1", "B. 索引典型压缩率3:1", "C. 历史数据典型压缩率5:1", "D. WAL日志典型压缩率4:1", "E. 高性能场景应采用有损压缩"],
+        "answer": "ABCD",
+        "analysis": "TP表2:1、索引3:1、历史数据5:1、WAL4:1。E错误，有损压缩不适用于数据库数据。"
+    },
+    {
+        "id": "M2-10",
+        "question": "关于GaussDB性能指标TPS（Transactions Per Second），以下描述正确的有？",
+        "options": ["A. TPS表示系统每秒处理的事务数量", "B. TPS计算需要考虑高峰期集中系数", "C. tpmC是TPC-C基准测试的每分钟吞吐量指标", "D. TPS与tpmC是同一概念的不同表达", "E. 单笔业务可能产生多个数据库事务"],
+        "answer": "ABCE",
+        "analysis": "TPS衡量每秒事务处理能力，需考虑高峰期集中系数。tpmC是TPC-C每分钟吞吐量，TPS与tpmC是不同的指标概念（D错误）。"
+    }
 ]
 
 CH3_JUDGE_EXT = [
@@ -989,7 +1196,7 @@ CH3_JUDGE_EXT = [
         "question": "GaussDB基于分布式理论构建的分布式数据库，空间放大更小，性能抖动更小。",
         "answer": "√",
         "analysis": "GaussDB分布式架构通过数据分片、分布式事务管理等技术，有效减少了空间放大问题，并通过智能调度减少了性能抖动。"
-    },
+    }
 ]
 
 CH3_SINGLE_EXT = [
@@ -1014,6 +1221,170 @@ CH3_SINGLE_EXT = [
         "answer": "B",
         "analysis": "CN轻量化是将部分SQL优化和执行计划生成工作下推到DN节点，减少CN的负载压力，提升分布式执行效率。"
     },
+    {
+        "id": "D5-13",
+        "question": "以下哪个工具不能用于排查GaussDB的CPU高占用问题？",
+        "options": ["A. pg_stat_activity", "B. WDR报告", "C. statement_history视图", "D. pg_stat_replication"],
+        "answer": "D",
+        "analysis": "pg_stat_replication用于查看主备复制状态，不包含CPU使用信息。其他三个均可用于CPU问题排查。"
+    }
+,
+    {
+        "id": "D5-14",
+        "question": "GaussDB DBMind的诊断能力中，用于分析秒级性能抖动的关键数据源是？",
+        "options": ["A. pg_stat_activity", "B. WDR报告", "C. ASP（Active Session Profile）", "D. pg_stat_statements"],
+        "answer": "C",
+        "analysis": "ASP定时采样活跃会话的等待事件、SQL ID、状态等信息，可用于诊断秒级性能抖动问题。"
+    }
+,
+    {
+        "id": "M5-7",
+        "question": "GaussDB的索引推荐算法的工作流程包括以下哪些步骤？",
+        "options": ["A. 基于语法解析处理SQL语句，识别可优化模式", "B. 利用虚拟索引进行代价分析，避免创建真实索引的开销", "C. 采集Workload信息，评估索引对整体负载的收益", "D. 通过爬山法（Hill Climbing）选取最优索引组合", "E. 自动将推荐的索引创建到生产环境"],
+        "answer": "ABCD",
+        "analysis": "索引推荐流程：语法解析识别→虚拟索引代价分析→Workload采集评估→爬山法选优。推荐索引需要人工审核后创建。"
+    }
+,
+    {
+        "id": "M5-8",
+        "question": "关于GaussDB JDBC驱动参数优化，以下说法正确的有？",
+        "options": ["A. prepareThreshold控制多次重复执行时切换为服务端预编译的阈值", "B. batchMode=on开启批量提交模式", "C. autoBalance参数控制CN节点的负载均衡", "D. defaultRowFetchSize控制批量查询时每次拉取的行数", "E. priorityServers=3配置容灾优先选主策略"],
+        "answer": "ABCD",
+        "analysis": "prepareThreshold、batchMode、autoBalance、defaultRowFetchSize均为JDBC标准优化参数。"
+    }
+,
+    {
+        "id": "M5-9",
+        "question": "GaussDB DBMind的智能运维核心能力包括？",
+        "options": ["A. 慢SQL根因分析", "B. 索引推荐", "C. 性能容量预测", "D. 趋势分析和异常检测", "E. 自动数据备份和恢复"],
+        "answer": "ABCD",
+        "analysis": "DBMind覆盖SQL诊断优化、索引推荐、容量预测、异常检测等场景。自动备份恢复由独立模块负责。"
+    }
+,
+    {
+        "id": "D6-14",
+        "question": "GaussDB分布式集群中，CN节点故障超过多少秒会被自动剔除？",
+        "options": ["A. 5秒", "B. 10秒", "C. 20秒", "D. 25秒"],
+        "answer": "D",
+        "analysis": "GaussDB集群中CN节点故障超过25秒会被自动剔除。"
+    }
+,
+    {
+        "id": "D6-15",
+        "question": "GaussDB的HashBucket在线扩容技术，扩容期间对在线业务性能的影响小于？",
+        "options": ["A. 3%", "B. 5%", "C. 8%", "D. 10%"],
+        "answer": "B",
+        "analysis": "HashBucket在线扩容期间平均吞吐量和平均延时影响小于5%。"
+    }
+,
+    {
+        "id": "D6-16",
+        "question": "关于GaussDB全量备份的理解，以下说法错误的是？",
+        "options": ["A. 全量备份表示对所有目标数据进行备份", "B. 全量备份包含备份时刻点上数据库的全部数据", "C. 全量备份耗时与数据库数据总量成正比", "D. 全量备份自身无法恢复出完整的数据库"],
+        "answer": "D",
+        "analysis": "全量备份自身可以恢复完整的数据库，不需要依赖其他备份集。D选项是错误的。"
+    }
+,
+    {
+        "id": "D6-17",
+        "question": "GaussDB闪回查询中，参数undo_retention设置为0时会发生什么？",
+        "options": ["A. 闪回查询性能提升", "B. 清理所有闪回点快照信息，之前版本不可再做闪回查询", "C. 保留时间变为无限", "D. 仅影响AStore引擎的闪回"],
+        "answer": "B",
+        "analysis": "undo_retention设置为0时会立即清理所有闪回点快照信息，之前任何版本都不再支持闪回查询。"
+    }
+,
+    {
+        "id": "D6-18",
+        "question": "GaussDB流式容灾（异地）与同城双集群容灾的主要区别是？",
+        "options": ["A. 流式容灾不需要网络连接", "B. 流式容灾基于WAL日志异步传输RPO>0；同城双集群基于同步复制RPO=0", "C. 流式容灾性能更好", "D. 同城双集群不支持故障切换"],
+        "answer": "B",
+        "analysis": "流式容灾通过WAL日志异步传输实现异地容灾RPO>0；同城双集群采用同步复制确保RPO=0。"
+    }
+,
+    {
+        "id": "D6-19",
+        "question": "GaussDB升级中，需要中断业务进行升级的方式是？",
+        "options": ["A. 滚动升级", "B. 就地升级", "C. 灰度升级", "D. 热补丁升级"],
+        "answer": "B",
+        "analysis": "就地升级需停止数据库服务进行升级，业务中断时间长。滚动/灰度升级支持在线逐节点升级。"
+    },
+    {
+        "id": "D3-21",
+        "question": "GaussDB集群启动时，各组件的正确启动顺序是？",
+        "options": ["A. DN - CN - GTM - CSS", "B. CSS - GTM - CN - DN", "C. CN - DN - GTM - CSS", "D. 所有组件同时启动"],
+        "answer": "B",
+        "analysis": "GaussDB集群启动顺序：CSS先启动负责管理启动流程，然后GTM启动，接着CN启动，最后DN启动，确保组件依赖正确。"
+    },
+    {
+        "id": "D3-22",
+        "question": "GaussDB集群中，当CN节点发生故障被自动剔除后，修复完成后应如何恢复？",
+        "options": ["A. 被剔除的CN会自动重启恢复", "B. 使用gs_ctl或集群管理工具重新启动CN进程", "C. 无需操作，故障后新CN自动创建", "D. 故障CN不再需要恢复，直接删除"],
+        "answer": "B",
+        "analysis": "CN故障被剔除后的恢复流程：修复故障原因（硬件/网络/配置）后，使用gs_ctl或集群管理工具重新启动CN进程，验证CN与GTM连接正常，确认集群状态恢复balanced。"
+    },
+    {
+        "id": "D3-23",
+        "question": "GaussDB中，列级别的统计信息用于优化查询计划，其中MCV（Most Common Values）统计信息的主要作用是？",
+        "options": ["A. 记录列中NULL值比例", "B. 记录列中最常出现的前N个值及其频率", "C. 记录列的最小值和最大值", "D. 记录列的唯一值数量"],
+        "answer": "B",
+        "analysis": "MCV（高频值）统计信息记录目标列中最常出现的前N个值及其出现频率，帮助优化器准确估算包含等值条件的查询选择率，是列级统计信息的重要组成部分。"
+    },
+    {
+        "id": "D3-24",
+        "question": "GaussDB备机通过并行回放（Parallel Replay）WAL日志实现极速RTO，以下关于日志回放的描述正确的是？",
+        "options": ["A. 备机串行回放WAL日志以确保数据一致性", "B. 备机使用多线程并行回放WAL日志，通过Page Token机制解决冲突", "C. WAL日志回放只在故障切换时进行", "D. 日志回放仅由主机完成"],
+        "answer": "B",
+        "analysis": "GaussDB极速RTO技术核心是备机多线程并行回放WAL日志，通过Page Token机制解决并行回放中的页面冲突问题，利用多核CPU加速日志回放速度，将恢复时间降低到秒级。"
+    },
+    {
+        "id": "D3-25",
+        "question": "GaussDB的分布式事务中，保证读一致性的机制是？",
+        "options": ["A. GTM-Lite提供全局CSN保证读一致性", "B. 两阶段提交保证读一致性", "C. MVCC通过xmin/xmax比较保证读一致性", "D. Paxos协议保证读一致性"],
+        "answer": "A",
+        "analysis": "GTM-Lite提供全局CSN（提交序列号），事务基于CSN判断快照可见性，与活跃事务数量无关。两阶段提交保证写原子性而非读一致性。"
+    },
+    {
+        "id": "D3-26",
+        "question": "GaussDB的分布式事务中，保证写原子性（Write Atomicity）的机制是？",
+        "options": ["A. 一阶段提交", "B. 两阶段提交（2PC）", "C. 三阶段提交", "D. Paxos协议"],
+        "answer": "B",
+        "analysis": "GaussDB分布式事务通过两阶段提交（2PC）协议保证写原子性，确保事务在所有DN节点上要么全部提交要么全部回滚。"
+    },
+    {
+        "id": "D3-27",
+        "question": "GaussDB的PBE机制中，前几次执行生成Custom Plan？",
+        "options": ["A. 3次", "B. 5次", "C. 7次", "D. 10次"],
+        "answer": "B",
+        "analysis": "PBE机制中前5次执行生成Custom Plan，从第6次起切换为Generic Plan（可复用）。通过plan_cache_mode='force_generic_plan'可强制使用通用计划。"
+    },
+    {
+        "id": "D3-28",
+        "question": "GaussDB的WAL日志中，最大占用空间的计算公式是？",
+        "options": ["A. (wal_keep_segments + checkpoint_segments * 2 + 1) * 16MB", "B. (wal_keep_segments + checkpoint_segments) * 16MB", "C. wal_keep_segments * 16MB", "D. (wal_keep_segments + checkpoint_segments + 1) * 16MB"],
+        "answer": "A",
+        "analysis": "WAL日志最大空间=(wal_keep_segments + checkpoint_segments * 2 + 1) * 16MB。wal_keep_segments推荐128，checkpoint_segments推荐1024。"
+    },
+    {
+        "id": "D3-29",
+        "question": "GaussDB的统计信息中，Histogram（直方图）的作用是？",
+        "options": ["A. 记录列中最常出现的前N个值", "B. 描述除NULL值和MCV值外数据的分布", "C. 记录列的唯一值数量", "D. 记录列中NULL值的比例"],
+        "answer": "B",
+        "analysis": "Histogram（等高直方图）描述除NULL值和MCV值外数据的分布，将数据划分为多个bucket，帮助优化器估算范围查询选择率。"
+    },
+    {
+        "id": "D3-30",
+        "question": "GaussDB中，IndexOnlyScan算子的特点是？",
+        "options": ["A. 需要访问基表获取数据行", "B. 直接从索引返回结果，无需访问基表", "C. 仅用于唯一索引", "D. 与Seq Scan等价"],
+        "answer": "B",
+        "analysis": "IndexOnlyScan直接从索引元组中返回查询所需列，无需回表访问基表数据页，当索引覆盖查询所需列时使用，可大幅减少I/O。"
+    },
+    {
+        "id": "D3-31",
+        "question": "GaussDB统计信息中，NULLFrac统计信息的作用是？",
+        "options": ["A. 记录列中NULL值占比，帮助估算IS NULL条件的行数", "B. 记录非NULL值的数量", "C. 记录列的默认值占比", "D. 记录空字符串占比"],
+        "answer": "A",
+        "analysis": "NULLFrac记录NULL值占总行数比例，优化器基于此准确估算IS NULL/IS NOT NULL等条件的行数。"
+    }
 ]
 
 CH3_MULTI_EXT = [
@@ -1031,6 +1402,55 @@ CH3_MULTI_EXT = [
         "answer": "ABCD",
         "analysis": "AStore：追加更新，使用potential_freespace；UStore：原地更新，使用td_count记录事务槽。两者各有优劣，E选项过于绝对。"
     },
+    {
+        "id": "M3-9",
+        "question": "GaussDB分布式执行计划中，以下关于计划下推（Pushdown）的描述正确的有？",
+        "options": ["A. 部分分布式计划可以将计算完全下推到DN执行，减少CN负担", "B. 所有分布式查询计划都可以完全下推到DN执行", "C. 算子下推将过滤和投影操作下推到DN，减少CN-DN数据传输", "D. 分布式计划可能在CN上执行部分计算（如最终聚合），无法完全下推", "E. 下推计划不适合复杂多表关联场景"],
+        "answer": "ACDE",
+        "analysis": "分布式计划根据SQL复杂度分为多种类型，部分计划可完全下推到DN（如简单表扫描），但需要数据重分布或最终聚合的查询必须在CN执行部分计算（D正确）。B错误（并非所有计划都可完全下推）。"
+    },
+    {
+        "id": "M3-10",
+        "question": "GaussDB的页式存储（Page-Structured）与段页式存储（Segment-Page）的对比，以下说法正确的有？",
+        "options": ["A. 页式存储页面大小固定（默认8KB），段页式以段为单位管理空间", "B. 段页式存储更适合大表，支持动态扩展", "C. 页式存储的元组头包含xmin/xmax事务信息", "D. 段页式的1号文件仅存储文件头信息", "E. 页式存储和段页式存储可在同一数据库实例中共存"],
+        "answer": "ABCD",
+        "analysis": "页式存储页面固定8KB，元组头含xmin/xmax实现MVCC。段页式以段为单位（1号文件存文件头，2-5号存数据），支持大表动态扩展。E错误：两者不能在同一数据库实例中共存，是互斥的。"
+    },
+    {
+        "id": "M3-11",
+        "question": "GaussDB支持的连接算子（Join Operator）类型中，以下关于适用场景的说法正确的有？",
+        "options": ["A. NestLoop适合外表结果集小、内表有索引的场景", "B. HashJoin适合内表可在内存中放下的场景", "C. MergeJoin适合内外表已经有序的场景", "D. SemiJoin（半连接）用于EXISTS子查询", "E. AntiJoin（反连接）用于NOT EXISTS子查询"],
+        "answer": "ABCDE",
+        "analysis": "五种连接算子各有适用场景：NestLoop适合小结果集+索引；HashJoin适合内存容纳内表；MergeJoin适合有序输入；SemiJoin/AntiJoin对应EXISTS/NOT EXISTS。"
+    },
+    {
+        "id": "M3-12",
+        "question": "GaussDB的分布式计划类型包括以下哪些？描述正确的有？",
+        "options": ["A. CN轻量化：简单语句直接下推DN执行，跳过优化器", "B. FQS（完全下推）：语句完全下推到多个DN执行无需交互", "C. STREAM计划：DN间通过Stream算子（Gather/Redistribute/Broadcast）交互", "D. XC计划：CN承担大部分计算", "E. FQS计划不支持算子下推"],
+        "answer": "ABCD",
+        "analysis": "四种分布式计划按复杂度：CN轻量化→FQS→STREAM→XC。轻量化跳过优化器；FQS完全下推无交互；STREAM需Stream算子流转数据；XC计划CN承担主要计算。E错误。"
+    },
+    {
+        "id": "M3-13",
+        "question": "GaussDB的统计信息体系包含以下哪些级别？",
+        "options": ["A. 表级别（行数、页面数）", "B. 列级别（Distinct/NULLFrac/MCV/Histogram）", "C. 多列统计信息（解决多列相关性误差）", "D. 索引统计信息", "E. 视图统计信息"],
+        "answer": "ABCD",
+        "analysis": "GaussDB支持表级、列级、多列、索引等统计级别。视图统计信息不是独立统计级别。"
+    },
+    {
+        "id": "M3-14",
+        "question": "GaussDB的安全能力五维体系包括以下哪些？",
+        "options": ["A. 进不来：访问控制和身份认证", "B. 看不懂：数据加密（TDE、全密态）", "C. 改不了：防篡改账本数据库", "D. 拿不走：数据加密防止数据文件泄露", "E. 赖不掉：安全审计日志"],
+        "answer": "ABCDE",
+        "analysis": "五维安全体系：进不来（访问控制）、看不懂（TDE/全密态加密）、改不了（防篡改）、拿不走（数据加密）、赖不掉（审计日志）。"
+    },
+    {
+        "id": "M3-15",
+        "question": "GaussDB的多租户精细化资源管理包括以下哪些维度的管控？",
+        "options": ["A. CPU（通过cgroup限制时间片）", "B. 内存（限制使用上限）", "C. I/O（限制IOPS）", "D. 存储空间（限制容量大小）", "E. 网络带宽"],
+        "answer": "ABCD",
+        "analysis": "多租户资源管理包括CPU（cgroup）、内存、I/O（IOPS）、存储空间四个维度。网络带宽不属于多租户资源管理范围。"
+    }
 ]
 
 CH4_JUDGE_EXT = [
@@ -1045,7 +1465,7 @@ CH4_JUDGE_EXT = [
         "question": "GaussDB创建行访问控制策略时，应使用USING关键字而不是WITH关键字。",
         "answer": "√",
         "analysis": "GaussDB行级安全策略通过CREATE POLICY ... USING语句创建，使用USING关键字定义策略表达式。WITH用于CREATE POLICY的WITH CHECK OPTION子句。"
-    },
+    }
 ]
 
 CH4_SINGLE_EXT = [
@@ -1063,6 +1483,66 @@ CH4_SINGLE_EXT = [
         "answer": "B",
         "analysis": "TDE（Transparent Data Encryption）在数据库内核层完成加密/解密操作，对上层应用完全透明，无需修改应用程序。"
     },
+    {
+        "id": "D4-11",
+        "question": "关于GaussDB透明加密（TDE）的使用场景和性能影响，以下说法正确的是？",
+        "options": ["A. TDE对所有数据类型加密性能开销相同", "B. TDE加密后查询性能完全不变", "C. TDE适用于存储敏感数据的场景，会有一定的读写性能开销", "D. TDE仅对列存储生效"],
+        "answer": "C",
+        "analysis": "TDE在存储引擎层对数据文件进行实时加密/解密，适用于存储身份证、银行卡等敏感数据的场景。由于加解密操作在数据读写路径上，会有一定的性能开销，并非完全无影响。"
+    },
+    {
+        "id": "D4-9",
+        "question": "GaussDB中，查看指定时间区间审计日志的正确语法是？",
+        "options": ["A. SELECT * FROM pg_audit_log WHERE time BETWEEN 't1' AND 't2'", "B. gs_audit_log -s 't1' -e 't2'", "C. SELECT * FROM pg_query_audit('start_time', 'end_time')", "D. AUDIT LOG FROM 't1' TO 't2'"],
+        "answer": "C",
+        "analysis": "GaussDB通过pg_query_audit函数查询指定时间区间的审计日志记录。"
+    },
+    {
+        "id": "D4-10",
+        "question": "GaussDB的动态数据脱敏功能，支持对以下哪些DML操作进行脱敏？",
+        "options": ["A. 仅SELECT", "B. SELECT和INSERT", "C. SELECT、INSERT、UPDATE、DELETE", "D. 仅INSERT和UPDATE"],
+        "answer": "C",
+        "analysis": "动态数据脱敏支持对SELECT、INSERT、UPDATE、DELETE四种操作进行脱敏处理。"
+    },
+    {
+        "id": "J4-9",
+        "question": "GaussDB的安全规划只需考虑数据库内核层安全即可。",
+        "answer": "×",
+        "analysis": "GaussDB安全规划是分层体系，包括应用层（SQL审核）、接入层（SSL）、网络传输层（VPC/防火墙）、OS层（iptables）、数据库内核层（TDE/审计/三权分立）五个层次。"
+    }
+]
+
+CH4_MULTI_EXT = [
+    {
+        "id": "M4-6",
+        "question": "GaussDB透明加密TDE的密钥体系中包含的密钥层级有？",
+        "options": ["A. 主密钥（CMK）", "B. 表加密密钥（TDEK）", "C. 数据加密密钥（DEK）", "D. 用户公钥（User Key）", "E. 会话密钥（Session Key）"],
+        "answer": "ABC",
+        "analysis": "TDE多层密钥体系：CMK（主密钥）加密TDEK（表加密密钥），TDEK加密DEK（数据加密密钥），DEK加密实际数据。用户公钥和会话密钥不属于TDE密钥体系。"
+    },
+    {
+        "id": "M4-7",
+        "question": "关于GaussDB统一审计（Unified Audit），以下说法正确的有？",
+        "options": ["A. 可按用户配置审计策略", "B. 可按IP地址配置审计策略", "C. 可按操作资源类型配置策略", "D. 可按时间条件组合配置策略", "E. 可通过CREATE AUDIT POLICY创建审计策略"],
+        "answer": "ABCDE",
+        "analysis": "统一审计通过CREATE AUDIT POLICY创建灵活的策略，可按操作类型、用户、IP、客户端、时间等条件组合定义审计范围，所有选项均正确。"
+    },
+    {
+        "id": "M4-8",
+        "question": "关于GaussDB的防篡改账本数据库，以下说法正确的有？",
+        "options": ["A. 防篡改账本通过Hash链技术确保数据不可篡改", "B. 历史表记录用户表每一行数据的变更历史", "C. 全局表存储所有防篡改表的全局信息", "D. 防篡改账本适用于对数据完整性要求极高的审计场景", "E. 防篡改账本会降低数据写入性能"],
+        "answer": "ABCDE",
+        "analysis": "防篡改账本数据库通过Hash链技术保证数据完整性。历史表存变更记录，全局表存元数据。适用于审计等场景，但Hash计算会带来写入性能开销。"
+    }
+]
+
+CH5_JUDGE_EXT = [
+    {
+        "id": "J5-6",
+        "question": "GaussDB DBMind的均值漂移检测器（Mean Shift Detector）基于固定阈值进行异常检测。",
+        "answer": "×",
+        "analysis": "均值漂移检测器动态适应数据分布变化，无需固定阈值，适合渐变异常检测。它基于统计分布建模，通过检测均值漂移发现异常。"
+    }
 ]
 
 CH5_SINGLE_EXT = [
@@ -1080,6 +1560,34 @@ CH5_SINGLE_EXT = [
         "answer": "A",
         "analysis": "pg_stat_activity视图可以查看当前数据库会话状态和正在执行的SQL语句，当动态内存使用较高时，通过该视图查找占用内存较多的会话和SQL进行优化。"
     },
+    {
+        "id": "D5-15",
+        "question": "客户数据库中表数量较多（数千张表），查询效率偏低，以下哪个GUC参数调整最有助于优化此类场景的查询效率？",
+        "options": ["A. 增大max_connections", "B. 开启enable_global_plancache缓存通用计划", "C. 增大wal_buffers", "D. 降低maintenance_work_mem"],
+        "answer": "B",
+        "analysis": "表数量多的场景，频繁的SQL编译和计划生成会消耗大量资源。开启enable_global_plancache后，通用执行计划（gplan）可被多个会话复用，减少重复优化开销。max_connections控制连接数而非查询效率。"
+    },
+    {
+        "id": "D5-16",
+        "question": "GaussDB的Plan Hint中，指定两表连接方式为哈希连接的语法是？",
+        "options": ["A. nestloop(t1 t2)", "B. hashjoin(t1 t2)", "C. mergejoin(t1 t2)", "D. leading(t1 t2)"],
+        "answer": "B",
+        "analysis": "Plan Hint语法：hashjoin(t1 t2)强制HashJoin；nestloop强制NestLoop；mergejoin强制MergeJoin；leading指定表连接顺序如leading((t1 t2))。"
+    },
+    {
+        "id": "D5-17",
+        "question": "GaussDB的Plan Hint中，禁止对某表使用顺序扫描的语法是？",
+        "options": ["A. tablescan(table)", "B. indexscan(table)", "C. no tablescan(table)", "D. no indexscan(table)"],
+        "answer": "C",
+        "analysis": "no tablescan(table)禁止优化器使用全表顺序扫描；indexscan(table)强制索引扫描；tablescan(table)强制全表扫描。Hint通过/*+ */注释嵌入SQL。"
+    },
+    {
+        "id": "D5-18",
+        "question": "GaussDB统计信息自动收集的触发阈值是？",
+        "options": ["A. 变化量超50+5%*reltuples", "B. 变化量超50+10%*reltuples", "C. 变化量超100+5%*reltuples", "D. 变化量超100+10%*reltuples"],
+        "answer": "B",
+        "analysis": "统计信息自动收集阈值默认50+10%*reltuples。当表中数据变化量超过此阈值时，autovacuum自动触发ANALYZE。"
+    }
 ]
 
 CH5_MULTI_EXT = [
@@ -1089,7 +1597,7 @@ CH5_MULTI_EXT = [
         "options": ["A. 统计信息的变化", "B. 系统参数（GUC）的调整", "C. 数据分布的变化", "D. 索引的新增或删除", "E. SQL语句的大小写"],
         "answer": "ABCD",
         "analysis": "自适应计划根据统计信息、GUC参数变化、数据分布变化、索引变更等动态调整执行计划。SQL的大小写不影响执行计划选择。"
-    },
+    }
 ]
 
 CH6_JUDGE_EXT = [
@@ -1104,7 +1612,7 @@ CH6_JUDGE_EXT = [
         "question": "GaussDB两地三中心容灾架构中，同城AZ间距要求大于200km。",
         "answer": "×",
         "analysis": "两地三中心架构中：同城AZ间距要求大于50km（而非200km），异地AZ间距要求大于200km。"
-    },
+    }
 ]
 
 CH6_SINGLE_EXT = [
@@ -1129,6 +1637,20 @@ CH6_SINGLE_EXT = [
         "answer": "C",
         "analysis": "GaussDB自动备份默认保留时间为30天，超过保留期限的备份文件会被系统自动清理。手动备份需要用户自行管理清理策略。"
     },
+    {
+        "id": "D6-20",
+        "question": "GaussDB的SQL Patch中，创建补丁的函数是？",
+        "options": ["A. dbe_sql_util.create_hint_sql_patch", "B. dbe_sql_util.create_sql_patch", "C. dbe_sql_util.create_patch", "D. dbe_sql_util.gs_spm_set_plan_status"],
+        "answer": "A",
+        "analysis": "SQL Patch使用dbe_sql_util.create_hint_sql_patch函数创建，通过Unique SQL ID标识目标SQL。Unique SQL ID可通过dbe_perf.statement_history视图获取。"
+    },
+    {
+        "id": "D6-21",
+        "question": "GaussDB多租户管理中，CPU资源租户级隔离依赖什么技术？",
+        "options": ["A. 线程池", "B. cgroup", "C. NUMA绑核", "D. Docker容器"],
+        "answer": "B",
+        "analysis": "GaussDB多租户通过cgroup实现CPU时间片的租户级隔离和限制，涵盖CPU、内存、I/O和存储空间四个维度的管控。"
+    }
 ]
 
 CH6_MULTI_EXT = [
@@ -1146,6 +1668,13 @@ CH6_MULTI_EXT = [
         "answer": "ABC",
         "analysis": "租户资源管理通过将不同资源消耗特征的租户混合部署，实现资源充分利用（A），通过资源隔离避免租户间相互影响（B），并支持CPU/内存的按需分配（C）。D和E不属于租户资源管理的直接优势。"
     },
+    {
+        "id": "M6-12",
+        "question": "GaussDB多租户精细化资源管理的优势包括？",
+        "options": ["A. 不同租户间CPU资源隔离，避免相互影响", "B. I/O管控可限制特定租户的IOPS", "C. 存储空间管控防止单个租户耗尽磁盘空间", "D. 将不同消耗特征的租户混合部署以充分利用资源", "E. 自动优化租户的SQL执行计划"],
+        "answer": "ABCD",
+        "analysis": "多租户通过cgroup实现CPU/内存/I/O/存储空间的隔离，混合部署高消耗+低消耗租户可充分利用硬件。SQL优化不属于多租户管理。"
+    }
 ]
 
 
@@ -1154,11 +1683,11 @@ CH6_MULTI_EXT = [
 # ============================================================
 
 QUESTION_BANK = {
-    1: {"judge": CH1_JUDGE, "single": CH1_SINGLE, "multi": CH1_MULTI},
+    1: {"judge": CH1_JUDGE + CH1_JUDGE_EXT, "single": CH1_SINGLE + CH1_SINGLE_EXT, "multi": CH1_MULTI + CH1_MULTI_EXT},
     2: {"judge": CH2_JUDGE + CH2_JUDGE_EXT, "single": CH2_SINGLE + CH2_SINGLE_EXT, "multi": CH2_MULTI + CH2_MULTI_EXT},
     3: {"judge": CH3_JUDGE + CH3_JUDGE_EXT, "single": CH3_SINGLE + CH3_SINGLE_EXT, "multi": CH3_MULTI + CH3_MULTI_EXT},
-    4: {"judge": CH4_JUDGE + CH4_JUDGE_EXT, "single": CH4_SINGLE + CH4_SINGLE_EXT, "multi": CH4_MULTI},
-    5: {"judge": CH5_JUDGE, "single": CH5_SINGLE + CH5_SINGLE_EXT, "multi": CH5_MULTI + CH5_MULTI_EXT},
+    4: {"judge": CH4_JUDGE + CH4_JUDGE_EXT, "single": CH4_SINGLE + CH4_SINGLE_EXT, "multi": CH4_MULTI + CH4_MULTI_EXT},
+    5: {"judge": CH5_JUDGE + CH5_JUDGE_EXT, "single": CH5_SINGLE + CH5_SINGLE_EXT, "multi": CH5_MULTI + CH5_MULTI_EXT},
     6: {"judge": CH6_JUDGE + CH6_JUDGE_EXT, "single": CH6_SINGLE + CH6_SINGLE_EXT, "multi": CH6_MULTI + CH6_MULTI_EXT}
 }
 

@@ -2,6 +2,12 @@
 SQL Server -> DWS 规则集
 聚合所有子模块规则并注册到规则注册表
 """
+
+# ============================================================
+# 迁移路径元信息 (用于Web UI自动发现)
+# ============================================================
+MIGRATION_INFO = {'label': 'SQL Server -> DWS', 'icon': '&#x1F4CB;', 'description': 'SQL Server到DWS迁移兼容性评估'}
+
 from rules.registry import register
 
 from .data_type_rules import DATA_TYPE_RULES
@@ -50,6 +56,6 @@ UDF_LANGUAGE_MAP = {
 
 
 # 自动注册到规则注册表
-register("mssql", "dws", load_rules)
-register("sqlserver", "dws", load_rules)
-register("sql_server", "dws", load_rules)
+register("mssql", "dws", load_rules, info=MIGRATION_INFO)
+register("sqlserver", "dws", load_rules, info=MIGRATION_INFO)
+register("sql_server", "dws", load_rules, info=MIGRATION_INFO)

@@ -1,6 +1,6 @@
 ; HCCDE-GaussDB 考试验证系统 安装脚本
 #define MyAppName "HCCDE-GaussDB"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.2.1"
 #define MyAppPublisher "HCCDE"
 #define MyAppExeName "HCCDE-GaussDB.exe"
 

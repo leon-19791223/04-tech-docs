@@ -1324,6 +1324,25 @@ class ExamApp:
         n_single = max(1, round(count * len(singles) / total_avail)) if singles else 0
         n_multi = max(1, round(count * len(multis) / total_avail)) if multis else 0
 
+        # 修正因 round() 各自独立舍入导致的总数偏差
+        diff = count - (n_judge + n_single + n_multi)
+        while diff > 0:
+            if singles and n_single < len(singles):
+                n_single += 1
+            elif multis and n_multi < len(multis):
+                n_multi += 1
+            elif judges and n_judge < len(judges):
+                n_judge += 1
+            diff -= 1
+        while diff < 0:
+            if n_multi > 1:
+                n_multi -= 1
+            elif n_single > 1:
+                n_single -= 1
+            elif n_judge > 1:
+                n_judge -= 1
+            diff += 1
+
         selected = []
         if judges:
             selected.extend(

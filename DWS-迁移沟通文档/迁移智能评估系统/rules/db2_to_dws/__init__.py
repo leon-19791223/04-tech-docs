@@ -2,6 +2,12 @@
 DB2 -> DWS 规则集
 聚合所有子模块规则并注册到规则注册表
 """
+
+# ============================================================
+# 迁移路径元信息 (用于Web UI自动发现)
+# ============================================================
+MIGRATION_INFO = {'label': 'DB2 LUW -> DWS', 'icon': '&#x1F310;', 'description': 'DB2到DWS迁移兼容性评估'}
+
 from rules.registry import register
 
 from .data_type_rules import DATA_TYPE_RULES
@@ -50,5 +56,5 @@ UDF_LANGUAGE_MAP = {
 
 
 # 自动注册到规则注册表
-register("db2", "dws", load_rules)
-register("db2_luw", "dws", load_rules)
+register("db2", "dws", load_rules, info=MIGRATION_INFO)
+register("db2_luw", "dws", load_rules, info=MIGRATION_INFO)

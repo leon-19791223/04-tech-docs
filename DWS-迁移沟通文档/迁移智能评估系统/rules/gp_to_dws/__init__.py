@@ -2,6 +2,12 @@
 GP -> DWS 规则集
 聚合所有子模块规则并注册到规则注册表
 """
+
+# ============================================================
+# 迁移路径元信息 (用于Web UI自动发现)
+# ============================================================
+MIGRATION_INFO = {'label': 'Greenplum -> DWS', 'icon': '&#x1F7E2;', 'description': 'GP到DWS迁移兼容性评估 (55条规则)'}
+
 from rules.registry import register
 
 from .ddl_rules import DDL_RULES
@@ -64,6 +70,6 @@ UDF_LANGUAGE_MAP = {
 
 
 # 自动注册到规则注册表
-register("gp", "dws", load_rules)
-register("greenplum", "dws", load_rules)
+register("gp", "dws", load_rules, info=MIGRATION_INFO)
+register("greenplum", "dws", load_rules, info=MIGRATION_INFO)
 
