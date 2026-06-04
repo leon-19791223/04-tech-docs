@@ -4,140 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Z-DBMate 部署工具集{% endblock %}</title>
-<style>
-:root {
-  --grad-sidebar: linear-gradient(135deg, #0B1A33 0%, #1A3C6E 50%, #1E4D8C 100%);
-  --grad-topbar: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(248,250,255,0.95));
-  --grad-card: linear-gradient(135deg, #ffffff, #FAFCFF);
-  --grad-primary: linear-gradient(135deg, #0077CC, #00A3FF);
-  --grad-success: linear-gradient(135deg, #0F7B3E, #1AA85A);
-  --grad-warning: linear-gradient(135deg, #CC7A00, #FFA000);
-  --grad-danger: linear-gradient(135deg, #C62828, #E53935);
-  --grad-accent-soft: linear-gradient(135deg, #E3F0FA, #F0F7FF);
-  --grad-bg: linear-gradient(135deg, #F2F5FA 0%, #E8EEF6 50%, #F5F7FB 100%);
-  --primary: #1A3C6E; --accent: #0077CC; --success: #0F7B3E; --warning: #B76500; --danger: #C62828;
-  --g50: #F8F9FB; --g100: #EFF2F7; --g200: #E2E6EE; --g300: #C8CEDB; --g400: #98A0B2; --g500: #6B7285; --text: #1A1D26;
-  --shadow: 0 1px 3px rgba(0,0,0,0.04); --shadow-md: 0 4px 20px rgba(0,0,0,0.06);
-  --r: 12px; --rs: 8px; --t: 0.3s cubic-bezier(0.34,1.56,0.64,1); --ts: 0.2s ease;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--grad-bg); color: var(--text); line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
-::-webkit-scrollbar { width:6px; }
-::-webkit-scrollbar-thumb { background:var(--g300); border-radius:3px; }
-.sidebar { position:fixed; left:0; top:0; bottom:0; width:248px; background:var(--grad-sidebar); z-index:1000; display:flex; flex-direction:column; box-shadow:4px 0 40px rgba(11,26,51,0.2); }
-.sb-brand { padding:24px 24px 18px; border-bottom:1px solid rgba(255,255,255,0.06); position:relative; overflow:hidden; }
-.sb-brand::after { content:''; position:absolute; top:-50%; right:-50%; width:100%; height:100%; background:radial-gradient(circle, rgba(0,163,255,0.08) 0%, transparent 70%); pointer-events:none; }
-.sb-brand .logo-badge { display:inline-flex; align-items:center; gap:8px; padding:6px 14px 6px 6px; border-radius:30px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.06); margin-bottom:12px; font-size:11px; font-weight:600; color:rgba(255,255,255,0.7); }
-.sb-brand .logo-icon { width:28px; height:28px; border-radius:50%; background:var(--grad-primary); display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 2px 8px rgba(0,119,204,0.3); }
-.sb-brand h1 { font-size:17px; font-weight:700; color:#fff; letter-spacing:0.3px; }
-.sb-brand p { font-size:12px; color:rgba(255,255,255,0.4); margin-top:3px; }
-.sb-nav { padding:16px 12px; flex:1; overflow-y:auto; }
-.sb-label { font-size:10px; text-transform:uppercase; letter-spacing:1.2px; color:rgba(255,255,255,0.25); padding:20px 12px 6px; font-weight:600; }
-.sb-nav a { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; color:rgba(255,255,255,0.55); text-decoration:none; font-size:13px; font-weight:500; transition:all var(--ts); margin-bottom:2px; position:relative; }
-.sb-nav a:hover { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.85); }
-.sb-nav a.active { background:rgba(0,163,255,0.12); color:#fff; }
-.sb-nav a.active::before { content:''; position:absolute; left:-12px; top:50%; transform:translateY(-50%); width:3px; height:20px; border-radius:0 3px 3px 0; background:var(--grad-primary); box-shadow:0 0 12px rgba(0,119,204,0.4); }
-.sb-nav a .ni { width:32px; height:32px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:15px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.04); }
-.sb-nav a.active .ni { background:rgba(0,163,255,0.2); border-color:rgba(0,163,255,0.15); box-shadow:0 0 20px rgba(0,119,204,0.1); }
-.sb-footer { padding:16px 24px; border-top:1px solid rgba(255,255,255,0.05); font-size:11px; color:rgba(255,255,255,0.25); }
-.main { margin-left:248px; min-height:100vh; }
-.topbar { position:sticky; top:0; z-index:100; height:68px; background:var(--grad-topbar); backdrop-filter:blur(16px) saturate(1.2); border-bottom:1px solid rgba(226,230,238,0.5); display:flex; align-items:center; justify-content:space-between; padding:0 36px; }
-.topbar h2 { font-size:17px; font-weight:600; background:var(--grad-sidebar); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-.page-wrap { padding:32px 36px; }
-.card { background:var(--grad-card); border-radius:var(--r); box-shadow:var(--shadow); border:1px solid rgba(255,255,255,0.6); padding:24px; margin-bottom:20px; transition:all var(--ts); position:relative; }
-.card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); border-radius:var(--r) var(--r) 0 0; pointer-events:none; }
-.card:hover { box-shadow:var(--shadow-md); border-color:rgba(0,119,204,0.08); transform:translateY(-1px); }
-.card-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--g100); }
-.card-title { font-size:15px; font-weight:600; display:flex; align-items:center; gap:8px; }
-.card-title .ti { font-size:17px; }
-.tag { display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:30px; font-size:12px; font-weight:500; white-space:nowrap; }
-.tg-grn { background:linear-gradient(135deg,#E6F7EE,#F0FBF4); color:var(--success); }
-.tg-org { background:linear-gradient(135deg,#FFF3E0,#FFF8E8); color:var(--warning); }
-.tg-red { background:linear-gradient(135deg,#FFEBEE,#FFF0F2); color:var(--danger); }
-.tg-blu { background:var(--grad-accent-soft); color:var(--accent); }
-.st-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
-.st-card { padding:18px; border-radius:var(--rs); background:linear-gradient(135deg,var(--g50),#fff); border:1px solid var(--g100); transition:all var(--ts); position:relative; overflow:hidden; }
-.st-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--grad-primary); opacity:0; transition:opacity var(--ts); }
-.st-card:hover::before { opacity:1; }
-.st-card .stl { font-size:12px; color:var(--g400); margin-bottom:4px; font-weight:500; }
-.st-card .stv { font-size:22px; font-weight:700; }
-.st-card .sts { font-size:12px; color:var(--g400); margin-top:2px; }
-.tw { overflow-x:auto; border-radius:var(--rs); border:1px solid var(--g100); }
-table.mt { width:100%; border-collapse:collapse; font-size:13px; }
-table.mt thead th { padding:12px 16px; font-weight:600; font-size:11px; color:var(--g500); text-transform:uppercase; letter-spacing:0.8px; background:linear-gradient(135deg,var(--g50),#fff); border-bottom:1px solid var(--g200); text-align:left; white-space:nowrap; }
-table.mt tbody td { padding:13px 16px; border-bottom:1px solid var(--g100); color:var(--text); vertical-align:top; }
-table.mt tbody tr:last-child td { border-bottom:none; }
-table.mt tbody tr:hover td { background:linear-gradient(135deg,var(--g50),#fff); }
-.btn { display:inline-flex; align-items:center; gap:6px; padding:9px 22px; border-radius:30px; font-size:13px; font-weight:600; border:none; cursor:pointer; transition:all var(--t); text-decoration:none; white-space:nowrap; }
-.btn-pri { background:var(--grad-primary); color:#fff; box-shadow:0 2px 12px rgba(0,119,204,0.2); }
-.btn-pri:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,119,204,0.3); }
-.btn-success { background:var(--grad-success); color:#fff; box-shadow:0 2px 12px rgba(15,123,62,0.2); }
-.btn-success:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(15,123,62,0.3); }
-.btn-ghost { background:transparent; color:var(--accent); border:1px solid var(--g200); }
-.btn-ghost:hover { background:var(--grad-accent-soft); border-color:var(--accent); }
-.btn-sm { padding:6px 14px; font-size:12px; }
-.btn-danger { background:var(--grad-danger); color:#fff; box-shadow:0 2px 12px rgba(198,40,40,0.2); }
-.btn-danger:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(198,40,40,0.3); }
-.alert { padding:14px 18px; border-radius:var(--rs); font-size:13px; display:flex; align-items:center; gap:10px; margin-top:12px; }
-.alert-warn { background:var(--grad-warning); color:#fff; }
-.alert-ok { background:var(--grad-success); color:#fff; }
-.alert-err { background:var(--grad-danger); color:#fff; }
-.two { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-.fsb { display:flex; justify-content:space-between; align-items:center; }
-.fsbc { display:flex; align-items:center; gap:8px; }
-.mt12 { margin-top:12px; } .mb12 { margin-bottom:12px; } .tc { text-align:center; }
-@media (max-width:1024px) { .two { grid-template-columns:1fr; } }
-@media (max-width:768px) { .sidebar { transform:translateX(-100%); } .main { margin-left:0; } .page-wrap { padding:16px; } }
-</style>
-  <link rel="stylesheet" href="http://127.0.0.1:8080/shared/brand.css">
+<link rel="stylesheet" href="http://127.0.0.1:8080/shared/brand.css">
 </head>
 <body>
 
 <div class="sidebar">
   <div class="sb-brand">
-    <div class="logo-badge"><span class="logo-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-          <line x1="8" y1="21" x2="16" y2="21"/>
-          <line x1="12" y1="17" x2="12" y2="21"/>
-          <circle cx="12" cy="10" r="2"/>
-          <line x1="14" y1="8" x2="16" y2="6"/>
-          <line x1="10" y1="8" x2="8" y2="6"/>
-        </svg>
-      </span><span>v1.0</span></div>
+    <div class="sb-badge"><span class="sb-icon">&#x2699;</span><span>v2.0</span></div>
     <h1>Z-DBMate 工具集</h1>
-    <p>TPOPS + GaussDB 部署</p>
+    <p>GaussDB OLTP 部署</p>
   </div>
   <nav class="sb-nav">
     <div class="sb-label">部署管理</div>
-    <a href="/" class="{% if request.path == '/' %}active{% endif %}">
-      <span class="ni">&#x1F4CA;</span> 仪表盘
-    </a>
-    <a href="/precheck" class="{% if request.path == '/precheck' %}active{% endif %}">
-      <span class="ni">&#x2705;</span> 环境预检
-    </a>
-    <a href="/deploy" class="{% if request.path == '/deploy' %}active{% endif %}">
-      <span class="ni">&#x1F680;</span> 一键部署
-    </a>
-    <a href="/monitor" class="{% if request.path == '/monitor' %}active{% endif %}">
-      <span class="ni">&#x1F4C8;</span> 部署监控
-    </a>
+    <a href="/" class="{% if request.path == '/' %}active{% endif %}"><span class="ni">&#x1F4CA;</span> 仪表盘</a>
+    <a href="/precheck" class="{% if request.path == '/precheck' %}active{% endif %}"><span class="ni">&#x2705;</span> 环境预检</a>
+    <a href="/deploy" class="{% if request.path == '/deploy' %}active{% endif %}"><span class="ni">&#x1F680;</span> 一键部署</a>
+    <a href="/monitor" class="{% if request.path == '/monitor' %}active{% endif %}"><span class="ni">&#x1F4C8;</span> 部署监控</a>
     <div class="sb-label">规范</div>
-    <a href="/checklist" class="{% if request.path == '/checklist' %}active{% endif %}">
-      <span class="ni">&#x1F4CB;</span> 检查清单
-    </a>
-    <a href="/guide" class="{% if request.path == '/guide' %}active{% endif %}">
-      <span class="ni">&#x1F4D6;</span> GaussDB部署指南
-    </a>
+    <a href="/checklist" class="{% if request.path == '/checklist' %}active{% endif %}"><span class="ni">&#x1F4CB;</span> 检查清单</a>
+    <a href="/guide" class="{% if request.path == '/guide' %}active{% endif %}"><span class="ni">&#x1F4D6;</span> GaussDB部署指南</a>
   </nav>
-  
-    <div style="padding:8px 16px;border-top:1px solid rgba(255,255,255,0.06);margin-bottom:4px;">
-      <a href="http://127.0.0.1:8080" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);transition:all 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">
-        <span style="font-size:12px;">&#x2190;</span>
-        <span>返回门户</span>
-      </a>
-    </div>
-<div class="sb-footer">&copy; 2026 &middot; v1.0</div>
+  <div style="padding:8px 16px;border-top:1px solid rgba(255,255,255,0.06);">
+    <a href="http://127.0.0.1:8080" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;text-decoration:none;font-size:11px;color:rgba(255,255,255,0.4);transition:all 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">&#x2190; 返回门户</a>
+  </div>
+  <div class="sb-footer">&copy; 2026 &middot; v2.0</div>
 </div>
 
 <div class="main">
@@ -145,49 +35,6 @@ table.mt tbody tr:hover td { background:linear-gradient(135deg,var(--g50),#fff);
     <div><h2>{% block page_title %}仪表盘{% endblock %}</h2></div>
   </div>
   <div class="page-wrap">{% block content %}{% endblock %}</div>
-
-
-<div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--g200);">
-  <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--g400);margin-bottom:12px;font-weight:600;text-align:center;">
-    &#x2699; <a href="http://127.0.0.1:8080" style="color:var(--accent);text-decoration:none;">掌数科技 · 数据库工具链</a>
-  </div>
-  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;font-size:12px;color:var(--g500);">
-    <span style="padding:4px 10px;border-radius:6px;background:var(--g50);">&#x1F4CA; 迁移评估 :5010</span>
-    <span style="color:var(--g300);">&#x2192;</span>
-    <span style="padding:4px 10px;border-radius:6px;background:var(--g50);">&#x2699; Z-DBMate :5012</span>
-    <span style="color:var(--g300);">&#x2192;</span>
-    <span style="padding:4px 10px;border-radius:6px;background:var(--g50);">&#x1F3D7; DWS部署 :5023</span>
-    <span style="color:var(--g300);">&#x2192;</span>
-    <span style="padding:4px 10px;border-radius:6px;background:var(--g50);">&#x1F504; DRS/DataX</span>
-  </div>
-</div>
-
-  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-    <a href="http://127.0.0.1:5010" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50);color:var(--text);transition:all 0.2s;">
-      <span style="font-size:14px;">&#x1F4CA;</span>
-      <span><strong>迁移智能评估系统</strong><br><span style="font-size:10px;color:var(--g500);">OLAP/OLTP兼容性评估</span></span>
-      <span style="font-size:10px;color:var(--accent);">:5000</span>
-    </a>
-    <div style="display:flex;align-items:center;color:var(--g300);font-size:18px;">&rarr;</div>
-    <a href="http://127.0.0.1:5012" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50);color:var(--text);transition:all 0.2s;">
-      <span style="font-size:14px;">&#x2699;</span>
-      <span><strong>Z-DBMate 工具集</strong><br><span style="font-size:10px;color:var(--g500);">GaussDB OLTP 部署</span></span>
-      <span style="font-size:10px;color:var(--accent);">:5002</span>
-    </a>
-    <div style="display:flex;align-items:center;color:var(--g300);font-size:18px;">&rarr;</div>
-    <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50);color:var(--text);">
-      <span style="font-size:14px;">&#x1F4E6;</span>
-      <span><strong>DWS 部署工具集</strong><br><span style="font-size:10px;color:var(--g500);">DWS MPP 数仓部署</span></span>
-      <span style="font-size:10px;color:var(--g500);">CLI</span>
-    </div>
-    <div style="display:flex;align-items:center;color:var(--g300);font-size:18px;">&rarr;</div>
-    <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50);color:var(--text);">
-      <span style="font-size:14px;">&#x1F504;</span>
-      <span><strong>DRS / DataX</strong><br><span style="font-size:10px;color:var(--g500);">数据迁移工具</span></span>
-    </div>
-  </div>
-</div>
-
 </div>
 
 {% block scripts %}{% endblock %}

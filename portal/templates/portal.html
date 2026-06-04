@@ -4,250 +4,225 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>掌数科技 · 数据库工具链</title>
+<link rel="stylesheet" href="/shared/brand.css">
 <style>
-:root {
-  --primary: #1A3C6E;
-  --primary-light: #2A5A9E;
-  --accent: #0077CC;
-  --success: #0F7B3E;
-  --warning: #B76500;
-  --danger: #C62828;
-  --g50: #F8F9FB;
-  --g100: #EFF2F7;
-  --g200: #E2E6EE;
-  --g300: #C8CEDB;
-  --g400: #98A0B2;
-  --g500: #6B7285;
-  --text: #1A1D26;
-  --grad-bg: linear-gradient(135deg, #F2F5FA 0%, #E8EEF6 50%, #F5F7FB 100%);
-  --grad-primary: linear-gradient(135deg, #1A3C6E, #2A5A9E);
-  --grad-accent: linear-gradient(135deg, #0077CC, #00A3FF);
-  --shadow: 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 20px rgba(0,0,0,0.06);
-  --shadow-lg: 0 12px 48px rgba(0,0,0,0.08);
-  --r: 12px;
-  --rs: 8px;
+/* ---- 门户特有 ---- */
+body { background: var(--grad-bg); }
+.top-banner {
+  background: linear-gradient(135deg, #0B1A33 0%, #1A3C6E 50%, #1E4D8C 100%);
+  padding: 0; position:relative; overflow:hidden;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--grad-bg);
-  color: var(--text);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
+.top-banner::after {
+  content:''; position:absolute; top:-40%; right:-10%;
+  width:50%; height:180%;
+  background: radial-gradient(circle, rgba(0,163,255,0.08) 0%, transparent 70%);
+  pointer-events:none;
 }
-/* Header */
-.header {
-  background: var(--grad-primary);
-  padding: 0;
-  box-shadow: 0 4px 24px rgba(26,60,110,0.15);
-  position: relative;
-  overflow: hidden;
+.banner-inner {
+  max-width:1200px; margin:0 auto; padding:36px 32px 28px;
+  position:relative; z-index:1;
 }
-.header::after {
-  content: '';
-  position: absolute;
-  top: -50%; right: -20%;
-  width: 60%; height: 200%;
-  background: radial-gradient(circle, rgba(0,163,255,0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-.header-inner {
-  max-width: 1200px; margin: 0 auto; padding: 48px 32px 40px;
-  position: relative; z-index: 1;
-}
-.header h1 {
-  font-size: 28px; font-weight: 700; color: #fff;
-  letter-spacing: 1px;
-}
-.header p {
-  font-size: 14px; color: rgba(255,255,255,0.6);
-  margin-top: 6px;
-}
-.header .badge {
-  display: inline-block;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 4px 12px; border-radius: 20px;
-  font-size: 11px; color: rgba(255,255,255,0.7);
-  margin-top: 12px;
-}
-/* Nav tabs */
-.nav-tabs {
-  max-width: 1200px; margin: 0 auto; padding: 20px 32px 0;
-  display: flex; gap: 24px; flex-wrap: wrap;
-}
-.nav-tabs a {
-  font-size: 13px; font-weight: 500; color: var(--g500);
-  text-decoration: none; padding: 6px 0;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-.nav-tabs a:hover { color: var(--accent); }
-.nav-tabs a.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-/* Content */
-.content { max-width: 1200px; margin: 0 auto; padding: 24px 32px 60px; }
+.banner-inner h1 { font-size:24px; font-weight:700; color:#fff; display:flex; align-items:center; gap:10px; }
+.banner-inner h1 span { font-size:28px; }
+.banner-inner p { font-size:13px; color:rgba(255,255,255,0.5); margin-top:4px; }
+.banner-inner .hub-info { display:flex; gap:16px; margin-top:14px; }
+.hub-info .hi { font-size:11px; color:rgba(255,255,255,0.4); }
+.hub-info .hi strong { color:rgba(255,255,255,0.7); }
 
-/* Category section */
-.category { margin-bottom: 32px; }
-.category-title {
-  font-size: 13px; font-weight: 600; color: var(--g400);
-  text-transform: uppercase; letter-spacing: 1px;
-  margin-bottom: 14px; padding-left: 4px;
+/* 全局导航 */
+.global-nav {
+  background:#fff; border-bottom:1px solid var(--g200);
+  position:sticky; top:0; z-index:100;
 }
-/* Card grid */
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+.nav-inner {
+  max-width:1200px; margin:0 auto; display:flex; align-items:center;
+  padding:0 32px; gap:0;
+}
+.nav-inner a {
+  display:flex; align-items:center; gap:6px;
+  padding:14px 20px; font-size:13px; font-weight:500;
+  color:var(--g500); text-decoration:none;
+  border-bottom:2px solid transparent;
+  transition:all 0.2s;
+}
+.nav-inner a:hover { color:var(--accent); }
+.nav-inner a.active { color:var(--accent); border-bottom-color:var(--accent); }
 
-/* Card */
-.card {
-  background: #fff; border-radius: var(--r);
-  box-shadow: var(--shadow); border: 1px solid var(--g100);
-  padding: 24px; transition: all 0.25s ease;
-  position: relative; overflow: hidden;
-  display: flex; flex-direction: column;
-}
-.card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: var(--grad-accent); opacity: 0;
-  transition: opacity 0.25s;
-}
-.card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-  border-color: rgba(0,119,204,0.12);
-}
-.card:hover::before { opacity: 1; }
-.card.disabled { opacity: 0.5; pointer-events: none; }
+/* 页面内容 */
+.page { max-width:1200px; margin:0 auto; padding:24px 32px 60px; }
 
-.card .card-top {
-  display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px;
-}
-.card .card-icon {
-  width: 44px; height: 44px; border-radius: 10px;
-  background: linear-gradient(135deg, #E8EEF6, #fff);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; flex-shrink: 0;
-}
-.card .card-info { flex: 1; }
-.card .card-name { font-size: 16px; font-weight: 600; color: var(--primary); }
-.card .card-desc { font-size: 13px; color: var(--g500); margin-top: 4px; line-height: 1.5; }
-.card .card-meta { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+/* 分类导航 */
+.section-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px; }
+.section-desc { font-size:13px; color:var(--g400); margin-bottom:16px; }
 
-.card .card-bottom {
-  margin-top: auto; padding-top: 14px;
-  display: flex; justify-content: space-between; align-items: center;
+/* 卡片网格 - 3列 */
+.product-grid {
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:14px; margin-bottom:36px;
 }
-.card .card-version { font-size: 11px; color: var(--g400); }
 
-/* Status tags */
-.tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
-.tg-grn { background: #E6F7EE; color: var(--success); }
-.tg-red { background: #FFEBEE; color: var(--danger); }
-.tg-gry { background: var(--g100); color: var(--g500); }
-.tg-blu { background: #E3F0FA; color: var(--accent); }
-/* Button */
-.btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
-  border: none; cursor: pointer; transition: all 0.2s;
-  text-decoration: none;
+/* 产品卡片 */
+.p-card {
+  background:#fff; border-radius:var(--r);
+  border:1px solid var(--g100); padding:20px;
+  transition:all 0.25s; position:relative; overflow:hidden;
+  text-decoration:none; display:block; cursor:pointer;
 }
-.btn-pri { background: var(--grad-accent); color: #fff; box-shadow: 0 2px 8px rgba(0,119,204,0.2); }
-.btn-pri:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,119,204,0.3); }
-.btn-ghost { background: transparent; color: var(--accent); border: 1px solid var(--g200); }
-.btn-ghost:hover { background: #E3F0FA; }
-.btn-sm { padding: 5px 12px; font-size: 12px; }
-/* Footer */
-.footer {
-  text-align: center; padding: 32px; color: var(--g400); font-size: 12px;
-  border-top: 1px solid var(--g100); margin-top: 40px;
+.p-card.disabled { opacity:0.55; cursor:default; }
+.p-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--accent-grad); opacity:0; transition:opacity 0.25s;
 }
-/* Responsive */
-@media (max-width: 768px) {
-  .header-inner { padding: 32px 20px 28px; }
-  .content { padding: 16px; }
-  .card-grid { grid-template-columns: 1fr; }
+.p-card:not(.disabled):hover {
+  box-shadow:var(--shadow-md); transform:translateY(-2px);
+  border-color:rgba(0,119,204,0.12);
 }
+.p-card:not(.disabled):hover::before { opacity:1; }
+.pc-top { display:flex; align-items:flex-start; gap:14px; margin-bottom:10px; }
+.pc-icon {
+  width:42px; height:42px; border-radius:10px;
+  background:linear-gradient(135deg, #E8EEF6, #fff);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+}
+.pc-info { flex:1; min-width:0; }
+.pc-name { font-size:15px; font-weight:600; color:var(--primary); margin-bottom:2px; }
+.pc-desc { font-size:12px; color:var(--g500); line-height:1.5; }
+.pc-meta { display:flex; align-items:center; gap:8px; margin-top:8px; }
+.pc-bottom { display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--g100); }
+.pc-ver { font-size:11px; color:var(--g400); }
+.pc-link { font-size:12px; font-weight:600; padding:6px 16px; border-radius:20px; border:none; cursor:pointer; }
+.pc-link.on { background:var(--accent-grad); color:#fff; }
+.pc-link.off { background:var(--g100); color:var(--g400); cursor:default; }
+
+/* 状态栏 */
+.status-bar {
+  margin-bottom:24px; padding:14px 20px;
+  background:#fff; border-radius:var(--r);
+  border:1px solid var(--g100);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.status-bar .sb-left { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--g500); }
+.status-bar .sb-left strong { color:var(--text); }
+
+/* 无项目提示 */
+.empty-state { text-align:center; padding:40px; color:var(--g400); }
+.empty-state .e-icon { font-size:40px; margin-bottom:8px; }
+.empty-state .e-text { font-size:14px; }
+.empty-state .e-sub { font-size:12px; margin-top:4px; }
+
+@media (max-width:1024px) { .product-grid { grid-template-columns:repeat(2,1fr); } }
+@media (max-width:640px) { .product-grid { grid-template-columns:1fr; } .banner-inner { padding:28px 20px 24px; } .page { padding:16px; } }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-inner">
-    <h1>⛁ 掌数科技 · 数据库工具链</h1>
-    <p>异构数据库迁移 · 部署 · 认证 · 全生命周期管理</p>
-    <div class="badge">
-      统一门户 v1.0 · {{ now.strftime('%Y-%m-%d') }}
+<div class="top-banner">
+  <div class="banner-inner">
+    <h1><span>&#x26A1;</span> 掌数科技 · 数据库工具链</h1>
+    <p>异构数据库全生命周期管理平台 — 评估 &rarr; 部署 &rarr; 迁移 &rarr; 运维</p>
+    <div class="hub-info">
+      <span class="hi">统一门户 <strong>v1.0</strong></span>
+      <span class="hi">{{ now.strftime('%Y-%m-%d') }}</span>
     </div>
   </div>
 </div>
 
-<div class="nav-tabs">
-    <a href="http://127.0.0.1:8080/" class="active">首页</a>
-    <a href="http://127.0.0.1:8080/projects">项目管理</a>
+<div class="global-nav">
+  <div class="nav-inner">
+    <a href="/" class="active">&#x1F3E0; 首页</a>
+    <a href="/projects">&#x1F4CB; 项目管理</a>
+    <a href="http://127.0.0.1:5010">&#x1F50D; 迁移评估</a>
+    <a href="http://127.0.0.1:5012">&#x2699; Z-DBMate</a>
+    <a href="http://127.0.0.1:5023">&#x1F3D7; DWS部署</a>
   </div>
-  <div class="content">
-  {% set categories = {
-    "迁移评估": [],
-    "部署工具": [],
-    "业务系统": [],
-    "学习认证": [],
-  } %}
+</div>
 
-  {% for s in systems %}
-    {% if s.category in categories %}
-      {% set _ = categories[s.category].append(s) %}
+<div class="page">
+
+  {% set running_count = systems|selectattr("status", "equalto", "running")|list|length %}
+  {% set total_count = systems|rejectattr("status", "equalto", "offline")|list|length %}
+
+  <div class="status-bar">
+    <div class="sb-left">
+      <span>&#x1F7E2; {{ running_count }}/{{ total_count }} 系统在线</span>
+      <span style="color:var(--g300);">|</span>
+      <span>共 {{ systems|length }} 个产品</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <span class="tag tg-grn">&#x25CF; 运行中 {{ running_count }}</span>
+      <span class="tag tg-gry">&#x25CB; 离线 {{ systems|length - running_count }}</span>
+    </div>
+  </div>
+
+  {% set sections = [
+    ("&#x1F50D; 数据库迁移评估", "一键评估异构数据库到目标平台的兼容性"),
+    ("&#x1F680; GaussDB 部署助手", "GaussDB OLTP / DWS MPP 一键部署与管理"),
+    ("&#x1F4CB; 业务与管理工具", "投标管理、考试认证等辅助工具"),
+  ] %}
+  {% set section_products = [
+    systems|selectattr("category", "in", ["迁移评估"])|list,
+    systems|selectattr("category", "in", ["部署工具", "部署工具(OLTP)", "部署工具(MPP)"])|list,
+    systems|selectattr("category", "in", ["业务系统", "学习认证"])|list,
+  ] %}
+
+  {% for section_idx in range(3) %}
+  {% set sec_products = section_products[section_idx] %}
+  {% if sec_products %}
+  <div class="section-title">{{ sections[section_idx][0]|safe }}</div>
+  <div class="section-desc">{{ sections[section_idx][1] }}</div>
+  <div class="product-grid">
+    {% for s in sec_products %}
+    {% if s.status == "running" %}
+    <a href="{{ s.url }}" target="_blank" class="p-card">
+    {% else %}
+    <div class="p-card disabled">
     {% endif %}
-  {% endfor %}
-
-  {% for cat_name, cat_systems in categories.items() %}
-    {% if cat_systems %}
-    <div class="category">
-      <div class="category-title">{{ cat_name }}</div>
-      <div class="card-grid">
-      {% for s in cat_systems %}
-        <div class="card {% if s.status == 'offline' %}disabled{% endif %}">
-          <div class="card-top">
-            <div class="card-icon">{{ s.icon }}</div>
-            <div class="card-info">
-              <div class="card-name">{{ s.name }}</div>
-              <div class="card-desc">{{ s.desc }}</div>
-              <div class="card-meta">
-                {% if s.status == "running" %}
-                <span class="tag tg-grn">● 运行中</span>
-                {% elif s.status == "stopped" %}
-                <span class="tag tg-red">● 未启动</span>
-                {% else %}
-                <span class="tag tg-gry">离线应用</span>
-                {% endif %}
-                {% if s.port %}
-                <span class="tag tg-blu">:{{ s.port }}</span>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-          <div class="card-bottom">
-            <span class="card-version">{{ s.version }}</span>
-            {% if s.url and s.status == "running" %}
-            <a href="{{ s.url }}" target="_blank" class="btn btn-pri">打开 →</a>
-            {% elif s.url and s.status == "stopped" %}
-            <span class="btn btn-ghost btn-sm" style="opacity:0.6;">未启动</span>
+      <div class="pc-top">
+        <div class="pc-icon">{{ s.icon }}</div>
+        <div class="pc-info">
+          <div class="pc-name">{{ s.name }}</div>
+          <div class="pc-desc">{{ s.desc }}</div>
+          <div class="pc-meta">
+            {% if s.status == "running" %}
+            <span class="tag tg-grn">&#x25CF; 运行中</span>
+            {% elif s.status == "stopped" %}
+            <span class="tag tg-red">&#x25CB; 未启动</span>
             {% else %}
-            <span class="btn btn-ghost btn-sm">下载EXE</span>
+            <span class="tag tg-gry">离线应用</span>
             {% endif %}
+            {% if s.port %}<span class="tag tg-blu">:{{ s.port }}</span>{% endif %}
           </div>
         </div>
-      {% endfor %}
       </div>
-    </div>
-    {% endif %}
+      <div class="pc-bottom">
+        <span class="pc-ver">{{ s.version }}</span>
+        {% if s.status == "running" %}
+        <span class="pc-link on">打开 &rarr;</span>
+        {% else %}
+        <span class="pc-link off">未上线</span>
+        {% endif %}
+      </div>
+    {% if s.status == "running" %}</a>{% else %}</div>{% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
   {% endfor %}
 
-  {% set running = systems|selectattr("status", "equalto", "running")|list|length %}
-  {% set total = systems|rejectattr("status", "equalto", "offline")|list|length %}
-  <div class="footer">
-    掌数科技 · 数据库工具链 v1.0 · {{ running }}/{{ total }} 在线
+  <div class="footer" style="text-align:center;padding:24px;border-top:1px solid var(--g100);margin-top:20px;font-size:12px;color:var(--g400);">
+    <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
+      <span>迁移评估 :5010</span>
+      <span style="color:var(--g300);">&rarr;</span>
+      <span>Z-DBMate :5012</span>
+      <span style="color:var(--g300);">&rarr;</span>
+      <span>DWS部署 :5023</span>
+      <span style="color:var(--g300);">&rarr;</span>
+      <span style="color:var(--g400);">DRS/DataX 迁移</span>
+    </div>
+    <div>掌数科技 &middot; 数据库工具链 &middot; {{ running_count }}/{{ total_count }} 在线</div>
   </div>
+
 </div>
 
 </body>
