@@ -26,6 +26,7 @@ from core.engine import MigrationAnalyzer
 from core.models import MigrationMetadata, AssessmentResult
 
 app = Flask(__name__)
+app.jinja_env.auto_reload = True
 
 # ================================================================
 # 2. 扫描器映射 (source -> scanner_class)
@@ -129,6 +130,12 @@ def workload():
                            current_path=_current_path, paths=MIGRATION_PATHS)
 
 
+@app.route("/poc")
+def poc():
+    result = get_or_create_result()
+    return render_template("poc.html", result=result,
+                           current_path=_current_path, paths=MIGRATION_PATHS)
+
 @app.route("/recommendations")
 def recommendations():
     result = get_or_create_result()
@@ -171,6 +178,17 @@ def api_data():
         "capacity_planning": result.capacity_planning,
         "batch_strategy": result.batch_strategy,
         "workload_estimate": result.workload_estimate,
+        "poc_recommendations": {
+            "summary": {
+                "total_cases": result.poc_recommendations.get("summary", {}).get("total_cases", 0),
+                "total_hours": result.poc_recommendations.get("summary", {}).get("total_estimated_hours", 0),
+                "timeline": result.poc_recommendations.get("summary", {}).get("timeline_estimate", ""),
+            },
+            "levels": {
+                k: {"case_count": v.get("case_count", 0), "hours": v.get("level_hours", 0)}
+                for k, v in result.poc_recommendations.get("levels", {}).items()
+            },
+        } if result.poc_recommendations else {},
     })
 
 
@@ -223,6 +241,97 @@ def reanalyze():
     _current_result = analyzer.analyze()
     return jsonify({"status": "ok", "score": _current_result.overall_score,
                     "path": _current_path})
+
+
+# ================================================================
+
+# 持久化: 保存评估结果
+
+# ================================================================
+
+import json
+
+import sys as _sys
+
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+try:
+
+    from shared.db import save_assessment, create_project, list_projects
+
+    DB_AVAILABLE = True
+
+except Exception:
+
+    DB_AVAILABLE = False
+
+
+
+@app.route("/api/save-assessment", methods=["POST"])
+
+def api_save_assessment():
+
+    """保存评估结果到项目"""
+
+    if not DB_AVAILABLE:
+
+        return jsonify({"status": "error", "msg": "数据库未就绪"})
+
+    data = request.get_json() or {}
+
+    project_name = data.get("project_name", "")
+
+    if not project_name:
+
+        return jsonify({"status": "error", "msg": "请提供项目名称"})
+
+    # Find or create project
+
+    projects = list_projects()
+
+    pid = None
+
+    for p in projects:
+
+        if p["name"] == project_name:
+
+            pid = p["id"]
+
+            break
+
+    if not pid:
+
+        pid = create_project(
+
+            name=project_name,
+
+            source_type=data.get("source_type", ""),
+
+            target_type=data.get("target_type", ""),
+
+        )
+
+    save_assessment(
+
+        project_id=pid,
+
+        source_type=data.get("source_type", ""),
+
+        target_type=data.get("target_type", ""),
+
+        overall_score=data.get("overall_score", 0),
+
+        risk_level=data.get("risk_level", ""),
+
+        rules_count=data.get("rules_count", 0),
+
+        critical_issues=data.get("critical_issues", 0),
+
+        metadata=data.get("metadata"),
+
+    )
+
+    return jsonify({"status": "ok", "project_id": pid})
 
 
 if __name__ == "__main__":

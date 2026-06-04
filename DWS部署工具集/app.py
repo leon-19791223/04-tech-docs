@@ -15,6 +15,7 @@ from core.config_generator import DWSConfig, generate_preinstall_ini
 from core.verifier import VERIFY_ITEMS
 
 app = Flask(__name__)
+app.jinja_env.auto_reload = True
 
 # 模拟预检数据
 MOCK_PRECHECK = {
@@ -90,6 +91,13 @@ def api_config_generate():
 # ================================================================
 # Route: 部署引导
 # ================================================================
+# ================================================================
+# Route: 部署流程（配合作战指引页面）
+# ================================================================
+@app.route("/flow")
+def flow():
+    return render_template("dws_flow.html")
+
 @app.route("/deploy")
 def deploy():
     return render_template("dws_deploy.html")
@@ -142,6 +150,6 @@ if __name__ == "__main__":
     print("  DWS 智能部署系统 - Web UI")
     print(f"  预检: {len(PRECHECK_ITEMS)}项 | 验证: {len(VERIFY_ITEMS)}项")
     print("=" * 50)
-    print("  访问地址: http://127.0.0.1:5013")
+    print("  访问地址: http://127.0.0.1:5023")
     print("=" * 50)
-    app.run(debug=False, host="127.0.0.1", port=5013)
+    app.run(debug=False, host="127.0.0.1", port=5023)

@@ -44,8 +44,8 @@ class OracleScanner(BaseScanner):
             compression_table_count=300,
             has_realtime_data=True,
             udf_languages={
-                "plsql": 450,       # 存储过程+函数
-                "java": 20,         # Java存储过程
+                "plsql": 450,
+                "java": 20,
             },
             data_types_used=[
                 "VARCHAR2", "NUMBER", "DATE", "CLOB", "BLOB",
@@ -78,7 +78,7 @@ class OracleScanner(BaseScanner):
             backup_strategy="每日全量RMAN + 归档日志",
             ops_team_size=3,
             has_runbook=True,
-            # 补充字段
+            # 安全字段
             security_model="RBAC + VPD行级安全",
             encryption_method="TDE (Transparent Data Encryption)",
             audit_capability="Oracle Unified Audit",
@@ -106,4 +106,14 @@ class OracleScanner(BaseScanner):
             workload_type="OLAP",
             peak_concurrent_queries=200,
             avg_query_response_seconds=3.0,
+            # 新增业务场景字段
+            business_scenarios=["监管报表报送", "风控指标计算", "客户信息披露"],
+            pain_points=["Exadata一体机扩容成本高", "月末跑批窗口紧张", "信创合规要求"],
+            data_source_types=["Oracle", "MySQL", "文件系统", "MQ"],
+            ingestion_frequency="每日批量 + OGG实时同步",
+            incremental_data_daily_gb=20.0,
+            sample_sql_count=35,
+            has_data_link_diagram=True,
+            network_architecture="双平面25GE(业务+管理隔离)",
+            server_hardware="Oracle Exadata X8-2 一体机",
         )

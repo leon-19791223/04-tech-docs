@@ -109,6 +109,13 @@ class MigrationAnalyzer:
             etl_task_count=self.metadata.etl_task_count,
         )
 
+        # POC测试建议
+        from core.poc_planner import PocTestPlanner
+        result.poc_recommendations = PocTestPlanner.recommend(
+            metadata=self.metadata,
+            assessment_result=result,
+        )
+
         return result
 
     def _check_category(self, category: str, rules: list) -> CategoryResult:

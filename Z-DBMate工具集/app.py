@@ -12,6 +12,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_file
 
 app = Flask(__name__)
+app.jinja_env.auto_reload = True
 
 # ================================================================
 # 数据模型

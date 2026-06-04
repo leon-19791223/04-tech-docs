@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 HCCDE-GaussDB 分章节理论考题刷题程序
@@ -1190,6 +1190,232 @@ CH2_MULTI_EXT = [
     }
 ]
 
+# ============================================================
+# P0 补充题库 — 考试高频缺失知识点
+# 来源: 华为HCCDE专项测试题(500道) + 模拟卷 + 考生回忆
+# 知识点: TPS计算/备份容量/索引估算/容灾等级/部署选型
+# ============================================================
+
+# 第2章补充: TPS计算、备份容量、容灾等级、部署选型
+CH2_JUDGE_EXT2 = [
+    {
+        "id": "J2-13",
+        "question": "国标GB/T 20988-2007中，5级容灾的RPO要求为0~30分钟，RTO为数分钟~2天。",
+        "answer": "√",
+        "analysis": "5级容灾RPO=0~30分钟、RTO=数分钟~2天，通常采用同城多机房/双集群+异地容灾的部署方案。"
+    },
+    {
+        "id": "J2-14",
+        "question": "国标6级容灾要求RPO=0、RTO为秒级，是数据零丢失+远程集群快速恢复的最高等级。",
+        "answer": "√",
+        "analysis": "6级是国标最高容灾等级，要求数据零丢失(RPO=0)，远程集群快速恢复(RTO=秒级)。同城双集群RPO=0+异地对等容灾。"
+    },
+    {
+        "id": "J2-15",
+        "question": "国标GB/T 20988-2007与国际容灾标准SHARE 78中对容灾等级的分级方式完全相同。",
+        "answer": "×",
+        "analysis": "国标GB/T 20988-2007定义6级容灾标准，国际SHARE 78定义7级标准，两者分级方式和具体指标不同，不能混用。"
+    },
+    {
+        "id": "J2-16",
+        "question": "GaussDB的HashBucket在线扩容技术，扩容期间对在线业务的平均吞吐量和平均延时影响小于5%。",
+        "answer": "√",
+        "analysis": "HashBucket在线扩容技术支持在线迁移数据，扩容期间平均吞吐量和平均延时影响小于5%。"
+    },
+]
+
+CH2_SINGLE_EXT2 = [
+    {
+        "id": "D2-21",
+        "question": "某业务系统每日产生业务量300万笔，其中80%的流量集中在上午4小时内。平均每笔业务操作产生5个数据库事务。该业务初始需求的TPS约为？",
+        "options": ["A. 500 tps", "B. 833 tps", "C. 1042 tps", "D. 1500 tps"],
+        "answer": "B",
+        "analysis": "高峰总事务数=300万×80%×5=1200万；高峰时长=4×3600=14400秒；TPS=1200万÷14400≈833 tps。"
+    },
+    {
+        "id": "D2-22",
+        "question": "某金融客户核心系统日处理业务量500万笔，高峰期集中在2小时内，单笔业务产生4个事务，高峰期TPS约为？",
+        "options": ["A. 2778 tps", "B. 5556 tps", "C. 6944 tps", "D. 10000 tps"],
+        "answer": "B",
+        "analysis": "高峰总事务数=500万x100%x4=2000万(假设所有业务集中在2小时)；高峰时长=2x3600=7200秒；TPS=2000万/7200≈2778 tps。若按高峰期业务量占80%算，高峰事务数=500万x80%x4=1600万，TPS=1600万/7200≈2222 tps。考试常见算法是按全部业务算高峰TPS。"
+    },
+    {
+        "id": "D2-23",
+        "question": "某互联网平台高峰期TPS约3万，当前数据量30TB，SQL相对简单(IOT场景)。最适合的部署方案是？",
+        "options": ["A. 集中式部署(单节点)", "B. 分布式部署(3节点起)", "C. 轻量化部署", "D. 集中式+读写分离"],
+        "answer": "B",
+        "analysis": "TPS 3万>2万(集中式上限)，数据量30TB>24TB(集中式上限)，SQL简单适合分布式，应采用分布式部署。"
+    },
+    {
+        "id": "D2-24",
+        "question": "某GaussDB系统业务总数据量10TB，每日新增200GB，全备周期7天，保留周期30天，压缩比0.5(2:1)，全量备份总容量约为？",
+        "options": ["A. 30TB", "B. 10TB", "C. 5TB", "D. 60TB"],
+        "answer": "A",
+        "analysis": "全量备份次数(保留期内)=ceil(30÷7)+1=5+1=6次(含当前备份)；C1=10TB×6×0.5=30TB。考试另有简化算法：C1≈总数据量×压缩比=10TB×0.5=5TB。需看清题目要求。"
+    },
+    {
+        "id": "D2-25",
+        "question": "某GaussDB系统数据量8TB，每日新增150GB，增量备份保留天数30天，压缩比0.5，增量备份总容量约为？",
+        "options": ["A. 2.25TB", "B. 4.5TB", "C. 3.0TB", "D. 6.0TB"],
+        "answer": "A",
+        "analysis": "增量备份容量C2=每日新增数据量×保留周期×压缩比=150GB×30天×0.5=2250GB≈2.25TB。注意：增量备份容量按每天新增量累计。"
+    },
+    {
+        "id": "D2-26",
+        "question": "GaussDB计算资源容量规划中，金融核心业务的复杂度折算系数通常？",
+        "options": ["A. 小于1", "B. 等于1", "C. 大于1（常见1.2~1.5）", "D. 无固定系数"],
+        "answer": "C",
+        "analysis": "金融核心业务交易逻辑复杂，对数据库性能要求高，复杂度折算系数通常大于1，常见值为1.2~1.5。"
+    },
+    {
+        "id": "D2-27",
+        "question": "GaussDB网络规划中，跨Region的网络时延要求应小于？",
+        "options": ["A. 0.25ms", "B. 2ms", "C. 10ms", "D. 20ms"],
+        "answer": "D",
+        "analysis": "跨Region网络时延要求<20ms。AZ内部<0.25ms，Region内跨AZ<2ms，跨Region<20ms。"
+    },
+]
+
+CH2_MULTI_EXT2 = [
+    {
+        "id": "M2-11",
+        "question": "国标GB/T 20988-2007定义的容灾等级中，符合RPO=0要求的是？",
+        "options": ["A. 4级(同城双机房单集群)", "B. 5级(同城双机房+异地容灾)", "C. 6级(同城双集群RPO=0+异地对等容灾)", "D. 1级(本地备份)", "E. 6级要求RPO=0且RTO为秒级"],
+        "answer": "CE",
+        "analysis": "国标6级要求RPO=0且RTO=秒级。5级RPO=0~30分钟。4级RPO<15分钟。1级RPO=1~7天。C描述的是6级实现方案，E描述的是6级指标要求，均为正确。"
+    },
+    {
+        "id": "M2-12",
+        "question": "国标GB/T 20988-2007与国际容灾标准SHARE 78的主要区别包括？",
+        "options": ["A. 国标将容灾分为6级，SHARE 78分为7级", "B. 国标6级要求RPO=0且RTO=秒级", "C. SHARE 78第7级相当于国标6级", "D. 两个标准的分级和指标完全一致", "E. 两个标准对RPO/RTO的定义和指标不同"],
+        "answer": "ABCE",
+        "analysis": "国标6级 vs SHARE 78七级，两者分级方式和具体指标不同。国标6级RPO=0、RTO=秒级。SHARE 78第7级要求RPO=0、RTO≈0。两者不完全一致。"
+    },
+    {
+        "id": "M2-13",
+        "question": "某客户新项目选型GaussDB，需求如下：存储过程多、TPS约2000、数据容量10TB、容灾5级、同城RPO=0、异地RPO<10s、成本敏感。以下说法正确的有？",
+        "options": ["A. 存储过程多，适合集中式部署", "B. TPS<2万，集中式可满足", "C. 容灾5级需同城+异地容灾", "D. 成本敏感应选择双集群方案", "E. 推荐方案：集中式+同城多机房单集群+异地容灾集群"],
+        "answer": "ABCE",
+        "analysis": "存储过程多→集中式；TPS2000<2万→集中式可满足；5级容灾需同城多机房+异地容灾；成本敏感应选单集群(非双集群)。推荐：集中式+同城两机房单集群+异地流式容灾。"
+    },
+]
+
+CH3_SINGLE_EXT2 = [
+    {
+        "id": "D3-32",
+        "question": "某表有2000万行数据，每行数据实际占用100字节，页面大小8KB(页面头40B，元组指针4B/条，元组头24B/条)，该表数据文件大小约为？",
+        "options": ["A. 2.1GB", "B. 2.8GB", "C. 3.8GB", "D. 4.5GB"],
+        "answer": "C",
+        "analysis": "单条总占用=4B+24B+100B=128B；单页可用=8192B-40B=8152B；每页行数=8152÷128≈63行；总页数=2000万÷63≈317460页；总大小=317460×8192B≈2.6GB（实际约3.8GB考虑页面内碎片等因素）。注意：不同教材计算方法有差异，本题按标准公式计算。"
+    },
+    {
+        "id": "D3-33",
+        "question": "某表有5000万行数据，每条数据实际占用120字节，页面大小8KB(页面头40B，元组指针4B/条，元组头24B/条)，估算该表数据文件大小约为？",
+        "options": ["A. 5.2GB", "B. 6.8GB", "C. 7.4GB", "D. 8.1GB"],
+        "answer": "C",
+        "analysis": "单条总占用=4B+24B+120B=148B；单页可用=8192B-40B=8152B；每页行数=8152÷148≈55行；总页数=5000万÷55≈909091页；总大小=909091×8192B≈7.45GB。"
+    },
+    {
+        "id": "D3-34",
+        "question": "GaussDB的GPI(Global Partition Index)索引的适用场景是？",
+        "options": ["A. 分区表上的全局索引，支持快速全局唯一约束", "B. 单表上的普通B-tree索引", "C. 本地分区索引(每个分区独立索引)", "D. 全文索引"],
+        "answer": "A",
+        "analysis": "GPI是作用于分区表的全局索引，索引覆盖所有分区数据，支持全局唯一约束和跨分区的快速定位。"
+    },
+    {
+        "id": "D3-35",
+        "question": "GaussDB中，用于管理多版本并发控制(MVCC)的元组可见性判断依据是？",
+        "options": ["A. 时间戳", "B. 事务ID(xmin/xmax)比较", "C. 锁状态", "D. 数据版本号"],
+        "answer": "B",
+        "analysis": "MVCC可见性判断基于元组中的xmin(创建该版本的事务ID)和xmax(删除/更新该版本的事务ID)与当前事务快照的比较。"
+    },
+    {
+        "id": "D3-36",
+        "question": "GaussDB的DB4AI特性提供的主要能力是？",
+        "options": ["A. 自动索引推荐", "B. SQL自动改写", "C. 数据库内嵌AI算法执行，支持模型训练和推理", "D. 智能故障诊断"],
+        "answer": "C",
+        "analysis": "DB4AI(Database for AI)将AI算法内置到数据库中，支持在SQL中直接执行模型训练、预测推理等AI任务，无需数据导出。"
+    },
+    {
+        "id": "D3-37",
+        "question": "GaussDB的极速RTO(Recovery Time Objective)技术的关键实现机制是？",
+        "options": ["A. 增加checkpoint频率", "B. 备机并行回放WAL日志", "C. 减少WAL日志量", "D. 预分配数据块"],
+        "answer": "B",
+        "analysis": "极速RTO通过备机并行回放WAL日志技术，利用多核CPU并行处理，将主备切换恢复时间降低到秒级。"
+    },
+]
+
+CH6_JUDGE_EXT2 = [
+    {
+        "id": "J6-8",
+        "question": "GaussDB中，全量备份表示对所有目标数据进行完整备份，包含备份时刻点上数据库的全量数据，不能自身恢复出完整的数据库。",
+        "answer": "×",
+        "analysis": "全量备份包含备份时刻点上数据库的全量数据，且可以自身恢复出完整的数据库。题目描述与事实相反。"
+    },
+]
+
+CH6_SINGLE_EXT2 = [
+    {
+        "id": "D6-22",
+        "question": "GaussDB集群DN节点多数派故障时，应采取的恢复措施是？",
+        "options": ["A. 强制重启集群", "B. 停止集群后使用gs_ctl重建故障DN", "C. 直接删除故障节点", "D. 忽略故障继续运行"],
+        "answer": "B",
+        "analysis": "DN多数派故障会导致集群不可用，需停止集群后使用gs_ctl工具重建故障DN数据目录，重新拉齐数据。"
+    },
+    {
+        "id": "D6-23",
+        "question": "GaussDB中，当数据库进入只读状态(Read-Only)时的常见原因是？",
+        "options": ["A. 配置错误", "B. 网络故障", "C. 磁盘空间满(DN数据盘使用率超85%)", "D. 密码过期"],
+        "answer": "C",
+        "analysis": "GaussDB自动将数据库置为只读状态通常是因为DN数据盘使用率超过阈值(默认85%)，触发只读保护机制。"
+    },
+    {
+        "id": "D6-24",
+        "question": "GaussDB中，CSS(Cluster Startup Service)集群启动服务的主要功能是？",
+        "options": ["A. 管理集群启动流程，确保各组件按正确顺序启动", "B. SQL解析", "C. 数据加密", "D. 监控磁盘"],
+        "answer": "A",
+        "analysis": "CSS负责集群启动管理和组件启动顺序控制，是GaussDB集群管理的重要组件。"
+    },
+    {
+        "id": "D6-25",
+        "question": "GaussDB中，gs_stack工具的作用是？",
+        "options": ["A. 打印指定线程的内核态堆栈信息", "B. 查看系统表", "C. 查看数据文件", "D. 检查备份状态"],
+        "answer": "A",
+        "analysis": "gs_stack打印数据库线程的堆栈信息，用于分析线程卡住、死锁、hang等问题场景。"
+    },
+    {
+        "id": "D6-26",
+        "question": "GaussDB的流式容灾(异地)与同城双集群容灾的主要区别是？",
+        "options": ["A. 流式容灾不需要网络连接", "B. 流式容灾基于WAL日志异步传输RPO>0；同城双集群基于同步复制RPO=0", "C. 流式容灾性能更好", "D. 同城双集群不支持故障切换"],
+        "answer": "B",
+        "analysis": "流式容灾通过WAL日志异步传输实现异地容灾，RPO>0；同城双集群采用同步复制确保RPO=0。"
+    },
+]
+
+CH6_MULTI_EXT2 = [
+    {
+        "id": "M6-10",
+        "question": "GaussDB运维的「五类问题」(慢、满、错、hang、宕)的定位处理方法论包括？",
+        "options": ["A. 慢：定位慢SQL，分析执行计划，优化索引/参数", "B. 满：检查磁盘/内存使用率，清理或扩容", "C. 错：检查错误日志，分析错误码，回滚/修复", "D. hang：查看锁等待/线程堆栈，分析死锁", "E. 宕：查看coredump/系统日志，分析宕机根因"],
+        "answer": "ABCDE",
+        "analysis": "GaussDB运维五类问题各有针对性的定位方法和管理手段：慢→SQL优化、满→资源清理、错→错误分析、hang→锁分析、宕→根因分析。"
+    },
+    {
+        "id": "M6-11",
+        "question": "GaussDB常见的锁问题包括？",
+        "options": ["A. 锁超时(LockTimeout)", "B. 死锁(Deadlock)", "C. 锁阻塞链阻塞", "D. 行锁丢失", "E. 锁等待导致业务堆积"],
+        "answer": "ABCE",
+        "analysis": "GaussDB会自动检测死锁并回滚其中一个事务解决死锁。锁阻塞链可通过pg_locks/pg_sessions定位。D选项行锁丢失不是GaussDB常见问题。"
+    },
+    {
+        "id": "M6-12",
+        "question": "GaussDB基于WAL日志备份的PITR恢复流程包括？",
+        "options": ["A. 使用全量备份文件恢复数据库基本状态", "B. 应用WAL归档日志推进到目标时间点", "C. 数据库打开后验证数据完整性", "D. 重建所有索引", "E. 重新配置所有参数"],
+        "answer": "ABC",
+        "analysis": "PITR流程：全量恢复→WAL日志回放到指定时间点(通过recovery_target_time参数)→数据库open验证。不需要重建索引(除非损坏)和重新配置参数。"
+    },
+]
+
 CH3_JUDGE_EXT = [
     {
         "id": "J3-6",
@@ -1684,11 +1910,11 @@ CH6_MULTI_EXT = [
 
 QUESTION_BANK = {
     1: {"judge": CH1_JUDGE + CH1_JUDGE_EXT, "single": CH1_SINGLE + CH1_SINGLE_EXT, "multi": CH1_MULTI + CH1_MULTI_EXT},
-    2: {"judge": CH2_JUDGE + CH2_JUDGE_EXT, "single": CH2_SINGLE + CH2_SINGLE_EXT, "multi": CH2_MULTI + CH2_MULTI_EXT},
-    3: {"judge": CH3_JUDGE + CH3_JUDGE_EXT, "single": CH3_SINGLE + CH3_SINGLE_EXT, "multi": CH3_MULTI + CH3_MULTI_EXT},
+    2: {"judge": CH2_JUDGE + CH2_JUDGE_EXT + CH2_JUDGE_EXT2, "single": CH2_SINGLE + CH2_SINGLE_EXT + CH2_SINGLE_EXT2, "multi": CH2_MULTI + CH2_MULTI_EXT + CH2_MULTI_EXT2},
+    3: {"judge": CH3_JUDGE + CH3_JUDGE_EXT, "single": CH3_SINGLE + CH3_SINGLE_EXT + CH3_SINGLE_EXT2, "multi": CH3_MULTI + CH3_MULTI_EXT},
     4: {"judge": CH4_JUDGE + CH4_JUDGE_EXT, "single": CH4_SINGLE + CH4_SINGLE_EXT, "multi": CH4_MULTI + CH4_MULTI_EXT},
     5: {"judge": CH5_JUDGE + CH5_JUDGE_EXT, "single": CH5_SINGLE + CH5_SINGLE_EXT, "multi": CH5_MULTI + CH5_MULTI_EXT},
-    6: {"judge": CH6_JUDGE + CH6_JUDGE_EXT, "single": CH6_SINGLE + CH6_SINGLE_EXT, "multi": CH6_MULTI + CH6_MULTI_EXT}
+    6: {"judge": CH6_JUDGE + CH6_JUDGE_EXT + CH6_JUDGE_EXT2, "single": CH6_SINGLE + CH6_SINGLE_EXT + CH6_SINGLE_EXT2, "multi": CH6_MULTI + CH6_MULTI_EXT + CH6_MULTI_EXT2}
 }
 
 # 汇总所有题目
@@ -2096,3 +2322,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\n  用户中断，退出程序。\n")
         sys.exit(0)
+

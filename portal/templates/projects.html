@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目管理 · 掌数科技</title>
+<link rel="stylesheet" href="http://127.0.0.1:8080/shared/brand.css">
+<style>
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--grad-bg); color: var(--text); margin:0; padding:0; }
+.topbar { background: var(--grad-sidebar); padding: 20px 32px; display:flex; justify-content:space-between; align-items:center; }
+.topbar h1 { font-size:20px; font-weight:700; color:#fff; margin:0; }
+.topbar a { color:rgba(255,255,255,0.7); text-decoration:none; font-size:13px; }
+.topbar a:hover { color:#fff; }
+.page { max-width:1100px; margin:0 auto; padding:24px 32px 60px; }
+.btn-create { margin-bottom:20px; }
+table { width:100%; border-collapse:collapse; font-size:13px; background:#fff; border-radius:8px; overflow:hidden; box-shadow:var(--shadow-sm); }
+th { background:var(--brand-primary); color:#fff; padding:12px 16px; font-weight:600; font-size:12px; text-align:left; }
+td { padding:12px 16px; border-bottom:1px solid var(--g100); }
+tr:hover td { background:var(--g50); }
+.empty { text-align:center; padding:60px; color:var(--g400); }
+.modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center; }
+.modal.active { display:flex; }
+.modal-box { background:#fff; border-radius:12px; padding:28px; width:480px; max-width:90vw; box-shadow:var(--shadow-lg); }
+.modal-box h3 { margin:0 0 16px; font-size:16px; }
+.modal-box label { font-size:13px; font-weight:600; display:block; margin-bottom:4px; }
+.modal-box input, .modal-box select { width:100%; padding:8px 12px; border:1px solid var(--g200); border-radius:6px; font-size:13px; margin-bottom:12px; }
+.form-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>📋 项目管理</h1>
+  <div><a href="http://127.0.0.1:8080">← 返回门户</a></div>
+</div>
+<div class="page">
+  <button class="btn btn-pri btn-create" onclick="showCreate()">＋ 新建项目</button>
+
+  {% if projects %}
+  <table>
+    <thead><tr><th>项目名称</th><th>客户</th><th>源库</th><th>目标库</th><th>评估次数</th><th>创建时间</th><th>操作</th></tr></thead>
+    <tbody>
+    {% for p in projects %}
+    <tr>
+      <td><strong>{{ p.name }}</strong></td>
+      <td>{{ p.customer or '—' }}</td>
+      <td><span class="tag tg-blu">{{ p.source_type or '—' }}</span></td>
+      <td><span class="tag tg-grn">{{ p.target_type or '—' }}</span></td>
+      <td>{{ p.assessment_count or 0 }}</td>
+      <td>{{ p.created_at[:10] }}</td>
+      <td><a href="#" class="btn btn-ghost btn-sm">查看</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">
+    <div style="font-size:48px;margin-bottom:12px;">📋</div>
+    <div style="font-size:16px;font-weight:600;color:var(--g500);">暂无项目</div>
+    <div style="font-size:13px;color:var(--g400);margin-top:4px;">创建一个项目开始评估与部署管理</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Create Modal -->
+<div class="modal" id="createModal">
+  <div class="modal-box">
+    <h3>新建项目</h3>
+    <label>项目名称</label>
+    <input id="p-name" placeholder="如: 嘉兴银行DWS迁移项目">
+    <label>客户名称</label>
+    <input id="p-customer" placeholder="如: 嘉兴银行">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <label>源数据库</label>
+        <select id="p-source">
+          <option value="oracle">Oracle</option>
+          <option value="mysql">MySQL</option>
+          <option value="gp">Greenplum</option>
+          <option value="mssql">SQL Server</option>
+          <option value="db2">DB2</option>
+          <option value="teradata">Teradata</option>
+        </select>
+      </div>
+      <div>
+        <label>目标数据库</label>
+        <select id="p-target">
+          <option value="dws">GaussDB(DWS)</option>
+          <option value="gaussdb">GaussDB OLTP</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="hideCreate()">取消</button>
+      <button class="btn btn-pri" onclick="createProject()">创建</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showCreate(){ document.getElementById('createModal').classList.add('active'); }
+function hideCreate(){ document.getElementById('createModal').classList.remove('active'); }
+function createProject(){
+  fetch('/api/projects', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name: document.getElementById('p-name').value,
+      customer: document.getElementById('p-customer').value,
+      source_type: document.getElementById('p-source').value,
+      target_type: document.getElementById('p-target').value,
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if(d.status === 'ok'){ hideCreate(); location.reload(); }
+  });
+}
+</script>
+</body>
+</html>

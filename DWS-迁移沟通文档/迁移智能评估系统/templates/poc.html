@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block page_title %}POC测试建议{% endblock %}
+{% block content %}
+
+{% set poc = result.poc_recommendations %}
+{% if not poc or not poc.get("summary") %}
+<div class="card" style="text-align:center;padding:60px 40px;">
+  <div style="font-size:48px;margin-bottom:16px;">&#x1F9EA;</div>
+  <div style="font-size:18px;font-weight:600;color:var(--g500);">POC 测试建议将在完成评估后生成</div>
+  <div style="font-size:14px;color:var(--g400);margin-top:8px;">请先运行兼容性评估获取源端特征数据</div>
+</div>
+{% else %}
+{% set summary = poc.get("summary", {}) %}
+{% set levels = poc.get("levels", {}) %}
+{% set recommended = poc.get("recommended_cases", {}) %}
+{% set all_cases = poc.get("all_cases", []) %}
+
+<!-- 概览卡片 -->
+<div class="two">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4CA;</span> 测试规模</span></div>
+    <div style="display:flex;gap:24px;padding:12px 0;">
+      <div style="text-align:center;">
+        <div style="font-size:36px;font-weight:800;color:var(--primary);">{{ summary.get("total_cases", 0) }}</div>
+        <div style="font-size:13px;color:var(--g400);">推荐用例数</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:36px;font-weight:800;color:var(--accent);">{{ summary.get("total_estimated_hours", 0) }}</div>
+        <div style="font-size:13px;color:var(--g400);">预估总耗时(小时)</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:36px;font-weight:800;color:var(--success);">{{ summary.get("timeline_estimate", "") }}</div>
+        <div style="font-size:13px;color:var(--g400);">建议周期</div>
+      </div>
+    </div>
+    {% if summary.get("note") %}
+    <div style="font-size:12px;color:var(--g400);margin-top:8px;padding-top:12px;border-top:1px solid var(--g100);">
+      {{ summary.note }}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F3AF;</span> 各阶段分布</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:8px 0;">
+      {% for lv_key in ["L1","L2","L3","L4"] %}
+      {% set lv = levels.get(lv_key, {}) %}
+      <div style="padding:14px;border-radius:8px;background:linear-gradient(135deg,var(--g50),#fff);border:1px solid var(--g100);">
+        <div style="font-size:11px;font-weight:600;color:var(--g400);text-transform:uppercase;">{{ lv_key }}</div>
+        <div style="font-size:15px;font-weight:600;margin:4px 0;">{{ lv.get("name","") }}</div>
+        <div style="font-size:12px;color:var(--g500);">{{ lv.get("case_count",0) }} 项 / {{ lv.get("level_hours",0) }}h</div>
+        <div style="font-size:11px;color:var(--g400);margin-top:2px;">
+          {% if lv.get("mandatory") %}<span style="color:var(--success);">&#x2713; 必选</span>{% else %}<span style="color:var(--g400);">按需</span>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- 各阶段用例详情 -->
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x1F4CB;</span> 推荐测试用例详情</span>
+    <div style="font-size:12px;color:var(--g400);">按 L1-L4 四级分类</div>
+  </div>
+  <div class="tabbar">
+    {% for lv_key in ["L1","L2","L3","L4"] %}
+    <div class="tab {% if loop.first %}active{% endif %}" onclick="switchTab('poc-{{ lv_key }}', this)">
+      {{ lv_key }} - {{ levels.get(lv_key, {}).get("name","") }}
+      <span style="font-size:10px;opacity:0.6;">({{ recommended.get(lv_key, [])|length }})</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% for lv_key in ["L1","L2","L3","L4"] %}
+  {% set cases = recommended.get(lv_key, []) %}
+  <div id="poc-{{ lv_key }}" class="tc2 {% if loop.first %}active{% endif %}">
+    {% if cases %}
+    <div class="tw">
+      <table class="mt">
+        <thead>
+          <tr>
+            <th style="width:120px;">用例ID</th>
+            <th>名称</th>
+            <th style="width:100px;">分类</th>
+            <th style="width:80px;">预估(h)</th>
+            <th style="width:70px;">优先级</th>
+            <th>测试步骤</th>
+            <th>预期结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in cases %}
+          <tr>
+            <td style="font-family:monospace;font-size:11px;color:var(--g500);">{{ c.id }}</td>
+            <td><strong>{{ c.name }}</strong></td>
+            <td><span class="tag tg-blu">{{ c.category }}</span></td>
+            <td>{{ c.estimated_hours }}</td>
+            <td>
+              {% if c.priority == "高" %}
+              <span class="tag tg-red">高</span>
+              {% elif c.priority == "中" %}
+              <span class="tag tg-org">中</span>
+              {% else %}
+              <span class="tag tg-gry">低</span>
+              {% endif %}
+            </td>
+            <td style="font-size:12px;color:var(--g500);">
+              <ol style="padding-left:16px;margin:0;">
+                {% for step in c.get("steps", [])[:3] %}
+                <li>{{ step }}</li>
+                {% endfor %}
+                {% if c.get("steps")|length > 3 %}
+                <li style="color:var(--g300);">...</li>
+                {% endif %}
+              </ol>
+            </td>
+            <td style="font-size:12px;color:var(--g500);">{{ c.expected_result }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:40px;color:var(--g400);font-size:14px;">
+      &#x1F4AD; 当前场景下无推荐的 {{ lv_key }} 级测试用例
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- 完整用例库 -->
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x1F4DA;</span> 完整用例库参考</span>
+    <span style="font-size:12px;color:var(--g400);">共 {{ all_cases|length }} 条用例</span>
+  </div>
+  <div class="tw">
+    <table class="mt">
+      <thead>
+        <tr>
+          <th style="width:100px;">用例ID</th>
+          <th>名称</th>
+          <th style="width:60px;">级别</th>
+          <th style="width:100px;">分类</th>
+          <th>说明</th>
+          <th style="width:70px;">预估(h)</th>
+          <th style="width:60px;">优先级</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in all_cases %}
+        <tr>
+          <td style="font-family:monospace;font-size:11px;color:var(--g500);">{{ c.id }}</td>
+          <td>{{ c.name }}</td>
+          <td>
+            <span class="tag {% if c.level == 'L1' %}tg-grn{% elif c.level == 'L2' %}tg-blu{% elif c.level == 'L3' %}tg-org{% else %}tg-red{% endif %}">{{ c.level }}</span>
+          </td>
+          <td>{{ c.category }}</td>
+          <td style="font-size:12px;color:var(--g500);">{{ c.description[:60] }}{% if c.description|length > 60 %}...{% endif %}</td>
+          <td>{{ c.estimated_hours }}</td>
+          <td>
+            {% if c.priority == "高" %}
+            <span class="tag tg-red">高</span>
+            {% elif c.priority == "中" %}
+            <span class="tag tg-org">中</span>
+            {% else %}
+            <span class="tag tg-gry">低</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function switchTab(tabId, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tc2').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+</script>
+
+{% endif %}
+{% endblock %}

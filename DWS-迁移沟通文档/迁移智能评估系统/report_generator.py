@@ -137,6 +137,7 @@ class ReportGenerator:
         self._add_phase_timeline(doc)
         self._add_capacity_planning(doc)
         self._add_batch_strategy(doc)
+        self._add_poc_recommendations(doc)
         self._add_recommendations(doc)
         self._add_appendix(doc)
         doc.save(self.output_path)
@@ -524,7 +525,63 @@ class ReportGenerator:
                 add_para(doc, f"☐ {item}", size=9)
         doc.add_page_break()
 
-    def _add_recommendations(self, doc):
+    def _add_poc_recommendations(self, doc):
+        """POC测试建议"""
+        poc = self.result.poc_recommendations
+        if not poc:
+            return
+        add_heading(doc, "7A  POC测试建议", level=1)
+        doc.add_paragraph()
+
+        summary = poc.get("summary", {})
+        add_rich_para(doc, [
+            ("建议测试用例数: ", True, DARK, 11),
+            (f"{summary.get('total_cases', '—')} 项  |  ", False, DARK, 11),
+            ("预估测试时间: ", True, DARK, 11),
+            (f"{summary.get('total_estimated_hours', '—')} 小时 ({summary.get('timeline_estimate', '—')})", False, BLUE, 11),
+        ])
+        if summary.get("note"):
+            add_para(doc, f"说明: {summary['note']}", color=GRAY, size=9)
+        doc.add_paragraph()
+
+        # 各层级概况
+        levels = poc.get("levels", {})
+        add_heading(doc, "7A.1  测试阶段总览", level=2)
+        table = doc.add_table(rows=1, cols=5)
+        table.style = 'Table Grid'
+        make_header_row(table, ["阶段", "名称", "用例数", "预估时间", "是否必选"])
+        for level_key in ["L1", "L2", "L3", "L4"]:
+            lv = levels.get(level_key, {})
+            add_data_row(table, [
+                level_key,
+                lv.get("name", ""),
+                str(lv.get("case_count", 0)),
+                f"{lv.get('level_hours', 0)}h ({lv.get('time_estimate', '')})",
+                "✅ 必选" if lv.get("mandatory") else "按需",
+            ])
+        doc.add_paragraph()
+
+        # 推荐用例详情
+        recommended = poc.get("recommended_cases", {})
+        for level_key in ["L1", "L2", "L3", "L4"]:
+            cases = recommended.get(level_key, [])
+            if not cases:
+                continue
+            lv = levels.get(level_key, {})
+            add_heading(doc, f"7A.2  {lv.get('name', level_key)}", level=2)
+            add_para(doc, lv.get("description", ""), color=GRAY, size=9)
+            doc.add_paragraph()
+            table = doc.add_table(rows=1, cols=5)
+            table.style = 'Table Grid'
+            make_header_row(table, ["用例ID", "名称", "分类", "预估(h)", "优先级"])
+            for c in cases:
+                add_data_row(table, [
+                    c["id"], c["name"], c["category"],
+                    str(c["estimated_hours"]), c["priority"],
+                ])
+            doc.add_paragraph()
+
+        doc.add_page_break()
         add_heading(doc, "9  建议与推荐", level=1)
         doc.add_paragraph()
         recs = self.result.recommendations

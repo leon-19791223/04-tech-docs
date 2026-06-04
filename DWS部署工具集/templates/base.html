@@ -6,7 +6,7 @@
 <title>{% block title %}DWS 部署工具集{% endblock %}</title>
 <style>
 :root {
-  --grad-sidebar: linear-gradient(135deg, #1A237E 0%, #283593 50%, #3949AB 100%);
+  --grad-sidebar: linear-gradient(135deg, #0B1A33 0%, #1A3C6E 50%, #1E4D8C 100%);
   --grad-topbar: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(248,250,255,0.95));
   --grad-card: linear-gradient(135deg, #ffffff, #FAFCFF);
   --grad-primary: linear-gradient(135deg, #3949AB, #5C6BC0);
@@ -76,6 +76,7 @@ table.mt tbody tr:hover td { background:linear-gradient(135deg,var(--g50),#fff);
 @media (max-width:1024px){ .two{grid-template-columns:1fr} }
 @media (max-width:768px){ .sidebar{transform:translateX(-100%)} .main{margin-left:0} .page-wrap{padding:16px} }
 </style>
+  <link rel="stylesheet" href="http://127.0.0.1:8080/shared/brand.css">
 </head>
 <body>
 
@@ -110,7 +111,14 @@ table.mt tbody tr:hover td { background:linear-gradient(135deg,var(--g50),#fff);
       <span class="ni">&#x1F4CB;</span> 检查清单
     </a>
   </nav>
-  <div class="sb-footer">&copy; 2026 &middot; v1.0</div>
+  
+    <div style="padding:8px 16px;border-top:1px solid rgba(255,255,255,0.06);margin-bottom:4px;">
+      <a href="http://127.0.0.1:8080" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);transition:all 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">
+        <span style="font-size:12px;">&#x2190;</span>
+        <span>返回门户</span>
+      </a>
+    </div>
+<div class="sb-footer">&copy; 2026 &middot; v1.0</div>
 </div>
 
 <div class="main">
@@ -119,8 +127,22 @@ table.mt tbody tr:hover td { background:linear-gradient(135deg,var(--g50),#fff);
   </div>
   <div class="page-wrap">
     {% block content %}{% endblock %}
-    <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--g200);">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--g400);margin-bottom:12px;font-weight:600;text-align:center;">&#x2699; 数据库全生命周期工具链</div>
+    
+<div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--g200);">
+  <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--g400);margin-bottom:12px;font-weight:600;text-align:center;">
+    &#x2699; <a href="http://127.0.0.1:8080" style="color:var(--accent);text-decoration:none;">掌数科技 · 数据库工具链</a>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;font-size:12px;color:var(--g500);">
+    <span style="padding:4px 10px;border-radius:6px;background:var(--g50);">&#x1F4CA; 迁移评估 :5010</span>
+    <span style="color:var(--g300);">&#x2192;</span>
+    <span style="padding:4px 10px;border-radius:6px;background:var(--g50);">&#x2699; Z-DBMate :5012</span>
+    <span style="color:var(--g300);">&#x2192;</span>
+    <span style="padding:4px 10px;border-radius:6px;background:var(--g50);">&#x1F3D7; DWS部署 :5023</span>
+    <span style="color:var(--g300);">&#x2192;</span>
+    <span style="padding:4px 10px;border-radius:6px;background:var(--g50);">&#x1F504; DRS/DataX</span>
+  </div>
+</div>
+
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
         <a href="http://127.0.0.1:5010" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:500;border:1px solid var(--g200);background:var(--g50);color:var(--text);transition:all 0.2s;">
           <span style="font-size:14px;">&#x1F4CA;</span>

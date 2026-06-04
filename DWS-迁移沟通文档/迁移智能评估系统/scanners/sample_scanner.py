@@ -30,5 +30,15 @@ class SampleScanner(BaseScanner):
             meta.scheduler_tool = "iControl"
             meta.bi_tools = ["FineReport 9.x"]
             meta.udf_languages = {"plpgsql": 1027, "plpythonu": 18, "plperl": 247}
+            # 新增业务场景字段
+            meta.business_scenarios = ["BI报表分析", "风控数据报送", "监管报表生成"]
+            meta.pain_points = ["IO高导致ETL延迟", "月末结算时性能瓶颈", "扩容成本高"]
+            meta.data_source_types = ["Oracle", "文件系统", "Kafka"]
+            meta.ingestion_frequency = "每日批量(T+1) + 近实时(Kafka)"
+            meta.incremental_data_daily_gb = 50.0
+            meta.sample_sql_count = 25
+            meta.has_data_link_diagram = True
+            meta.network_architecture = "双平面万兆(业务Bond4+管理Bond1)"
+            meta.server_hardware = "鲲鹏920 32C/256G + 12*3.84T SSD"
 
         return meta

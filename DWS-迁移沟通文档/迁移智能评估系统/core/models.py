@@ -134,6 +134,19 @@ class MigrationMetadata:
     ops_team_size: int = 0            # 运维团队规模
     has_runbook: bool = False         # 是否有运维手册
 
+    # ============================================================
+    # 新增字段: 业务场景与数据接入 (来自DWS客户调研表)
+    # ============================================================
+    business_scenarios: list = field(default_factory=list)  # 业务场景 e.g. ["BI报表","监管报送","风控"]
+    pain_points: list = field(default_factory=list)         # 当前痛点 e.g. ["IO高","性能卡慢"]
+    data_source_types: list = field(default_factory=list)   # 源端数据库类型列表 e.g. ["Oracle","MySQL"]
+    ingestion_frequency: str = ""                           # 数据接入频率 e.g. "每天/实时/分钟级"
+    incremental_data_daily_gb: float = 0.0                  # 日均增量数据(GB)
+    sample_sql_count: int = 0                               # 提供的典型SQL数量
+    has_data_link_diagram: bool = False                     # 是否有数据链路图
+    network_architecture: str = ""                          # 网络架构描述
+    server_hardware: str = ""                               # 服务器硬件规格
+
 
 # ================================================================
 # 兼容性检查结果
@@ -203,6 +216,7 @@ class AssessmentResult:
     estimated_phases: dict = field(default_factory=dict)
 
     # 扩展输出
-    capacity_planning: dict = field(default_factory=dict)  # 容量规划建议
-    batch_strategy: dict = field(default_factory=dict)     # 分批迁移策略
-    competitor_compare: dict = field(default_factory=dict)  # 竞品对比
+    capacity_planning: dict = field(default_factory=dict)      # 容量规划建议
+    batch_strategy: dict = field(default_factory=dict)         # 分批迁移策略
+    competitor_compare: dict = field(default_factory=dict)     # 竞品对比
+    poc_recommendations: dict = field(default_factory=dict)    # POC测试建议
