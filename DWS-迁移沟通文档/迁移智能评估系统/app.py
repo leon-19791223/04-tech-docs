@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
 
 # ================================================================
 # 1. 导入规则包（自动注册所有迁移路径到规则注册表）
@@ -94,9 +94,36 @@ def get_or_create_result(path_key: str = None):
 
 @app.route("/")
 def index():
+    """首页: 6路径总览"""
+    global _current_path, _current_result
+    overview_data = []
+    prev_path = _current_path
+    for key, cfg in MIGRATION_PATHS.items():
+        try:
+            _current_path = key
+            _current_result = None
+            r = get_or_create_result(path_key=key)
+            overview_data.append({
+                "key": key, "label": cfg["label"], "icon": cfg.get("icon",""),
+                "score": r.overall_score, "risk": r.risk_level,
+                "issues": len(r.critical_issues),
+                "rules": sum(c.total_rules for c in r.category_results),
+                "recs": len(r.recommendations),
+                "desc": cfg.get("description",""),
+            })
+        except:
+            overview_data.append({"key": key, "label": cfg["label"], "icon": cfg.get("icon",""), "score": 0, "error": True})
+    _current_path = prev_path
+    _current_result = None
+    return render_template("overview.html", results=overview_data)
+
+
+@app.route("/dashboard")
+def dashboard():
+    """某路径的详细仪表盘"""
     path_key = request.args.get("path", _current_path)
     if path_key not in AVAILABLE_KEYS:
-        path_key = _current_path
+        return index()
     result = get_or_create_result(path_key=path_key)
     return render_template("dashboard.html", result=result,
                            current_path=_current_path, paths=MIGRATION_PATHS)
@@ -147,7 +174,7 @@ def recommendations():
 def switch_path(path_key):
     if path_key in AVAILABLE_KEYS:
         get_or_create_result(path_key=path_key)
-    return index()
+    return redirect(url_for("dashboard", path=_current_path))
 
 
 @app.route("/api/data")
@@ -341,6 +368,6 @@ if __name__ == "__main__":
     for key, cfg in sorted(MIGRATION_PATHS.items()):
         print(f"    {cfg.get('icon', '')} {cfg['label']}")
     print("=" * 50)
-    print("  访问地址: http://127.0.0.1:5010")
+    print("  访问地址: http://127.0.0.1:5030")
     print("=" * 50)
-    app.run(debug=False, host="127.0.0.1", port=5010)
+    app.run(debug=False, host="127.0.0.1", port=5030)
