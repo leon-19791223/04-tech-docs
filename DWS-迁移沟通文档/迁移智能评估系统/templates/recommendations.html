@@ -2,65 +2,169 @@
 {% block page_title %}建议与推荐{% endblock %}
 {% block content %}
 
-<div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4CB;</span> 迁移定制建议</span></div>
-  <div class="rlist">
-    {% for rec in result.recommendations %}
-    <div class="ritem"><span class="rt">{{ rec }}</span></div>
-    {% endfor %}
+<!-- ============================================================
+     1. 迁移定制建议
+     ============================================================ -->
+<div class="card" style="padding:0;">
+  <div style="padding:18px 20px 14px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:16px;">&#x1F4CB;</span>
+      <span style="font-size:14px;font-weight:600;">迁移定制建议</span>
+      <span class="tg-blu" style="font-size:11px;padding:2px 10px;border-radius:4px;">{{ result.recommendations|length }} 条</span>
+    </div>
+  </div>
+  <div style="padding:16px 20px;">
+    {% if result.recommendations %}
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for rec in result.recommendations %}
+      {% if '改造' in rec or '不兼容' in rec or '重写' in rec or '替换' in rec %}
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:6px;background:#FFF3E0;border-left:3px solid #E67E22;transition:all.15s;">
+        <span style="font-size:14px;flex-shrink:0;margin-top:1px;">&#x26A0;</span>
+        <span style="font-size:13px;line-height:1.5;color:var(--text);flex:1;">{{ rec }}</span>
+      </div>
+      {% elif '建议' in rec or '评估' in rec or '分批' in rec or 'POC' in rec %}
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:6px;background:#E8F0FE;border-left:3px solid #1A73E8;transition:all.15s;">
+        <span style="font-size:14px;flex-shrink:0;margin-top:1px;">&#x1F4A1;</span>
+        <span style="font-size:13px;line-height:1.5;color:var(--text);flex:1;">{{ rec }}</span>
+      </div>
+      {% else %}
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:6px;background:#F8F9FA;border-left:3px solid #9CA0AF;transition:all.15s;">
+        <span style="font-size:14px;flex-shrink:0;margin-top:1px;">&#x2139;</span>
+        <span style="font-size:13px;line-height:1.5;color:var(--text);flex:1;">{{ rec }}</span>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--gray2);">
+      <div style="font-size:32px;margin-bottom:8px;">&#x2705;</div>
+      <div style="font-size:14px;">无迁移建议</div>
+    </div>
+    {% endif %}
   </div>
 </div>
 
-<div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F6E0;</span> 推荐迁移工具链</span></div>
-  <div class="tgrid">
-    <div class="tc"><div class="tcd">DDL转换</div><div class="tcn">华为UGO</div><div class="tcnn">自动语法分析 + SQL转换，人工复核后执行</div></div>
-    <div class="tc"><div class="tcd">数据迁移</div><div class="tcn">华为DRS / DataX</div><div class="tcnn">全量+增量实时同步，支持断点续传</div></div>
-    <div class="tc"><div class="tcd">ETL调度</div><div class="tcn">DolphinScheduler</div><div class="tcnn">统一调度平台，支持DWS原生任务</div></div>
-    <div class="tc"><div class="tcd">数据校验</div><div class="tcn">MD5 + 行数对比</div><div class="tcnn">逐表验证数据一致性</div></div>
-    <div class="tc"><div class="tcd">性能测试</div><div class="tcn">DWS负载工具</div><div class="tcnn">基于真实业务SQL压测</div></div>
-    <div class="tc"><div class="tcd">备份恢复</div><div class="tcn">DWS备份服务</div><div class="tcnn">全量增量备份，保障数据安全</div></div>
+<!-- ============================================================
+     2. 推荐迁移工具链
+     ============================================================ -->
+<div class="card" style="padding:0;">
+  <div style="padding:18px 20px 14px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:16px;">&#x1F6E0;</span>
+      <span style="font-size:14px;font-weight:600;">推荐迁移工具链</span>
+    </div>
+  </div>
+  <div style="padding:20px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div style="padding:16px;border-radius:8px;background:linear-gradient(135deg,#E8F0FE,#F5F8FF);border:1px solid #C5D9F2;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#1A73E8;font-weight:600;margin-bottom:4px;">DDL转换</div>
+        <div style="font-size:14px;font-weight:700;color:#1A1D26;margin-bottom:3px;">华为UGO</div>
+        <div style="font-size:11px;color:#6B7285;line-height:1.5;">自动语法分析+SQL转换，人工复核后执行</div>
+      </div>
+      <div style="padding:16px;border-radius:8px;background:linear-gradient(135deg,#E6F6F0,#F0FBF4);border:1px solid #B8DFCC;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#0E7C4B;font-weight:600;margin-bottom:4px;">数据迁移</div>
+        <div style="font-size:14px;font-weight:700;color:#1A1D26;margin-bottom:3px;">华为DRS / DataX</div>
+        <div style="font-size:11px;color:#6B7285;line-height:1.5;">全量+增量实时同步，断点续传</div>
+      </div>
+      <div style="padding:16px;border-radius:8px;background:linear-gradient(135deg,#FEF3E2,#FFF8E8);border:1px solid #F5D6A8;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#E67E22;font-weight:600;margin-bottom:4px;">ETL调度</div>
+        <div style="font-size:14px;font-weight:700;color:#1A1D26;margin-bottom:3px;">DolphinScheduler</div>
+        <div style="font-size:11px;color:#6B7285;line-height:1.5;">统一调度平台，支持DWS原生任务</div>
+      </div>
+      <div style="padding:16px;border-radius:8px;background:linear-gradient(135deg,#F3E8FD,#FAF5FF);border:1px solid #DDC8F0;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#7B4FBF;font-weight:600;margin-bottom:4px;">数据校验</div>
+        <div style="font-size:14px;font-weight:700;color:#1A1D26;margin-bottom:3px;">MD5 + 行数对比</div>
+        <div style="font-size:11px;color:#6B7285;line-height:1.5;">逐表验证数据一致性</div>
+      </div>
+      <div style="padding:16px;border-radius:8px;background:linear-gradient(135deg,#E6F6F0,#F0FBF4);border:1px solid #B8DFCC;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#0E7C4B;font-weight:600;margin-bottom:4px;">性能测试</div>
+        <div style="font-size:14px;font-weight:700;color:#1A1D26;margin-bottom:3px;">DWS负载工具</div>
+        <div style="font-size:11px;color:#6B7285;line-height:1.5;">基于真实业务SQL压测</div>
+      </div>
+      <div style="padding:16px;border-radius:8px;background:linear-gradient(135deg,#FFF3E0,#FFF8E8);border:1px solid #F5D6A8;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#E67E22;font-weight:600;margin-bottom:4px;">备份恢复</div>
+        <div style="font-size:14px;font-weight:700;color:#1A1D26;margin-bottom:3px;">DWS备份服务</div>
+        <div style="font-size:11px;color:#6B7285;line-height:1.5;">全量增量备份，数据安全保障</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;padding:10px;background:#F8F9FA;border-radius:6px;font-size:11px;color:var(--gray2);flex-wrap:wrap;">
+      <span style="font-weight:500;color:var(--text);">&#x1F4CB; 评估规划</span>
+      <span style="color:#D0D5DD;">&#x2192;</span>
+      <span style="font-weight:500;color:#1A73E8;">&#x2194; UGO结构迁移</span>
+      <span style="color:#D0D5DD;">&#x2192;</span>
+      <span style="font-weight:500;color:#0E7C4B;">&#x2194; DRS数据迁移</span>
+      <span style="color:#D0D5DD;">&#x2192;</span>
+      <span>&#x2705; 验证测试</span>
+      <span style="color:#D0D5DD;">&#x2192;</span>
+      <span>&#x1F680; 上线割接</span>
+    </div>
   </div>
 </div>
 
-<div class="two">
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x2705;</span> POC验证建议</span></div>
-    <ol class="numl">
-      <li>搭建与源端等规格的DWS测试环境</li>
-      <li>选取50+代表性SQL验证兼容性</li>
-      <li>选取20+典型UDF进行功能性验证</li>
-      <li>运行性能基准测试并对比</li>
-      <li>验证增量同步的稳定性和延迟</li>
-      <li>模拟故障场景测试回切流程</li>
-    </ol>
+<!-- ============================================================
+     3. POC验证 + 风险规避 + 评分规则
+     ============================================================ -->
+<div style="display:flex;gap:16px;margin-bottom:16px;align-items:stretch;">
+
+  <div class="card" style="flex:1;padding:0;">
+    <div style="padding:16px 18px 12px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:14px;font-weight:600;">&#x1F9F0; POC验证建议</span>
+    </div>
+    <div style="padding:14px 18px;">
+      <ol style="margin:0;padding:0;list-style:none;">
+        {% set poc_items = ["搭建与源端等规格的DWS测试环境","选取50+代表性SQL验证兼容性","选取20+典型UDF进行功能性验证","运行性能基准测试并对比","验证增量同步的稳定性和延迟","模拟故障场景测试回切流程"] %}
+        {% for item in poc_items %}
+        <li style="margin-bottom:{% if not loop.last %}10px{% else %}0{% endif %};display:flex;align-items:flex-start;gap:10px;">
+          <span style="min-width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1A73E8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;">{{ "0" ~ loop.index if loop.index < 10 else loop.index }}</span>
+          <span style="font-size:13px;line-height:1.6;color:var(--text);">{{ item }}</span>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x26A0;</span> 风险规避建议</span></div>
-    <ol class="numl">
-      <li><strong>不要直接修改</strong>源端生产DDL，先在测试环境验证</li>
-      <li>务必准备<strong>回切方案</strong>，避免迁移事故</li>
-      <li>选择<strong>业务低峰期</strong>进行割接</li>
-      <li>割接前执行<strong>至少2次</strong>完整演练</li>
-      <li>建立<strong>7x24小时</strong>值班保障机制</li>
-      <li>源端环境保留<strong>至少1个月</strong></li>
-    </ol>
+
+  <div class="card" style="flex:1;padding:0;">
+    <div style="padding:16px 18px 12px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:14px;font-weight:600;">&#x26A0; 风险规避建议</span>
+    </div>
+    <div style="padding:14px 18px;">
+      <ol style="margin:0;padding:0;list-style:none;">
+        {% set risk_items = ["不要直接修改源端生产DDL，先在测试环境验证","务必准备回切方案，避免迁移事故","选择业务低峰期进行割接","割接前执行至少2次完整演练","建立7x24小时值班保障机制","源端环境保留至少1个月"] %}
+        {% for item in risk_items %}
+        <li style="margin-bottom:{% if not loop.last %}10px{% else %}0{% endif %};display:flex;align-items:flex-start;gap:10px;">
+          <span style="min-width:22px;height:22px;border-radius:50%;background:#FFEBEE;color:#C62828;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;">{{ "0" ~ loop.index if loop.index < 10 else loop.index }}</span>
+          <span style="font-size:13px;line-height:1.6;color:var(--text);">{{ item }}</span>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+
+  <div class="card" style="flex:1;padding:0;">
+    <div style="padding:16px 18px 12px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:14px;font-weight:600;">&#x1F4CA; 评分规则</span>
+    </div>
+    <div style="padding:14px 18px;">
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#E6F7EE;border-radius:5px;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:600;color:#0E7C4B;">85-100 &rarr; 低风险</span>
+          <span style="font-size:11px;color:#0E7C4B;">大部分可直接迁移</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#FFF3E0;border-radius:5px;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:600;color:#E67E22;">65-84 &rarr; 中风险</span>
+          <span style="font-size:11px;color:#E67E22;">少量需改造POC后推进</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#FFEBEE;border-radius:5px;">
+          <span style="font-size:12px;font-weight:600;color:#C62828;">0-64 &rarr; 高风险</span>
+          <span style="font-size:11px;color:#C62828;">较多不兼容专项评估</span>
+        </div>
+      </div>
+      <div style="padding:10px;background:#F8F9FA;border-radius:5px;font-size:11px;color:var(--gray);line-height:1.6;">
+        <strong style="color:var(--text);">评分模型：</strong>加权通过率模型<br>
+        <span style="font-size:10px;">DDL(25%) | 数据类型(15%) | 函数(20%) | UDF(20%) | 扩展(10%) | ETL(5%) | 调度(3%) | BI(2%)</span>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4CA;</span> 评分规则说明</span></div>
-  <div class="tw"><table class="mt">
-    <thead><tr><th>分数区间</th><th>风险等级</th><th>说明</th></tr></thead>
-    <tbody>
-      <tr><td>85 - 100</td><td><span class="tag tg-grn">低风险</span></td><td>大部分对象可直接迁移，仅需微调</td></tr>
-      <tr><td>65 - 84</td><td><span class="tag tg-org">中风险</span></td><td>存在少量需改造项，POC验证后推进</td></tr>
-      <tr><td>0 - 64</td><td><span class="tag tg-red">高风险</span></td><td>存在较多不兼容项，建议专项评估</td></tr>
-    </tbody>
-  </table></div>
-  <div style="margin-top:12px;font-size:13px;color:var(--g500);line-height:1.8;">
-    <strong>评分模型:</strong> 加权通过率模型，8个维度按权重加权。<br>
-    权重: DDL兼容性(25%) | 数据类型(15%) | 函数兼容性(20%) | UDF语言(20%) | 扩展兼容性(10%) | ETL工具(5%) | 调度工具(3%) | BI工具(2%)
-  </div>
-</div>
 {% endblock %}

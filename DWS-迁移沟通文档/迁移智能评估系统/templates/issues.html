@@ -1,162 +1,194 @@
 {% extends "base.html" %}
 {% block page_title %}关键问题清单{% endblock %}
 {% block content %}
+{% set ec = result.critical_issues|length %}
+{% set tr = result.category_results|map(attribute='total_rules')|sum %}
+{% set wc = result.category_results|map(attribute='warnings')|sum %}
 
-{% if result.critical_issues %}
-<div class="card">
-  <div class="fsb" style="margin-bottom:8px;">
-    <div>
-      <span style="font-size:16px;font-weight:600;color:var(--danger);">&#x26A0; 共发现 {{ result.critical_issues|length }} 项不兼容的关键问题</span>
-      <p class="c-secondary" style="font-size:13px;margin-top:4px;">这些问题需要逐个评估和改造，建议在POC阶段优先验证</p>
-    </div>
-  </div>
-</div>
+<style>
+/* ---- 字体层级 ---- */
+.summary-cards{display:flex;gap:14px;margin-bottom:24px}
+.summary-cards .sc{flex:1;border-radius:10px;padding:18px 22px;border:1px solid}
+.summary-cards .sc .sc-l{font-size:12px;font-weight:500;letter-spacing:0.3px;margin-bottom:2px}
+.summary-cards .sc .sc-v{font-size:30px;font-weight:700;line-height:1.2;letter-spacing:-0.5px}
+.summary-cards .sc .sc-s{font-size:12px;margin-top:4px}
 
-<div class="icards">
-  {% for issue in result.critical_issues %}
-  <div class="icd ir">
-    <div class="ict">
-      <div class="icn">&#x1F534; {{ issue.name }}</div>
-      <span class="tag tg-red">{{ issue.category }}</span>
-    </div>
-    <div class="icdsc" style="margin-top:4px;">{{ issue.description }}</div>
-    {% if issue.solution %}<div class="icsol">&#x2705; 方案: {{ issue.solution }}</div>{% endif %}
-    {% if issue.difficulty %}
-    <div style="margin-top:6px;">
-      <span class="tag {% if issue.difficulty == '高' %}tg-red{% elif issue.difficulty == '中' %}tg-org{% else %}tg-grn{% endif %}">改造难度: {{ issue.difficulty }}</span>
-    </div>
-    {% endif %}
+.issue-section{background:#fff;border-radius:10px;border:1px solid #E6EAF0}
+.issue-section .is-h{padding:16px 22px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;justify-content:space-between}
+.issue-section .is-h .is-hl{display:flex;align-items:center;gap:10px}
+.issue-section .is-h .is-ht{font-size:15px;font-weight:600;color:var(--text)}
+.issue-section .is-b{padding:16px 18px}
+
+.issue-row{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;margin-bottom:8px;border-radius:8px;background:#FAFAFA;border:1px solid #EFEFEF;transition:all .15s}
+.issue-row:hover{box-shadow:0 2px 8px rgba(0,0,0,0.04);border-color:#E0E0E0}
+.issue-row .ir-dot{width:20px;height:20px;border-radius:50%;background:#FFEBEE;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:2px}
+.issue-row .ir-body{flex:1;min-width:0}
+.issue-row .ir-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.issue-row .ir-name{font-size:14px;font-weight:600;color:#1A1D26}
+.issue-row .ir-cat{font-size:11px;padding:2px 10px;border-radius:4px;background:#E8F0FE;color:#1A73E8;font-weight:500;white-space:nowrap}
+.issue-row .ir-desc{font-size:13px;color:#6B7285;line-height:1.5}
+.issue-row .ir-sol{margin-top:6px;padding:8px 12px;background:#E8F0FE;border-radius:6px;font-size:13px;color:#1A73E8;line-height:1.5}
+.issue-row .ir-tag{font-size:11px;padding:3px 10px;border-radius:5px;font-weight:600;white-space:nowrap;flex-shrink:0}
+
+.empty-state{text-align:center;padding:60px 0;color:#9CA0AF}
+.empty-state .e-icon{font-size:44px;margin-bottom:10px}
+.empty-state .e-text{font-size:16px;font-weight:600;color:#0E7C4B;margin-bottom:4px}
+.empty-state .e-sub{font-size:13px;color:#9CA0AF}
+
+.split-panel{display:flex;margin-top:24px;align-items:stretch;gap:0;position:relative;min-height:200px}
+.split-left{flex:0 0 auto;width:50%;overflow:hidden;transition:width .1s ease}
+.split-right{flex:1;overflow:hidden;min-width:0}
+.split-bar{width:5px;background:#E6EAF0;border-radius:3px;cursor:col-resize;flex-shrink:0;transition:background .2s;position:relative;margin:0 2px}
+.split-bar:hover,.split-bar.active{background:#1A73E8}
+</style>
+
+<!-- 统计卡片 -->
+{% set cards = [
+  ("不兼容项", ec, "需在POC阶段逐项解决", "#C62828", "#FFEBEE", "#FFCDD2"),
+  ("警告项", wc, "迁移时需重点关注", "#E67E22", "#FFF3E0", "#F5D6A8"),
+  ("检查规则", tr, "共 " ~ (result.category_results|length) ~ " 个维度", "#1A73E8", "#E8F0FE", "#C5D9F2"),
+] %}
+<div class="summary-cards">
+  {% for label, val, sub, fc, bg, bd in cards %}
+  <div class="sc" style="background:linear-gradient(135deg,{{ bg }},#fff);border-color:{{ bd }}">
+    <div class="sc-l" style="color:{{ fc }}">{{ label }}</div>
+    <div class="sc-v" style="color:{{ fc }}">{{ val }}</div>
+    <div class="sc-s" style="color:{{ fc }}">{{ sub }}</div>
   </div>
   {% endfor %}
 </div>
-{% else %}
-<div class="card" style="text-align:center;padding:48px;">
-  <div style="font-size:48px;margin-bottom:12px;">&#x2705;</div>
-  <div style="font-size:18px;font-weight:600;color:var(--success);">未发现严重不兼容问题</div>
-  <p class="c-secondary" style="margin-top:8px;">所有检查规则均通过，可直接进入迁移实施阶段</p>
+
+<!-- 问题列表 -->
+{% if ec %}
+<div class="issue-section">
+  <div class="is-h">
+    <div class="is-hl">
+      <span style="width:26px;height:26px;border-radius:7px;background:#C62828;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">&#x26A0;</span>
+      <span class="is-ht">不兼容问题清单</span>
+      <span style="font-size:12px;padding:2px 12px;border-radius:5px;background:#FFEBEE;color:#C62828;font-weight:500">{{ ec }} 项</span>
+    </div>
+  </div>
+  <div class="is-b">
+    {% for issue in result.critical_issues %}
+    <div class="issue-row">
+      <div class="ir-dot">&#x2715;</div>
+      <div class="ir-body">
+        <div class="ir-top">
+          <span class="ir-name">{{ issue.name }}</span>
+          <span class="ir-cat">{{ issue.category }}</span>
+        </div>
+        <div class="ir-desc">{{ issue.description[:130] }}{% if issue.description|length > 130 %}...{% endif %}</div>
+        {% if issue.solution %}<div class="ir-sol">&#x1F4A1; {{ issue.solution[:110] }}{% if issue.solution|length > 110 %}...{% endif %}</div>{% endif %}
+      </div>
+      {% if issue.difficulty %}
+      <span class="ir-tag"
+        {% if issue.difficulty == '高' %}style="background:#FFEBEE;color:#C62828"
+        {% elif issue.difficulty == '中' %}style="background:#FFF3E0;color:#E67E22"
+        {% else %}style="background:#E6F7EE;color:#0E7C4B"{% endif %}>{{ issue.difficulty }}</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
 </div>
+{% else %}
+<div class="empty-state"><div class="e-icon">&#x2705;</div><div class="e-text">无严重不兼容问题</div><div class="e-sub">所有检查规则均已通过</div></div>
 {% endif %}
 
-<div class="split-panel" id="splitPanel">
-  {# 动态UDF语言兼容性矩阵 #}
-  {% set udf_cat = result.category_results|selectattr('category', 'in', ['udf_language', 'plsql', 'sqlpl'])|first %}
-  <div class="split-left" id="splitLeft">
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> {{ udf_cat.category_name if udf_cat else 'UDF语言' }}兼容性矩阵</span></div>
-    <div class="tw"><table class="mt">
-      <thead><tr><th>语言</th><th>源端</th><th>DWS</th><th>迁移策略</th><th>难度</th></tr></thead>
-      <tbody>
-      {% if udf_cat and udf_cat.details %}
-        {% for d in udf_cat.details %}
-        <tr>
-          <td><code>{{ d.name }}</code></td>
-          <td>&#x2705;</td>
-          <td>{% if d.compatible or d.severity == 'info' %}&#x2705;{% elif d.severity == 'warning' %}&#x26A0;{% else %}&#x274C;{% endif %}</td>
-          <td style="font-size:13px;">{{ d.suggestion or d.note or d.target_solution[:60] }}</td>
-          <td><span class="tag {% if d.migration_difficulty == '高' %}tg-red{% elif d.migration_difficulty == '中' %}tg-org{% else %}tg-grn{% endif %}">{{ d.migration_difficulty or '—' }}</span></td>
-        </tr>
-        {% endfor %}
-      {% else %}
-        <tr><td colspan="5" style="text-align:center;color:var(--g400);padding:24px;">该路径无UDF/存储过程语言规则</td></tr>
-      {% endif %}
-      </tbody>
-    </table></div>
-    {% if udf_cat and (udf_cat.errors > 0 or udf_cat.warnings > 0) %}
-    <div class="alert alert-warn mt12">&#x26A0; {{ udf_cat.errors }} 项不兼容、{{ udf_cat.warnings }} 项需注意</div>
-    {% elif udf_cat %}
-    <div class="alert alert-ok mt12">&#x2705; 所有语言兼容</div>
-    {% endif %}
+<!-- UDF + 扩展矩阵(可拖拽) -->
+{% set udf = result.category_results|selectattr('category', 'in', ['udf_language','plsql','sqlpl'])|first %}
+{% set ext = result.category_results|selectattr('category', 'equalto', 'extension')|first %}
+{% if udf or ext %}
+<div class="split-panel" id="matPanel">
+  <div class="split-left" id="matLeft">
+    <div class="card" style="padding:0;margin:0">
+      <div class="is-h">
+        <div class="is-hl"><span>&#x1F4DD;</span><span class="is-ht">UDF语言兼容性</span></div>
+        {% if udf %}<span class="ir-tag" style="background:#FFEBEE;color:#C62828">{{ udf.errors }}/{{ udf.warnings }} 异常</span>{% endif %}
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr>
+            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:left">语言</th>
+            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:center">状态</th>
+            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:left">迁移策略</th>
+            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:center">难度</th>
+          </tr></thead>
+          <tbody>
+          {% for d in (udf.details if udf and udf.details else []) %}
+          <tr>
+            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;font-weight:600;font-size:13px;color:#1A1D26">{{ d.name }}</td>
+            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;text-align:center">
+              {% if d.compatible or d.severity == 'info' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#E6F7EE;color:#0E7C4B">&#x2713; 兼容</span>
+              {% elif d.severity == 'warning' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFF3E0;color:#E67E22">&#x26A0; 注意</span>
+              {% else %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFEBEE;color:#C62828">&#x2717; 不兼容</span>{% endif %}
+            </td>
+            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;font-size:13px;color:#6B7285;line-height:1.5">{{ d.suggestion or d.note or d.target_solution[:65] }}</td>
+            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;text-align:center">
+              {% if d.migration_difficulty %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:600;background:#FFEBEE;color:#C62828">{{ d.migration_difficulty }}</span>
+              {% else %}<span style="color:#D0D5DD">—</span>{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" style="padding:40px;text-align:center;color:#9CA0AF;font-size:13px">该路径无UDF/存储过程语言规则</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
-  </div>
-
-  <div class="split-divider" id="splitDivider"></div>
-
-  {# 动态扩展兼容性矩阵 #}
-  {% set ext_cat = result.category_results|selectattr('category', 'equalto', 'extension')|first %}
-  <div class="split-right" id="splitRight">
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4E6;</span> {{ ext_cat.category_name if ext_cat else '扩展' }}兼容性矩阵</span></div>
-    <div class="tw"><table class="mt">
-      <thead><tr><th>扩展</th><th>源端</th><th>DWS</th><th>替代方案</th><th>难度</th></tr></thead>
-      <tbody>
-      {% if ext_cat and ext_cat.details %}
-        {% for d in ext_cat.details %}
-        <tr>
-          <td><code>{{ d.name }}</code></td>
-          <td>&#x2705;</td>
-          <td>{% if d.compatible or d.severity == 'info' %}&#x2705;{% elif d.severity == 'warning' %}&#x26A0;{% else %}&#x274C;{% endif %}</td>
-          <td style="font-size:13px;">{{ d.note or d.target_solution[:60] }}</td>
-          <td><span class="tag {% if d.migration_difficulty == '高' %}tg-red{% elif d.migration_difficulty == '中' %}tg-org{% else %}tg-grn{% endif %}">{{ d.migration_difficulty or '—' }}</span></td>
-        </tr>
-        {% endfor %}
-      {% else %}
-        <tr><td colspan="5" style="text-align:center;color:var(--g400);padding:24px;">该路径无扩展规则</td></tr>
-      {% endif %}
-      </tbody>
-    </table></div>
-    {% if ext_cat and (ext_cat.errors > 0 or ext_cat.warnings > 0) %}
-    <div class="alert alert-warn mt12">&#x26A0; {{ ext_cat.errors }} 项不兼容、{{ ext_cat.warnings }} 项需注意</div>
-    {% elif ext_cat %}
-    <div class="alert alert-ok mt12">&#x2705; 所有扩展兼容</div>
-    {% endif %}
-  </div>
+  <div class="split-bar" id="matBar"></div>
+  <div class="split-right" id="matRight">
+    <div class="card" style="padding:0;margin:0">
+      <div class="is-h">
+        <div class="is-hl"><span>&#x1F4E6;</span><span class="is-ht">扩展兼容性</span></div>
+        {% if ext %}<span class="ir-tag" style="background:#FFEBEE;color:#C62828">{{ ext.errors }}/{{ ext.warnings }} 异常</span>{% endif %}
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr>
+            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:left">扩展</th>
+            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:center">状态</th>
+            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:left">替代方案</th>
+            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:center">难度</th>
+          </tr></thead>
+          <tbody>
+          {% for d in (ext.details if ext and ext.details else []) %}
+          <tr>
+            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;font-weight:600;font-size:13px;color:#1A1D26">{{ d.name }}</td>
+            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;text-align:center">
+              {% if d.compatible or d.severity == 'info' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#E6F7EE;color:#0E7C4B">&#x2713; 兼容</span>
+              {% elif d.severity == 'warning' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFF3E0;color:#E67E22">&#x26A0; 注意</span>
+              {% else %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFEBEE;color:#C62828">&#x2717; 不兼容</span>{% endif %}
+            </td>
+            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;font-size:13px;color:#6B7285;line-height:1.5">{{ d.note or d.target_solution[:65] }}</td>
+            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;text-align:center">
+              {% if d.migration_difficulty %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:600;background:#FFEBEE;color:#C62828">{{ d.migration_difficulty }}</span>
+              {% else %}<span style="color:#D0D5DD">—</span>{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" style="padding:40px;text-align:center;color:#9CA0AF;font-size:13px">该路径无扩展规则</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
-(function() {
-  var panel = document.getElementById('splitPanel');
-  var divider = document.getElementById('splitDivider');
-  var leftPane = document.getElementById('splitLeft');
-  if (!divider || !leftPane || !panel) return;
-
-  var isDragging = false;
-  var storageKey = 'splitPanelWidths_' + '{{ result.source_type or "gp" }}';
-
-  // 恢复持久化的宽度
-  var saved = sessionStorage.getItem(storageKey);
-  if (saved) {
-    leftPane.style.width = saved;
-  } else {
-    leftPane.style.width = '50%';
-  }
-
-  divider.addEventListener('mousedown', function(e) {
-    isDragging = true;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    panel.classList.add('dragging');
-    e.preventDefault();
+(function(){
+  var p=document.getElementById('matPanel'),b=document.getElementById('matBar'),l=document.getElementById('matLeft');
+  if(!b||!l||!p)return;
+  var saved=sessionStorage.getItem('matW');if(saved)l.style.width=saved;
+  b.addEventListener('mousedown',function(e){
+    e.preventDefault();b.classList.add('active');
+    document.body.style.cursor='col-resize';document.body.style.userSelect='none';p.style.pointerEvents='none';
+    function m(e){var r=p.getBoundingClientRect(),pct=Math.max(25,Math.min(75,(e.clientX-r.left)/r.width*100));l.style.width=pct+'%';sessionStorage.setItem('matW',pct+'%');}
+    function u(){b.classList.remove('active');document.body.style.cursor='';document.body.style.userSelect='';p.style.pointerEvents='';document.removeEventListener('mousemove',m);document.removeEventListener('mouseup',u);}
+    document.addEventListener('mousemove',m);document.addEventListener('mouseup',u);
   });
-
-  document.addEventListener('mousemove', function(e) {
-    if (!isDragging) return;
-    var rect = panel.getBoundingClientRect();
-    var offset = e.clientX - rect.left;
-    var pct = Math.max(20, Math.min(80, (offset / rect.width) * 100));
-    leftPane.style.width = pct + '%';
-    sessionStorage.setItem(storageKey, pct + '%');
-  });
-
-  document.addEventListener('mouseup', function() {
-    if (isDragging) {
-      isDragging = false;
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      panel.classList.remove('dragging');
-    }
-  });
-
-  // 跟随迁移路径变化刷新持久化key
-  var target = document.getElementById('sidebar-path-label');
-  if (target) {
-    var obs = new MutationObserver(function() {
-      // 路径切换后清空缓存，下次用新key
-    });
-    obs.observe(target, { childList: true, characterData: true, subtree: true });
-  }
 })();
 </script>
+{% endif %}
 {% endblock %}

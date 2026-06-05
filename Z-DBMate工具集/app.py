@@ -1,4 +1,4 @@
-"""
+﻿"""
 Z-DBMate 部署工具集 - Web UI (Flask)
 提供预检可视化、一键部署、进度监控和检查清单
 """
@@ -230,6 +230,6 @@ if __name__ == "__main__":
     print("=" * 50)
     print("  Z-DBMate 部署工具集 - Web UI")
     print("=" * 50)
-    print("  访问地址: http://127.0.0.1:5012")
+    print("  访问地址: http://127.0.0.1:5052")
     print("=" * 50)
-    app.run(debug=False, host="127.0.0.1", port=5012)
+    app.run(debug=False, host="127.0.0.1", port=5052)

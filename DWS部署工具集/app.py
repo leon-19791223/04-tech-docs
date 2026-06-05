@@ -1,4 +1,4 @@
-"""
+﻿"""
 DWS 智能部署系统 - Web UI (Flask)
 面向 GaussDB(DWS) MPP 数仓 FusionInsight 部署
 集成: 预检 / 配置生成 / 部署引导 / 验证
@@ -150,6 +150,6 @@ if __name__ == "__main__":
     print("  DWS 智能部署系统 - Web UI")
     print(f"  预检: {len(PRECHECK_ITEMS)}项 | 验证: {len(VERIFY_ITEMS)}项")
     print("=" * 50)
-    print("  访问地址: http://127.0.0.1:5023")
+    print("  访问地址: http://127.0.0.1:5053")
     print("=" * 50)
-    app.run(debug=False, host="127.0.0.1", port=5023)
+    app.run(debug=False, host="127.0.0.1", port=5053)

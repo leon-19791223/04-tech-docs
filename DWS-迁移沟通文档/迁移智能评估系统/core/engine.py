@@ -138,9 +138,9 @@ class MigrationAnalyzer:
                     severity=rule.get("severity", "error"),
                     compatible=False,
                     score_deduction=rule.get("score_deduction", 5),
-                    description=rule.get("description", ""),
+                    description=rule.get("description") or rule.get("note", ""),
                     source_pattern=rule.get("source_pattern", ""),
-                    target_solution=rule.get("target_solution", rule.get("alternative", "")),
+                    target_solution=rule.get("target_solution") or rule.get("alternative") or rule.get("migration_suggestion") or rule.get("note", ""),
                     note=rule.get("note", ""),
                     migration_difficulty=rule.get("migration_difficulty", ""),
                     suggestion=rule.get(
@@ -158,8 +158,8 @@ class MigrationAnalyzer:
                     severity="warning",
                     compatible=True,
                     score_deduction=rule.get("score_deduction", 2),
-                    description=rule.get("description", ""),
-                    target_solution=rule.get("target_solution", ""),
+                    description=rule.get("description") or rule.get("note", ""),
+                    target_solution=rule.get("target_solution") or rule.get("alternative") or rule.get("migration_suggestion") or rule.get("note", ""),
                     note=rule.get("note", ""),
                     suggestion=rule.get("migration_suggestion", rule.get("suggestion", "")),
                 ))

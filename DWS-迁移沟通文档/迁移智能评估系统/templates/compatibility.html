@@ -2,66 +2,137 @@
 {% block page_title %}兼容性详细分析{% endblock %}
 {% block content %}
 
-<div class="tabbar" id="tabs">
+<style>
+/* 兼容性页面专属 - 不依赖base.html CSS变量 */
+.compat-wrap{font-size:13px;color:#1A1D26}
+/* tab导航 */
+.tab-strip{display:flex;gap:4px;margin-bottom:20px;background:#F0F2F5;border-radius:8px;padding:4px;overflow-x:auto;border:1px solid #D0D5DD}
+.tab-strip .tab-btn{padding:8px 18px;cursor:pointer;font-size:13px;font-weight:500;color:#6B7285;border-radius:6px;white-space:nowrap;transition:all.15s;border:none;background:transparent}
+.tab-strip .tab-btn:hover{color:#1A1D26}
+.tab-strip .tab-btn.active{background:#fff;color:#1A1D26;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.tab-strip .tab-btn .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.tab-strip .tab-btn .count{font-size:11px;color:#9CA0AF;margin-left:4px}
+
+/* 概要区 */
+.overview-row{display:flex;gap:14px;margin-bottom:18px;align-items:stretch}
+.score-card{flex:0 0 150px;padding:20px;border-radius:8px;background:#F8F9FA;border:1px solid #D0D5DD;text-align:center}
+.score-card .sc-num{font-size:30px;font-weight:700;line-height:1.1}
+.score-card .sc-unit{font-size:11px;color:#9CA0AF;margin-top:2px}
+.score-card .sc-bar{height:4px;border-radius:2px;background:#D0D5DD;overflow:hidden;margin-top:10px}
+.score-card .sc-bar div{height:100%;border-radius:2px}
+
+.stat-group{flex:1;display:flex;gap:10px}
+.stat-group .stat-box{flex:1;padding:12px 14px;border-radius:6px;border:1px solid}
+.stat-group .stat-box .sn{font-size:22px;font-weight:700;line-height:1.2}
+.stat-group .stat-box .sl{font-size:11px;font-weight:500;margin-top:2px}
+
+/* 规则表格 */
+.rule-section{background:#fff;border-radius:10px;border:1px solid #D0D5DD;overflow:hidden;margin-bottom:12px}
+.rule-section .rs-h{padding:14px 20px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;justify-content:space-between}
+.rule-section .rs-h .rs-t{font-size:14px;font-weight:600;color:#1A1D26}
+.rule-section .rs-h .rs-c{font-size:11px;color:#9CA0AF}
+.rule-section table{width:100%;border-collapse:collapse}
+.rule-section th{padding:10px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #D0D5DD;text-align:left}
+.rule-section td{padding:10px 14px;border-bottom:1px solid #F0F2F5;font-size:13px;color:#6B7285;vertical-align:top}
+.rule-section tr:last-child td{border-bottom:none}
+.rule-section tr:hover td{background:#F8F9FA}
+.rule-section .td-name{font-weight:600;color:#1A1D26}
+.rule-section .td-name .rid{font-size:11px;color:#9CA0AF;font-weight:400;display:block;margin-top:1px}
+.rule-section .td-sol{color:#1A73E8}
+
+.status-tag{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500}
+.status-tag.ok{background:#E6F7EE;color:#0E7C4B}
+.status-tag.warn{background:#FFF3E0;color:#E67E22}
+.status-tag.err{background:#FFEBEE;color:#C62828}
+
+.diff-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600}
+.diff-h{background:#FFEBEE;color:#C62828}
+.diff-m{background:#FFF3E0;color:#E67E22}
+.diff-l{background:#E6F7EE;color:#0E7C4B}
+
+.summary-line{margin-top:12px;padding:12px 16px;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px}
+</style>
+
+<div class="compat-wrap">
+<div class="tab-strip">
   {% for cat in result.category_results if cat.details %}
-  <div class="tab {% if loop.first %}active{% endif %}" onclick="st('c-{{ cat.category }}')">
-    {% if cat.errors > 0 %}&#x1F534;{% elif cat.warnings > 0 %}&#x1F7E1;{% else %}&#x1F7E2;{% endif %}
+  <button class="tab-btn {% if loop.first %}active{% endif %}" onclick="switchCompat(this,'c-{{ cat.category }}')">
+    <span class="dot" style="background:{% if cat.errors > 0 %}#C62828{% elif cat.warnings > 0 %}#E67E22{% else %}#0E7C4B{% endif %}"></span>
     {{ cat.category_name }}
-  </div>
+    <span class="count">{{ cat.total_rules }}</span>
+  </button>
   {% endfor %}
 </div>
 
 {% for cat in result.category_results if cat.details %}
-{% set c = "#0F7B3E" if cat.actual_score >= 85 else "#CC7A00" if cat.actual_score >= 65 else "#C62828" %}
-<div id="c-{{ cat.category }}" class="tc2 {% if loop.first %}active{% endif %}">
-  <div class="card">
-    <div class="fsb" style="margin-bottom:16px;">
-      <div>
-        <span style="font-size:18px;font-weight:600;">{{ cat.category_name }}</span>
-        <span class="c-secondary" style="margin-left:12px;font-size:13px;">
-          得分: <strong style="color:{{ c }};">{{ cat.actual_score }}</strong>/100
-        </span>
-      </div>
-      <div class="fsbc">
-        <span class="tag tg-grn">&#x2705; {{ cat.passed }}</span>
-        <span class="tag tg-org">&#x26A0; {{ cat.warnings }}</span>
-        <span class="tag tg-red">&#x274C; {{ cat.errors }}</span>
-      </div>
+{% set sc = "#0E7C4B" if cat.actual_score >= 85 else "#E67E22" if cat.actual_score >= 65 else "#C62828" %}
+<div class="compat-content" id="c-{{ cat.category }}" style="display:{% if loop.first %}block{% else %}none{% endif %}">
+
+  <!-- 概要 -->
+  <div class="overview-row">
+    <div class="score-card">
+      <div class="sc-num" style="color:{{ sc }}">{{ cat.actual_score }}</div>
+      <div class="sc-unit">/ 100</div>
+      <div class="sc-bar"><div style="width:{{ cat.actual_score }}%;background:{{ sc }}"></div></div>
     </div>
-    <div class="tw"><table class="mt">
-      <thead><tr><th style="width:170px;">规则</th><th style="width:90px;">状态</th><th>说明</th><th>DWS解决方案</th></tr></thead>
+    <div class="stat-group">
+      <div class="stat-box" style="background:#E6F7EE;border-color:#B8DFCC"><div class="sn" style="color:#0E7C4B">{{ cat.passed }}</div><div class="sl" style="color:#0E7C4B">通过</div></div>
+      <div class="stat-box" style="background:#FFF3E0;border-color:#F5D6A8"><div class="sn" style="color:#E67E22">{{ cat.warnings }}</div><div class="sl" style="color:#E67E22">警告</div></div>
+      <div class="stat-box" style="background:#FFEBEE;border-color:#FFCDD2"><div class="sn" style="color:#C62828">{{ cat.errors }}</div><div class="sl" style="color:#C62828">不兼容</div></div>
+    </div>
+  </div>
+
+  <!-- 规则表 -->
+  <div class="rule-section">
+    <div class="rs-h">
+      <span class="rs-t">{{ cat.category_name }} 规则详情</span>
+      <span class="rs-c">共 {{ cat.total_rules }} 条规则</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:175px">规则</th>
+        <th style="width:75px;text-align:center">状态</th>
+        <th>说明</th>
+        <th>DWS解决方案</th>
+      </tr></thead>
       <tbody>
       {% for d in cat.details %}
-      <tr class="{% if d.severity == 'error' %}ir{% endif %}">
-        <td><strong>{{ d.name }}</strong><br><span class="c-secondary" style="font-size:11px;">{{ d.rule_id }}</span></td>
-        <td>
-          {% if d.severity == "info" %}<span class="tag tg-grn">&#x2705; 兼容</span>
-          {% elif d.severity == "warning" %}<span class="tag tg-org">&#x26A0; 需注意</span>
-          {% else %}<span class="tag tg-red">&#x274C; 不兼容</span>{% endif %}
+      <tr{% if d.severity == 'error' %} style="background:#FFF5F5"{% endif %}>
+        <td><span class="td-name">{{ d.name }}<span class="rid">{{ d.rule_id }}</span></span></td>
+        <td style="text-align:center">
+          {% if d.severity == "info" %}<span class="status-tag ok">&#x2713; 兼容</span>
+          {% elif d.severity == "warning" %}<span class="status-tag warn">&#x26A0; 注意</span>
+          {% else %}<span class="status-tag err">&#x2717; 不兼容</span>{% endif %}
         </td>
-        <td style="font-size:13px;">{{ d.description[:100] }}{% if d.description|length > 100 %}...{% endif %}</td>
-        <td style="font-size:13px;color:var(--accent);max-width:240px;">{{ d.target_solution[:80] }}{% if d.target_solution|length > 80 %}...{% endif %}</td>
+        <td style="font-size:13px;line-height:1.5">{{ d.description[:100] }}{% if d.description|length > 100 %}...{% endif %}</td>
+        <td class="td-sol" style="font-size:13px;line-height:1.5;max-width:220px">{{ d.target_solution[:80] }}{% if d.target_solution|length > 80 %}...{% endif %}</td>
       </tr>
       {% endfor %}
       </tbody>
-    </table></div>
+    </table>
+  </div>
+
+  <!-- 总结 -->
+  <div class="summary-line" style="{% if cat.warnings > 0 or cat.errors > 0 %}background:#FFF3E0;color:#E67E22;border:1px solid #F5D6A8{% else %}background:#E6F7EE;color:#0E7C4B;border:1px solid #B8DFCC{% endif %}">
     {% if cat.warnings > 0 or cat.errors > 0 %}
-    <div class="alert alert-warn mt12">&#x1F4A1; 该维度 {{ cat.errors }} 项不兼容、{{ cat.warnings }} 项需注意，迁移时需重点关注</div>
+    &#x1F4A1; 该维度 {{ cat.errors }} 项不兼容、{{ cat.warnings }} 项需注意，迁移时需重点关注
     {% else %}
-    <div class="alert alert-ok mt12">&#x2705; 该维度所有规则检查通过，兼容性良好</div>
+    &#x2705; 该维度所有规则检查通过，兼容性良好
     {% endif %}
   </div>
+
 </div>
 {% endfor %}
-
+</div>
 {% endblock %}
+
 {% block scripts %}
 <script>
-function st(id) {
-  document.querySelectorAll('.tc2').forEach(function(e){ e.classList.remove('active'); });
-  document.querySelectorAll('.tab').forEach(function(e){ e.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
-  document.querySelector('.tab[onclick*="'+id+'"]').classList.add('active');
+function switchCompat(el,id){
+  document.querySelectorAll('.tab-btn').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.compat-content').forEach(function(c){c.style.display='none'});
+  el.classList.add('active');
+  document.getElementById(id).style.display='block';
 }
 </script>
 {% endblock %}

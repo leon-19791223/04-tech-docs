@@ -3,41 +3,95 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}GaussDB(DWS) 部署系统{% endblock %}</title>
-<link rel="stylesheet" href="http://127.0.0.1:8080/shared/brand.css">
+<title>{% block title %}DWS 部署系统{% endblock %}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#1A2355;--primary2:#26347A;--accent:#4A5FC1;--accent-bg:#ECEEFB;--accent-light:#6B7FD5;--green:#0E7C4B;--green-bg:#E6F6F0;--orange:#E67E22;--orange-bg:#FFF3E0;--red:#C62828;--red-bg:#FFEBEE;--gray:#6B7285;--gray2:#9CA0AF;--gray3:#D0D5DD;--bg:#F0F2F5;--card:#FFF;--text:#1A1D26;--shadow:0 1px 3px rgba(0,0,0,0.04);--shadow-h:0 8px 25px rgba(0,0,0,0.06);--radius:10px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--gray3);border-radius:3px}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:240px;background:linear-gradient(180deg,#1A2355,#15204A,#101A3D);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sidebar-logo{padding:22px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.sidebar-logo .logo{display:flex;align-items:center;gap:10px}
+.sidebar-logo .logo-dot{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent-light));display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+.sidebar-logo .logo-text{font-size:14px;font-weight:600;color:#fff}
+.sidebar-logo .logo-sub{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;padding-left:40px}
+.sidebar-nav{padding:12px 10px;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.2);padding:18px 12px 5px;font-weight:600}
+.sidebar-nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:rgba(255,255,255,0.45);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;margin-bottom:1px}
+.sidebar-nav a:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.75)}
+.sidebar-nav a.active{background:rgba(74,95,193,0.18);color:#fff}
+.sidebar-nav a .ni{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,0.04);flex-shrink:0}
+.sidebar-nav a.active .ni{background:rgba(74,95,193,0.25)}
+.sidebar-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;color:rgba(255,255,255,0.2)}
+.sidebar-footer a{color:rgba(255,255,255,0.3);text-decoration:none;font-size:11px;display:block;margin-bottom:4px}
+.main{flex:1;margin-left:240px;min-height:100vh}
+.topbar{height:60px;background:rgba(255,255,255,0.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--gray3);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:50}
+.topbar h2{font-size:16px;font-weight:600;color:var(--primary)}
+.page{padding:24px 28px}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid #E6EAF0;padding:24px;margin-bottom:16px;transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-h)}
+.card-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #F0F2F5}
+.card-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.tg{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:500;white-space:nowrap}
+.tg-grn{background:var(--green-bg);color:var(--green)}
+.tg-org{background:var(--orange-bg);color:var(--orange)}
+.tg-red{background:var(--red-bg);color:var(--red)}
+.tg-blu{background:var(--accent-bg);color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all .15s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#3D50A8}
+.btn-ghost{background:transparent;color:var(--accent);border:1px solid var(--gray3)}
+.btn-ghost:hover{background:var(--accent-bg);border-color:var(--accent)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid #E6EAF0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+table th{padding:10px 14px;font-weight:600;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;background:#F8F9FA;border-bottom:1px solid #E6EAF0;text-align:left}
+table td{padding:11px 14px;border-bottom:1px solid #F0F2F5;color:var(--text)}
+table tr:last-child td{border-bottom:none}
+table tr:hover td{background:#F8F9FA}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.sb{display:flex;justify-content:space-between;align-items:center}
+.sbc{display:flex;align-items:center;gap:8px}
+.mt12{margin-top:12px}
+.stat-c{background:#F8F9FA;border:1px solid #E6EAF0;border-radius:8px;padding:16px}
+.stat-c .sl{font-size:12px;color:var(--gray2);margin-bottom:4px}
+.stat-c .sv{font-size:22px;font-weight:700;color:var(--primary)}
+@media(max-width:1024px){.g2{grid-template-columns:1fr}}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}.page{padding:16px}}
+</style>
 </head>
 <body>
-
+<div class="layout">
 <div class="sidebar">
-  <div class="sb-brand">
-    <div class="sb-badge"><span class="sb-icon">&#x1F3D7;</span><span>v1.0</span></div>
-    <h1>DWS 部署系统</h1>
-    <p>GaussDB(DWS) &middot; FusionInsight</p>
+  <div class="sidebar-logo">
+    <div class="logo">
+      <div class="logo-dot">&#x1F3D7;</div>
+      <div><div class="logo-text">DWS 部署系统</div><div class="logo-sub">GaussDB(DWS) MPP 数仓</div></div>
+    </div>
   </div>
-  <nav class="sb-nav">
-    <div class="sb-label">部署管理</div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">部署管理</div>
     <a href="/" class="{% if request.path == '/' %}active{% endif %}"><span class="ni">&#x1F4CA;</span> 仪表盘</a>
     <a href="/precheck" class="{% if request.path == '/precheck' %}active{% endif %}"><span class="ni">&#x2705;</span> 环境预检</a>
     <a href="/config" class="{% if request.path == '/config' %}active{% endif %}"><span class="ni">&#x2699;</span> 配置生成</a>
     <a href="/deploy" class="{% if request.path == '/deploy' %}active{% endif %}"><span class="ni">&#x1F680;</span> 部署引导</a>
     <a href="/verify" class="{% if request.path == '/verify' %}active{% endif %}"><span class="ni">&#x1F50D;</span> 部署验证</a>
-    <div class="sb-label">参考</div>
+    <div class="nav-label">参考</div>
     <a href="/flow" class="{% if request.path == '/flow' %}active{% endif %}"><span class="ni">&#x1F4C5;</span> 部署流程</a>
     <a href="/checklist" class="{% if request.path == '/checklist' %}active{% endif %}"><span class="ni">&#x1F4CB;</span> 检查清单</a>
   </nav>
-  <div style="padding:8px 16px;border-top:1px solid rgba(255,255,255,0.06);">
-    <a href="http://127.0.0.1:8080" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;text-decoration:none;font-size:11px;color:rgba(255,255,255,0.4);transition:all 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">&#x2190; 返回门户</a>
+  <div class="sidebar-footer">
+    <a href="http://127.0.0.1:8080">&#x2190; 返回门户</a>
+    v1.0 &middot; 2026
   </div>
-  <div class="sb-footer">&copy; 2026 &middot; v1.0</div>
 </div>
-
 <div class="main">
-  <div class="topbar">
-    <div><h2>{% block page_title %}仪表盘{% endblock %}</h2></div>
-  </div>
-  <div class="page-wrap">{% block content %}{% endblock %}</div>
+  <div class="topbar"><h2>{% block page_title %}仪表盘{% endblock %}</h2></div>
+  <div class="page">{% block content %}{% endblock %}</div>
 </div>
-
+</div>
 {% block scripts %}{% endblock %}
 </body>
 </html>

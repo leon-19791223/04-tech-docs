@@ -1,4 +1,4 @@
-"""
+﻿"""
 掌数科技 · 数据库工具链统一门户
 集成: 迁移评估系统 / Z-DBMate / DWS部署工具 / 投标系统 / HCCDE题库
 """
@@ -29,10 +29,10 @@ SYSTEMS = [
         "id": "assessment",
         "name": "迁移智能评估系统",
         "desc": "异构数据库迁移兼容性评估 · 7条迁移路径 (GP/Oracle/MySQL/TD等) · DOCX报告",
-        "url": "http://127.0.0.1:5010",
+        "url": "http://127.0.0.1:5030",
         "icon": "🔍",
         "category": "迁移评估",
-        "port": 5010,
+        "port": 5030,
         "version": "v2.0",
         "tag": "核心产品",
     },
