@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F5A5;</span> 源端环境信息</span></div>
+  <div class="card-hdr"><span class="card-title">源端环境信息</span></div>
   <div class="tw"><table class="mt">
     <thead><tr><th style="width:200px;">项目</th><th>内容</th></tr></thead>
     <tbody>
@@ -22,7 +22,7 @@
 
 <div class="two">
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4CA;</span> 元数据对象统计</span></div>
+    <div class="card-hdr"><span class="card-title">元数据对象统计</span></div>
     <div class="tw"><table class="mt">
       <thead><tr><th style="width:200px;">对象类型</th><th>数量</th></tr></thead>
       <tbody>
@@ -36,7 +36,7 @@
   </div>
   {% if result.udf_languages %}
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> UDF语言分布</span></div>
+    <div class="card-hdr"><span class="card-title">UDF语言分布</span></div>
     <div class="tw"><table class="mt">
       <thead><tr><th>语言</th><th>数量</th><th>兼容性</th></tr></thead>
       <tbody>
@@ -44,7 +44,7 @@
       <tr>
         <td><code>{{ lang }}</code></td>
         <td><strong>{{ cnt }}</strong></td>
-        <td><span class="tag {% if lang in ('plpgsql','sql') %}tg-grn{% else %}tg-red{% endif %}">{% if lang in ('plpgsql','sql') %}&#x2705; 兼容{% else %}&#x274C; 需改造{% endif %}</span></td>
+        <td><span class="tag {% if lang in ('plpgsql','sql') %}tg-grn{% else %}tg-red{% endif %}">{% if lang in ('plpgsql','sql') %}兼容{% else %}需改造{% endif %}</span></td>
       </tr>
       {% endfor %}
       </tbody>
@@ -54,7 +54,7 @@
 </div>
 
 <div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F504;</span> 数据流向概览</span></div>
+  <div class="card-hdr"><span class="card-title">数据流向概览</span></div>
   <div class="flow">
     <span class="fn" style="background:linear-gradient(135deg,#FFEBEE,#FFF5F6);color:var(--danger);">{{ result.db_version or "源端数据库" }}</span>
     <span class="fa">&#x2192;</span>

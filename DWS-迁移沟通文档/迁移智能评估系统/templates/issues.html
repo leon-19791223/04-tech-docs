@@ -63,7 +63,7 @@
 <div class="issue-section">
   <div class="is-h">
     <div class="is-hl">
-      <span style="width:26px;height:26px;border-radius:7px;background:#C62828;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">&#x26A0;</span>
+      <span style="width:26px;height:26px;border-radius:7px;background:#C62828;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;">!</span>
       <span class="is-ht">不兼容问题清单</span>
       <span style="font-size:12px;padding:2px 12px;border-radius:5px;background:#FFEBEE;color:#C62828;font-weight:500">{{ ec }} 项</span>
     </div>
@@ -71,14 +71,14 @@
   <div class="is-b">
     {% for issue in result.critical_issues %}
     <div class="issue-row">
-      <div class="ir-dot">&#x2715;</div>
+      <div class="ir-dot" style="background:#C62828;color:#fff;font-size:10px;font-weight:700;">!</div>
       <div class="ir-body">
         <div class="ir-top">
           <span class="ir-name">{{ issue.name }}</span>
           <span class="ir-cat">{{ issue.category }}</span>
         </div>
         <div class="ir-desc">{{ issue.description[:130] }}{% if issue.description|length > 130 %}...{% endif %}</div>
-        {% if issue.solution %}<div class="ir-sol">&#x1F4A1; {{ issue.solution[:110] }}{% if issue.solution|length > 110 %}...{% endif %}</div>{% endif %}
+        {% if issue.solution %}<div class="ir-sol">{{ issue.solution[:110] }}{% if issue.solution|length > 110 %}...{% endif %}</div>{% endif %}
       </div>
       {% if issue.difficulty %}
       <span class="ir-tag"
@@ -91,7 +91,7 @@
   </div>
 </div>
 {% else %}
-<div class="empty-state"><div class="e-icon">&#x2705;</div><div class="e-text">无严重不兼容问题</div><div class="e-sub">所有检查规则均已通过</div></div>
+<div class="empty-state"><div class="e-text">无严重不兼容问题</div><div class="e-sub">所有检查规则均已通过</div></div>
 {% endif %}
 
 <!-- UDF + 扩展矩阵(可拖拽) -->
@@ -102,7 +102,7 @@
   <div class="split-left" id="matLeft">
     <div class="card" style="padding:0;margin:0">
       <div class="is-h">
-        <div class="is-hl"><span>&#x1F4DD;</span><span class="is-ht">UDF语言兼容性</span></div>
+        <div class="is-hl"><span class="is-ht">UDF语言兼容性</span></div>
         {% if udf %}<span class="ir-tag" style="background:#FFEBEE;color:#C62828">{{ udf.errors }}/{{ udf.warnings }} 异常</span>{% endif %}
       </div>
       <div style="overflow-x:auto">
@@ -118,9 +118,9 @@
           <tr>
             <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;font-weight:600;font-size:13px;color:#1A1D26">{{ d.name }}</td>
             <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;text-align:center">
-              {% if d.compatible or d.severity == 'info' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#E6F7EE;color:#0E7C4B">&#x2713; 兼容</span>
-              {% elif d.severity == 'warning' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFF3E0;color:#E67E22">&#x26A0; 注意</span>
-              {% else %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFEBEE;color:#C62828">&#x2717; 不兼容</span>{% endif %}
+              {% if d.compatible or d.severity == 'info' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#E6F7EE;color:#0E7C4B">兼容</span>
+              {% elif d.severity == 'warning' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFF3E0;color:#E67E22">注意</span>
+              {% else %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFEBEE;color:#C62828">不兼容</span>{% endif %}
             </td>
             <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;font-size:13px;color:#6B7285;line-height:1.5">{{ d.suggestion or d.note or d.target_solution[:65] }}</td>
             <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;text-align:center">
@@ -129,36 +129,14 @@
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="4" style="padding:40px;text-align:center;color:#9CA0AF;font-size:13px">该路径无UDF/存储过程语言规则</td></tr>
+          <tr><td colspan="4" style="padding:40px;text-align:center;color:#9CA0AF;font-size:13px">该路径无扩展规则</td></tr>
           {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
   </div>
-  <div class="split-bar" id="matBar"></div>
-  <div class="split-right" id="matRight">
-    <div class="card" style="padding:0;margin:0">
-      <div class="is-h">
-        <div class="is-hl"><span>&#x1F4E6;</span><span class="is-ht">扩展兼容性</span></div>
-        {% if ext %}<span class="ir-tag" style="background:#FFEBEE;color:#C62828">{{ ext.errors }}/{{ ext.warnings }} 异常</span>{% endif %}
-      </div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <thead><tr>
-            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:left">扩展</th>
-            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:center">状态</th>
-            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:left">替代方案</th>
-            <th style="padding:11px 14px;font-size:11px;font-weight:600;color:#6B7285;text-transform:uppercase;letter-spacing:.4px;background:#F8F9FA;border-bottom:1px solid #DEE2E6;text-align:center">难度</th>
-          </tr></thead>
-          <tbody>
-          {% for d in (ext.details if ext and ext.details else []) %}
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;font-weight:600;font-size:13px;color:#1A1D26">{{ d.name }}</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;text-align:center">
-              {% if d.compatible or d.severity == 'info' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#E6F7EE;color:#0E7C4B">&#x2713; 兼容</span>
-              {% elif d.severity == 'warning' %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFF3E0;color:#E67E22">&#x26A0; 注意</span>
-              {% else %}<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:500;background:#FFEBEE;color:#C62828">&#x2717; 不兼容</span>{% endif %}
+</div>
             </td>
             <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;font-size:13px;color:#6B7285;line-height:1.5">{{ d.note or d.target_solution[:65] }}</td>
             <td style="padding:10px 14px;border-bottom:1px solid #F0F2F5;text-align:center">

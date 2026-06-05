@@ -100,9 +100,9 @@
       <tr{% if d.severity == 'error' %} style="background:#FFF5F5"{% endif %}>
         <td><span class="td-name">{{ d.name }}<span class="rid">{{ d.rule_id }}</span></span></td>
         <td style="text-align:center">
-          {% if d.severity == "info" %}<span class="status-tag ok">&#x2713; 兼容</span>
-          {% elif d.severity == "warning" %}<span class="status-tag warn">&#x26A0; 注意</span>
-          {% else %}<span class="status-tag err">&#x2717; 不兼容</span>{% endif %}
+          {% if d.severity == "info" %}<span class="status-tag ok">兼容</span>
+          {% elif d.severity == "warning" %}<span class="status-tag warn">注意</span>
+          {% else %}<span class="status-tag err">不兼容</span>{% endif %}
         </td>
         <td style="font-size:13px;line-height:1.5">{{ d.description[:100] }}{% if d.description|length > 100 %}...{% endif %}</td>
         <td class="td-sol" style="font-size:13px;line-height:1.5;max-width:220px">{{ d.target_solution[:80] }}{% if d.target_solution|length > 80 %}...{% endif %}</td>
@@ -115,9 +115,9 @@
   <!-- 总结 -->
   <div class="summary-line" style="{% if cat.warnings > 0 or cat.errors > 0 %}background:#FFF3E0;color:#E67E22;border:1px solid #F5D6A8{% else %}background:#E6F7EE;color:#0E7C4B;border:1px solid #B8DFCC{% endif %}">
     {% if cat.warnings > 0 or cat.errors > 0 %}
-    &#x1F4A1; 该维度 {{ cat.errors }} 项不兼容、{{ cat.warnings }} 项需注意，迁移时需重点关注
+    该维度 {{ cat.errors }} 项不兼容、{{ cat.warnings }} 项需注意，迁移时需重点关注
     {% else %}
-    &#x2705; 该维度所有规则检查通过，兼容性良好
+    该维度所有规则检查通过，兼容性良好
     {% endif %}
   </div>
 

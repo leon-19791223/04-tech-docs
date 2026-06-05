@@ -656,28 +656,28 @@ table.mt tbody tr:first-child td { border-top:none; }
   <nav class="sb-nav">
     <div class="sb-label">概览</div>
     <a href="/" class="{% if request.path == '/' %}active{% endif %}">
-      <span class="ni">&#x1F4CA;</span> 仪表盘
+      <span class="ni" style="background:rgba(26,115,232,0.15);color:#4A9AF5;">&#x25CF;</span> 仪表盘
     </a>
     <a href="/environment" class="{% if request.path == '/environment' %}active{% endif %}">
-      <span class="ni">&#x1F5A5;</span> 环境总览
+      <span class="ni" style="background:rgba(15,123,62,0.15);color:#1AA85A;">&#x25CF;</span> 环境总览
     </a>
     <div class="sb-label">分析</div>
     <a href="/compatibility" class="{% if request.path == '/compatibility' %}active{% endif %}">
-      <span class="ni">&#x1F50D;</span> 兼容性分析
+      <span class="ni" style="background:rgba(230,126,34,0.15);color:#E67E22;">&#x25CF;</span> 兼容性分析
     </a>
     <a href="/issues" class="{% if request.path == '/issues' %}active{% endif %}">
-      <span class="ni">&#x26A0;</span> 关键问题
+      <span class="ni" style="background:rgba(198,40,40,0.15);color:#E53935;">&#x25CF;</span> 关键问题
       {% if result and result.critical_issues %}<span class="nav-badge">{{ result.critical_issues|length }}</span>{% endif %}
     </a>
     <div class="sb-label">规划</div>
     <a href="/workload" class="{% if request.path == '/workload' %}active{% endif %}">
-      <span class="ni">&#x1F4C5;</span> 工作量与规划
+      <span class="ni" style="background:rgba(123,79,191,0.15);color:#9C6ADE;">&#x25CF;</span> 工作量与规划
     </a>
     <a href="/poc" class="{% if request.path == '/poc' %}active{% endif %}">
-      <span class="ni">&#x1F9EA;</span> POC测试建议
+      <span class="ni" style="background:rgba(26,115,232,0.15);color:#4A9AF5;">&#x25CF;</span> POC测试建议
     </a>
     <a href="/recommendations" class="{% if request.path == '/recommendations' %}active{% endif %}">
-      <span class="ni">&#x1F4A1;</span> 建议与推荐
+      <span class="ni" style="background:rgba(15,123,62,0.15);color:#1AA85A;">&#x25CF;</span> 建议与推荐
     </a>
   </nav>
   
@@ -693,13 +693,13 @@ table.mt tbody tr:first-child td { border-top:none; }
 <div class="main">
   <div class="topbar">
     <div class="topbar-left"><h2>{% block page_title %}仪表盘{% endblock %}</h2></div>
-    <div class="topbar-right"><a href="/report/download" class="btn btn-pri">&#x1F4E5; 下载报告</a></div>
+    <div class="topbar-right"><a href="/report/download" class="btn btn-pri">下载报告</a></div>
   </div>
   <div class="page-wrap">{% block content %}{% endblock %}</div>
 
 
 <div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--g200);text-align:center;font-size:11px;color:var(--g400);">
-    &#x2699; 掌数科技 &middot; 迁移工具链 &mdash;
+    掌数科技 &middot; 迁移工具链 &mdash;
     <a href="http://127.0.0.1:8080" style="color:var(--accent);text-decoration:none;">工具门户</a>
     <span style="margin:0 6px;color:var(--g300);">|</span> 迁移评估 :5010
     <span style="margin:0 6px;color:var(--g300);">|</span> Z-DBMate :5012

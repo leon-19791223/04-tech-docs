@@ -8,7 +8,6 @@
 <div class="card" style="padding:0;">
   <div style="padding:18px 20px 14px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;justify-content:space-between;">
     <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:16px;">&#x1F4CB;</span>
       <span style="font-size:14px;font-weight:600;">迁移定制建议</span>
       <span class="tg-blu" style="font-size:11px;padding:2px 10px;border-radius:4px;">{{ result.recommendations|length }} 条</span>
     </div>
@@ -19,17 +18,14 @@
       {% for rec in result.recommendations %}
       {% if '改造' in rec or '不兼容' in rec or '重写' in rec or '替换' in rec %}
       <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:6px;background:#FFF3E0;border-left:3px solid #E67E22;transition:all.15s;">
-        <span style="font-size:14px;flex-shrink:0;margin-top:1px;">&#x26A0;</span>
         <span style="font-size:13px;line-height:1.5;color:var(--text);flex:1;">{{ rec }}</span>
       </div>
       {% elif '建议' in rec or '评估' in rec or '分批' in rec or 'POC' in rec %}
       <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:6px;background:#E8F0FE;border-left:3px solid #1A73E8;transition:all.15s;">
-        <span style="font-size:14px;flex-shrink:0;margin-top:1px;">&#x1F4A1;</span>
         <span style="font-size:13px;line-height:1.5;color:var(--text);flex:1;">{{ rec }}</span>
       </div>
       {% else %}
       <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:6px;background:#F8F9FA;border-left:3px solid #9CA0AF;transition:all.15s;">
-        <span style="font-size:14px;flex-shrink:0;margin-top:1px;">&#x2139;</span>
         <span style="font-size:13px;line-height:1.5;color:var(--text);flex:1;">{{ rec }}</span>
       </div>
       {% endif %}
@@ -37,7 +33,6 @@
     </div>
     {% else %}
     <div style="text-align:center;padding:24px;color:var(--gray2);">
-      <div style="font-size:32px;margin-bottom:8px;">&#x2705;</div>
       <div style="font-size:14px;">无迁移建议</div>
     </div>
     {% endif %}
@@ -50,7 +45,6 @@
 <div class="card" style="padding:0;">
   <div style="padding:18px 20px 14px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;justify-content:space-between;">
     <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:16px;">&#x1F6E0;</span>
       <span style="font-size:14px;font-weight:600;">推荐迁移工具链</span>
     </div>
   </div>
@@ -88,15 +82,15 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;padding:10px;background:#F8F9FA;border-radius:6px;font-size:11px;color:var(--gray2);flex-wrap:wrap;">
-      <span style="font-weight:500;color:var(--text);">&#x1F4CB; 评估规划</span>
-      <span style="color:#D0D5DD;">&#x2192;</span>
-      <span style="font-weight:500;color:#1A73E8;">&#x2194; UGO结构迁移</span>
-      <span style="color:#D0D5DD;">&#x2192;</span>
-      <span style="font-weight:500;color:#0E7C4B;">&#x2194; DRS数据迁移</span>
-      <span style="color:#D0D5DD;">&#x2192;</span>
-      <span>&#x2705; 验证测试</span>
-      <span style="color:#D0D5DD;">&#x2192;</span>
-      <span>&#x1F680; 上线割接</span>
+      <span style="font-weight:500;color:var(--text);">评估规划</span>
+      <span style="color:#D0D5DD;">→</span>
+      <span style="font-weight:500;color:#1A73E8;">UGO结构迁移</span>
+      <span style="color:#D0D5DD;">→</span>
+      <span style="font-weight:500;color:#0E7C4B;">DRS数据迁移</span>
+      <span style="color:#D0D5DD;">→</span>
+      <span>验证测试</span>
+      <span style="color:#D0D5DD;">→</span>
+      <span>上线割接</span>
     </div>
   </div>
 </div>
@@ -108,7 +102,7 @@
 
   <div class="card" style="flex:1;padding:0;">
     <div style="padding:16px 18px 12px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;gap:8px;">
-      <span style="font-size:14px;font-weight:600;">&#x1F9F0; POC验证建议</span>
+      <span style="font-size:14px;font-weight:600;">POC验证建议</span>
     </div>
     <div style="padding:14px 18px;">
       <ol style="margin:0;padding:0;list-style:none;">
@@ -125,7 +119,7 @@
 
   <div class="card" style="flex:1;padding:0;">
     <div style="padding:16px 18px 12px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;gap:8px;">
-      <span style="font-size:14px;font-weight:600;">&#x26A0; 风险规避建议</span>
+      <span style="font-size:14px;font-weight:600;">风险规避建议</span>
     </div>
     <div style="padding:14px 18px;">
       <ol style="margin:0;padding:0;list-style:none;">
@@ -142,7 +136,7 @@
 
   <div class="card" style="flex:1;padding:0;">
     <div style="padding:16px 18px 12px;border-bottom:1px solid #F0F2F5;display:flex;align-items:center;gap:8px;">
-      <span style="font-size:14px;font-weight:600;">&#x1F4CA; 评分规则</span>
+      <span style="font-size:14px;font-weight:600;">评分规则</span>
     </div>
     <div style="padding:14px 18px;">
       <div style="margin-bottom:12px;">

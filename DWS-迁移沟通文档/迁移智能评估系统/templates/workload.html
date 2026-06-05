@@ -4,7 +4,7 @@
 
 <div class="two">
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4C5;</span> 迁移工作量评估</span></div>
+    <div class="card-hdr"><span class="card-title">迁移工作量评估</span></div>
     {% set wl = result.workload_estimate %}
     <div class="tw"><table class="mt">
       <thead><tr><th>工作项</th><th>预估天数</th></tr></thead>
@@ -20,7 +20,7 @@
     {% if wl.get('note') %}<div class="c-secondary" style="font-size:12px;margin-top:8px;">注: {{ wl['note'] }}</div>{% endif %}
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4B0;</span> 数据迁移耗时估算</span></div>
+    <div class="card-hdr"><span class="card-title">数据迁移耗时估算</span></div>
     <div style="padding:8px 0;">
       <div class="fsb" style="margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--g100);">
         <span class="c-secondary">总数据量</span><span style="font-weight:700;font-size:18px;">{{ result.total_capacity or "35TB" }}</span>
@@ -30,13 +30,13 @@
       <div class="fsb" style="margin-bottom:10px;"><span class="c-secondary">增量同步</span><span class="tag tg-org" style="font-size:14px;font-weight:600;">持续进行</span></div>
       <div class="fsb"><span class="c-secondary">数据校验</span><span class="tag tg-grn" style="font-size:14px;font-weight:600;">行数+MD5</span></div>
     </div>
-    <div class="alert alert-warn mt12">&#x26A1; 建议分批迁移: 先迁移20%非核心表验证，再迁移80%核心业务表</div>
+    <div class="alert alert-warn mt12">建议分批迁移: 先迁移20%非核心表验证，再迁移80%核心业务表</div>
   </div>
 </div>
 
 <div class="card">
   <div class="card-hdr">
-    <span class="card-title"><span class="ti">&#x1F4C8;</span> 四阶段迁移规划</span>
+    <span class="card-title">四阶段迁移规划</span>
     <span style="font-size:14px;color:var(--accent);font-weight:600;">总工期: {{ result.estimated_phases.get('total_months','4-6个月') }}</span>
   </div>
   <div class="tl">
@@ -55,7 +55,7 @@
 </div>
 
 <div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F504;</span> 回切方案</span></div>
+  <div class="card-hdr"><span class="card-title">回切方案</span></div>
   <div class="tw"><table class="mt">
     <thead><tr><th>场景</th><th>触发条件</th><th>操作</th><th>RTO</th></tr></thead>
     <tbody>
@@ -64,6 +64,6 @@
       <tr><td><span class="tag tg-grn">正常</span></td><td>正常运行</td><td>源端保留1个月以备回切</td><td>—</td></tr>
     </tbody>
   </table></div>
-  <div class="alert alert-ok mt12">&#x2705; 建议在正式割接前至少执行2次完整演练</div>
+  <div class="alert alert-ok mt12">建议在正式割接前至少执行2次完整演练</div>
 </div>
 {% endblock %}

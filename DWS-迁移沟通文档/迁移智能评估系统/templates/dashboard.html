@@ -116,7 +116,7 @@
 <!-- 评分+环境导航 -->
 <div class="main-row">
   <div class="score-col">
-    <div class="sh"><h3>\U0001F3AF 兼容性评分</h3><span style="font-size:12px;color:#9CA0AF">总分上限 100</span></div>
+    <div class="sh"><h3>兼容性评分</h3><span style="font-size:12px;color:#9CA0AF">总分上限 100</span></div>
     {% set circum = 2 * 3.14159 * 55 %}
     <div class="score-body">
       <div class="gauge">
@@ -134,7 +134,7 @@
   </div>
   <a href="/environment" style="flex:1;display:block;text-decoration:none;background:#fff;border-radius:10px;border:1px solid #E6EAF0;padding:20px 24px;transition:all.15s;" onmouseover="this.style.borderColor='#C5D9F2';this.style.boxShadow='0 2px 8px rgba(26,115,232,0.06)'" onmouseout="this.style.borderColor='#E6EAF0';this.style.boxShadow='none'">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #F0F2F5;">
-      <h3 style="font-size:15px;font-weight:600;color:#1A1D26;margin:0;">\U0001F5A5 源端环境</h3>
+      <h3 style="font-size:15px;font-weight:600;color:#1A1D26;margin:0;">源端环境</h3>
       <span style="font-size:12px;color:#9CA0AF;">查看详情 &rarr;</span>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -147,22 +147,22 @@
 </div>
 
 
-<!-- 快捷导航 — 替代原有的⚠️关键发现/💡迁移建议/🔗工具链三块面板 -->
+<!-- 快捷导航 -->
 <div style="display:flex;gap:12px;margin-bottom:0;">
   <a href="/issues" style="flex:1;display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E6EAF0;border-radius:10px;padding:14px 18px;text-decoration:none;transition:all.15s;" onmouseover="this.style.borderColor='#FFCDD2';this.style.boxShadow='0 2px 8px rgba(198,40,40,0.06)'" onmouseout="this.style.borderColor='#E6EAF0';this.style.boxShadow='none'">
-    <span style="width:36px;height:36px;border-radius:8px;background:#FFEBEE;display:flex;align-items:center;justify-content:center;font-size:17px;">&#x26A0;</span>
+    <span style="width:36px;height:36px;border-radius:8px;background:#FFEBEE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#C62828;">!</span>
     <div><div style="font-size:14px;font-weight:600;color:#1A1D26;">关键发现</div>
     <div style="font-size:12px;color:#6B7285;">{{ k }} 项不兼容 &middot; 需验证</div></div>
     <span style="margin-left:auto;font-size:18px;color:#D0D5DD;">&rarr;</span>
   </a>
   <a href="/recommendations" style="flex:1;display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E6EAF0;border-radius:10px;padding:14px 18px;text-decoration:none;transition:all.15s;" onmouseover="this.style.borderColor='#C5D9F2';this.style.boxShadow='0 2px 8px rgba(26,115,232,0.06)'" onmouseout="this.style.borderColor='#E6EAF0';this.style.boxShadow='none'">
-    <span style="width:36px;height:36px;border-radius:8px;background:#E8F0FE;display:flex;align-items:center;justify-content:center;font-size:17px;">&#x1F4A1;</span>
+    <span style="width:36px;height:36px;border-radius:8px;background:#E8F0FE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#1A73E8;">&raquo;</span>
     <div><div style="font-size:14px;font-weight:600;color:#1A1D26;">迁移建议</div>
     <div style="font-size:12px;color:#6B7285;">{{ result.recommendations|length }} 条定制建议 &middot; 工具链</div></div>
     <span style="margin-left:auto;font-size:18px;color:#D0D5DD;">&rarr;</span>
   </a>
   <a href="/poc" style="flex:1;display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E6EAF0;border-radius:10px;padding:14px 18px;text-decoration:none;transition:all.15s;" onmouseover="this.style.borderColor='#B8DFCC';this.style.boxShadow='0 2px 8px rgba(15,123,62,0.06)'" onmouseout="this.style.borderColor='#E6EAF0';this.style.boxShadow='none'">
-    <span style="width:36px;height:36px;border-radius:8px;background:#E6F7EE;display:flex;align-items:center;justify-content:center;font-size:17px;">&#x1F9EA;</span>
+    <span style="width:36px;height:36px;border-radius:8px;background:#E6F7EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0E7C4B;">&#9654;</span>
     <div><div style="font-size:14px;font-weight:600;color:#1A1D26;">POC 测试建议</div>
     <div style="font-size:12px;color:#6B7285;">{{ result.poc_recommendations.get("summary",{}).get("total_cases",0) if result.poc_recommendations else "—" }} 条用例 &middot; {{ result.poc_recommendations.get("summary",{}).get("timeline_estimate","按需") if result.poc_recommendations else "按需" }}</div></div>
     <span style="margin-left:auto;font-size:18px;color:#D0D5DD;">&rarr;</span>
