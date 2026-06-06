@@ -2,113 +2,192 @@
 {% block page_title %}部署引导{% endblock %}
 {% block content %}
 
-<div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F680;</span> DWS 部署引导</span></div>
-  <p style="font-size:13px;color:var(--g500);margin-bottom:16px;">按阶段逐步执行，每阶段完成预检后方可继续。共7个阶段。</p>
-  <div id="deploy-plan"></div>
-</div>
+<style>
+.phase-progress{display:flex;gap:0;margin-bottom:24px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);overflow:hidden}
+.phase-step{flex:1;text-align:center;padding:12px 8px;font-size:11px;font-weight:600;color:var(--gray2);border-right:1px solid var(--gray3);position:relative}
+.phase-step:last-child{border-right:none}
+.phase-step .step-num{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-bottom:4px;background:var(--g100);color:var(--gray2)}
+.phase-step.done{color:var(--text)}.phase-step.done .step-num{background:var(--green);color:#fff}
+.phase-step.active{color:var(--accent)}.phase-step.active .step-num{background:var(--accent);color:#fff;box-shadow:0 0 0 3px var(--accent-bg)}
+.phase-step.pending{color:var(--gray2)}.phase-step.pending .step-num{background:var(--g100);color:var(--gray2)}
 
-<div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> 操作指引</span></div>
-  <div id="step-guide" style="line-height:1.8;font-size:14px;">
-    点击左侧阶段查看详细操作步骤
+.deploy-layout{display:grid;grid-template-columns:320px 1fr;gap:16px}
+@media(max-width:900px){.deploy-layout{grid-template-columns:1fr}}
+
+.deploy-sidebar{background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);overflow:hidden}
+.deploy-sidebar .ds-item{padding:12px 16px;border-bottom:1px solid var(--g100);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px}
+.deploy-sidebar .ds-item:last-child{border-bottom:none}
+.deploy-sidebar .ds-item:hover{background:var(--g50)}
+.deploy-sidebar .ds-item.active{background:var(--accent-bg);border-left:3px solid var(--accent)}
+.deploy-sidebar .ds-item .ds-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.deploy-sidebar .ds-item.done .ds-icon{background:var(--green-bg);color:var(--green)}
+.deploy-sidebar .ds-item.active .ds-icon{background:var(--accent-bg);color:var(--accent)}
+.deploy-sidebar .ds-item.pending .ds-icon{background:var(--g100);color:var(--gray2)}
+.deploy-sidebar .ds-item .ds-name{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+.deploy-sidebar .ds-item .ds-status{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600}
+.deploy-sidebar .ds-item.done .ds-status{background:var(--green-bg);color:var(--green)}
+.deploy-sidebar .ds-item.active .ds-status{background:var(--accent-bg);color:var(--accent)}
+.deploy-sidebar .ds-item.pending .ds-status{background:var(--g100);color:var(--gray2)}
+
+.deploy-main{background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);padding:24px}
+.deploy-main h3{font-size:16px;font-weight:700;color:var(--primary);margin-bottom:4px}
+.deploy-main .dm-desc{font-size:12px;color:var(--gray2);margin-bottom:16px}
+.step-list{list-style:none;padding:0}
+.step-list li{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:6px;margin-bottom:4px;font-size:13px;line-height:1.5;color:var(--text);transition:background .15s}
+.step-list li:hover{background:var(--g50)}
+.step-list li .step-bullet{width:6px;height:6px;border-radius:50%;background:var(--gray3);margin-top:7px;flex-shrink:0}
+.step-list li .step-text{flex:1}
+.step-list li .step-cmd{display:block;font-family:monospace;font-size:11px;color:var(--gray2);margin-top:2px;padding:4px 8px;background:var(--g50);border-radius:4px}
+
+.deploy-footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--g100)}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--gray2);font-size:14px}
+</style>
+
+<div class="phase-progress" id="phaseProgress"></div>
+
+<div class="deploy-layout">
+  <div class="deploy-sidebar" id="deploySidebar"></div>
+  <div class="deploy-main" id="deployMain">
+    <div class="empty-state">点击左侧阶段查看详细操作步骤</div>
   </div>
 </div>
 
 <script>
 var phases = [
   {
-    name: "Phase 1: 环境准备", status: "done", steps: [
-      "确认RAID策略: Read Ahead + Write Back With BBU",
-      "检查网卡MTU=1500, Hi1822需hinicconfig增加中断",
-      "确认ISO镜像存在 /Kylin-*.iso",
-      "确认所有节点root密码一致",
-      "设置主机名 hostnamectl set-hostname"
+    name: "环境准备", status: "done", icon: "🔧",
+    desc: "服务器上架、RAID配置、网络连通、ISO准备，确保基础环境就绪",
+    steps: [
+      { text: "确认RAID策略", cmd: "storcli64 /c0 show | grep -E 'Read|Write'" },
+      { text: "检查网卡配置", cmd: "ethtool eth0 | grep Speed" },
+      { text: "确认ISO镜像就绪", cmd: "ls /opt/Kylin-*.iso" },
+      { text: "验证root密码一致性", cmd: "ssh <node2> 'echo ok'" },
+      { text: "设置主机名", cmd: "hostnamectl set-hostname <hostname>" },
     ]
   },
   {
-    name: "Phase 2: OS配置", status: "done", steps: [
-      "关闭audit: systemctl disable auditd",
-      "关闭防火墙: systemctl disable firewalld iptables",
-      "SELinux=disabled: sed -i 's/enforcing/disabled/' /etc/selinux/config",
-      "关闭swap: swapoff -a; 注释fstab中swap行",
-      "关闭透明大页: grub2追加transparent_hugepage=never",
-      "时区: timedatectl set-timezone Asia/Shanghai",
-      "字符集: LANG=en_US.UTF-8",
-      "内核参数: watermark_scale_factor=100, numa_balancing=0"
+    name: "OS配置", status: "done", icon: "⚙️",
+    desc: "关闭非必要服务，配置内核参数和系统基本设置",
+    steps: [
+      { text: "关闭 audit 服务", cmd: "systemctl disable auditd" },
+      { text: "关闭防火墙", cmd: "systemctl disable firewalld iptables" },
+      { text: "关闭 SELinux", cmd: "sed -i 's/enforcing/disabled/' /etc/selinux/config" },
+      { text: "关闭 swap", cmd: "swapoff -a; 注释 /etc/fstab 中 swap 行" },
+      { text: "关闭透明大页", cmd: "grub2-mkconfig; 追加 transparent_hugepage=never" },
+      { text: "配置时区", cmd: "timedatectl set-timezone Asia/Shanghai" },
+      { text: "配置内核参数", cmd: "sysctl -w vm.watermark_scale_factor=100" },
     ]
   },
   {
-    name: "Phase 3: 磁盘分区", status: "ready", steps: [
-      "lsblk 确认磁盘设备",
-      "parted GPT分区: parted -s /dev/sdb mklabel gpt",
-      "mkfs.xfs 格式化",
-      "创建挂载目录并写入 /etc/fstab",
-      "mount -a 验证",
-      "chown root:root 设置权限"
+    name: "磁盘分区", status: "ready", icon: "💾",
+    desc: "GPT分区、XFS格式化、挂载配置，确保数据盘就绪",
+    steps: [
+      { text: "确认磁盘设备", cmd: "lsblk -d -o NAME,SIZE" },
+      { text: "创建 GPT 分区", cmd: "parted -s /dev/sdb mklabel gpt && parted -s /dev/sdb mkpart primary 2048s 100%" },
+      { text: "格式化 XFS", cmd: "mkfs.xfs -f -n ftype=1 -L data1 /dev/sdb1" },
+      { text: "写入 /etc/fstab", cmd: "echo 'UUID=... /srv/BigData/data1 xfs defaults 0 0' >> /etc/fstab" },
+      { text: "挂载验证", cmd: "mount -a && df -h" },
     ]
   },
   {
-    name: "Phase 4: 软件安装", status: "ready", steps: [
-      "Python 3.8.5 编译安装: ./configure --enable-optimizations --prefix=/usr/local && make -j4 && make altinstall",
-      "安装依赖: yum install -y gcc libffi-devel python-devel ...",
-      "挂载ISO: mount /opt/Kylin-*.iso /media -o loop",
-      "配置local yum源, 上传fio/speed_test工具"
+    name: "软件安装", status: "ready", icon: "📦",
+    desc: "Python、系统依赖、yum源配置、性能测试工具安装",
+    steps: [
+      { text: "Python 3.8.5 编译安装", cmd: "./configure --enable-optimizations && make -j4 && make altinstall" },
+      { text: "安装系统依赖", cmd: "yum install -y gcc libffi-devel python-devel" },
+      { text: "挂载 ISO 配置 yum 源", cmd: "mount /opt/Kylin-*.iso /media -o loop" },
+      { text: "安装 fio/speed_test", cmd: "yum install -y fio iperf3" },
     ]
   },
   {
-    name: "Phase 5: 集群部署", status: "pending", steps: [
-      "配置 preinstall.ini (使用配置生成页面)",
-      "执行 FusionInsight SetupTool 安装",
-      "安装完成后验证集群状态",
-      "登录TPOPS: https://IP:8002/gaussdb/",
-      "申请License试用"
+    name: "集群部署", status: "pending", icon: "🌐",
+    desc: "FusionInsight SetupTool 自动化部署，集群初始化",
+    steps: [
+      { text: "配置 preinstall.ini", cmd: "参见「配置生成」页面" },
+      { text: "执行 FusionInsight Setup", cmd: "cd SetupTool && bash setup.sh -f preinstall.ini" },
+      { text: "验证集群状态", cmd: "gs_om -t status" },
+      { text: "登录 TPOPS", cmd: "https://<oms_ip>:8002/gaussdb/" },
+      { text: "申请 License", cmd: "TPOPS -> 系统 -> License管理" },
     ]
   },
   {
-    name: "Phase 6: 性能测试", status: "pending", steps: [
-      "fio 磁盘压测: 顺序写≥800MB/s, 顺序读≥1200MB/s",
-      "dd 多块并发读写测试",
-      "网络带宽压测: ≥800MB/s (10GE)",
-      "网络重传率: <0.01%"
+    name: "性能测试", status: "pending", icon: "📈",
+    desc: "磁盘性能、网络带宽、TPOPS 基准测试，确保达到交付标准",
+    steps: [
+      { text: "fio 磁盘压测", cmd: "fio --name=test --iodepth=16 --rw=randwrite --bs=64k --size=10G --numjobs=4" },
+      { text: "dd 多块并发测试", cmd: "dd if=/dev/zero of=/data/test bs=1M count=10240 oflag=direct" },
+      { text: "网络带宽压测", cmd: "iperf3 -c <peer_ip> -p 12345 -t 30 -P 4" },
+      { text: "网络重传率检查", cmd: "netstat -s | grep retransmit" },
     ]
   },
   {
-    name: "Phase 7: 验收交付", status: "pending", steps: [
-      "gsql 连接测试: gsql -d postgres -p 40080 -U root",
-      "实例运行状态检查",
-      "备份策略配置",
-      "参数优化: cstore_buffers/并行参数/性能参数",
-      "交付文档归档"
+    name: "验收交付", status: "pending", icon: "🏁",
+    desc: "功能验证、性能基线、文档归档，完成交付",
+    steps: [
+      { text: "gsql 连接测试", cmd: "gsql -d postgres -p 40080 -U root -c 'SELECT version()'" },
+      { text: "检查实例运行状态", cmd: "gs_om -t status --detail" },
+      { text: "配置备份策略", cmd: "gs_dump -U root -f /backup/init.sql postgres" },
+      { text: "参数优化", cmd: "gs_guc set -c cstore_buffers=512MB -D /data/gaussdb" },
+      { text: "归档交付文档", cmd: "参见「交付物」页面" },
     ]
   }
 ];
 
-function renderPlan(){
-  var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+var statusLabels = {done: "已完成", ready: "待执行", pending: "未开始"};
+var statusColors = {done: "var(--green)", ready: "var(--orange)", pending: "var(--gray2)"};
+
+function renderProgress(){
+  var html = '';
   phases.forEach(function(p, i){
-    var icons = {done: '✅', ready: '⏳', pending: '⬜'};
-    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--g100);cursor:pointer;" onclick="showSteps('+i+')">' +
-      '<span style="font-size:18px;">' + (icons[p.status] || '⬜') + '</span>' +
-      '<span style="font-weight:600;font-size:14px;flex:1;">' + p.name + '</span>' +
-      '<span class="tag ' + (p.status === 'done' ? 'tg-grn' : p.status === 'ready' ? 'tg-org' : 'tg-gry') + '">' +
-      (p.status === 'done' ? '已完成' : p.status === 'ready' ? '待执行' : '未开始') + '</span></div>';
+    html += '<div class="phase-step ' + p.status + '" onclick="showPhase(' + i + ')">';
+    html += '<div class="step-num">' + (i+1) + '</div>';
+    html += '<div>' + p.name + '</div></div>';
   });
-  html += '</div>';
-  document.getElementById('deploy-plan').innerHTML = html;
+  document.getElementById('phaseProgress').innerHTML = html;
 }
 
-function showSteps(idx){
+function renderSidebar(){
+  var html = '';
+  phases.forEach(function(p, i){
+    html += '<div class="ds-item ' + p.status + '" onclick="showPhase(' + i + ')" data-idx="' + i + '">';
+    html += '<div class="ds-icon">' + p.icon + '</div>';
+    html += '<div class="ds-name">' + p.name + '</div>';
+    html += '<span class="ds-status">' + (statusLabels[p.status] || '') + '</span></div>';
+  });
+  document.getElementById('deploySidebar').innerHTML = html;
+}
+
+function showPhase(idx){
   var p = phases[idx];
-  var html = '<h3 style="margin-bottom:12px;font-size:15px;">' + p.name + '</h3><ol style="padding-left:20px;">';
+  // Highlight sidebar
+  document.querySelectorAll('.ds-item').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.ds-item[data-idx="' + idx + '"]').forEach(function(el){ el.classList.add('active'); });
+
+  var html = '<h3>' + p.icon + ' ' + p.name + '</h3>';
+  html += '<div class="dm-desc">' + p.desc + '</div>';
+  html += '<ul class="step-list">';
   p.steps.forEach(function(s){
-    html += '<li style="padding:4px 0;font-size:13px;line-height:1.6;">' + s + '</li>';
+    html += '<li><span class="step-bullet"></span>';
+    html += '<div class="step-text">' + s.text;
+    if(s.cmd) html += '<span class="step-cmd">' + s.cmd + '</span>';
+    html += '</div></li>';
   });
-  html += '</ol>';
-  document.getElementById('step-guide').innerHTML = html;
+  html += '</ul>';
+
+  // Navigation footer
+  html += '<div class="deploy-footer">';
+  if(idx > 0) html += '<button class="btn btn-ghost btn-sm" onclick="showPhase(' + (idx-1) + ')">← 上一步</button>';
+  else html += '<span></span>';
+  if(idx < phases.length - 1) html += '<button class="btn btn-primary btn-sm" onclick="showPhase(' + (idx+1) + ')">下一步 →</button>';
+  else html += '<span class="tg tg-grn">全部完成 ✔</span>';
+  html += '</div>';
+
+  document.getElementById('deployMain').innerHTML = html;
 }
 
-renderPlan();
-showSteps(0);
+renderProgress();
+renderSidebar();
+showPhase(0);
 </script>
 {% endblock %}

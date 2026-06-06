@@ -1,72 +1,121 @@
 {% extends "base.html" %}
-{% block title %}模板 · DWS{% endblock %}
+{% block title %}配置模板 - DWS 部署系统{% endblock %}
+{% block page_title %}部署配置模板{% endblock %}
 {% block content %}
 
 <style>
-.cw{position:relative;margin-bottom:4px}
-.cw .cp{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--t2);padding:3px 10px;border-radius:5px;font-size:11px;cursor:pointer;transition:.15s;z-index:10;display:flex;align-items:center;gap:4px}
-.cw .cp:hover{background:rgba(255,255,255,.12);color:var(--tx)}
-.cw .cp.done{background:var(--gr-bg);border-color:var(--gr);color:var(--gr)}
-.fname{font-size:10.5px;color:var(--t2);margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.fname .dot{width:6px;height:6px;border-radius:50%}.fname .dot.pri{background:var(--ac)}.fname .dot.sec{background:var(--t3)}
-.code-sm{max-height:200px;overflow:hidden;position:relative}
-.code-sm::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--bg));pointer-events:none}
-.exp{display:block;text-align:center;padding:4px;color:var(--ac);font-size:11px;cursor:pointer;background:var(--ac-bg);border-radius:0 0 var(--R1) var(--R1);margin-top:-1px}
-.exp:hover{background:rgba(88,166,255,.15)}
+.tpl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.tpl-header h3{font-size:16px;font-weight:700;color:var(--primary);margin:0}
+.tpl-header .tpl-desc{font-size:12px;color:var(--gray2);margin-top:2px}
+
+.tpl-hero{background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.tpl-hero .th-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--g50);border-bottom:1px solid var(--gray3)}
+.tpl-hero .th-head .th-name{font-size:13px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:8px}
+.tpl-hero .th-head .th-name .th-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+.tpl-hero .th-body{position:relative}
+.tpl-hero .th-body .code{padding:16px 20px;max-height:300px;overflow-y:auto;background:var(--g50);font-size:12px;line-height:1.7;border-radius:0;margin:0}
+.tpl-hero .th-body .cp-btn{position:absolute;top:8px;right:8px;padding:4px 10px;font-size:11px;border-radius:5px;border:1px solid var(--gray3);background:var(--card);color:var(--gray);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px}
+.tpl-hero .th-body .cp-btn:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
+.tpl-hero .th-body .cp-btn.done{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+
+.tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:1000px){.tpl-grid{grid-template-columns:1fr}}
+.tpl-card{background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);overflow:hidden;transition:box-shadow .2s}
+.tpl-card:hover{box-shadow:var(--shadow-h)}
+.tpl-card .tc-head{padding:10px 14px;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:var(--text)}
+.tpl-card .tc-head .tc-dot{width:6px;height:6px;border-radius:50%;background:var(--gray3);display:inline-block;margin-right:8px}
+.tpl-card .tc-body{position:relative}
+.tpl-card .tc-body .code{padding:12px 14px;font-size:11px;line-height:1.6;max-height:160px;overflow:hidden;margin:0;border-radius:0}
+.tpl-card .tc-body .code.expanded{max-height:none}
+.tpl-card .tc-body .tc-expand{display:block;text-align:center;padding:4px;font-size:11px;color:var(--accent);cursor:pointer;background:var(--accent-bg);transition:background .15s}
+.tpl-card .tc-body .tc-expand:hover{background:rgba(74,95,193,.15)}
+
+.empty-state{text-align:center;padding:60px 20px}
+.empty-state .empty-icon{font-size:48px;margin-bottom:12px}
+.empty-state .empty-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
+.empty-state .empty-desc{font-size:12px;color:var(--gray2);margin-bottom:16px}
 </style>
 
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-    <div><h3 style="font-size:15px;font-weight:700;color:var(--tx);margin:0;">部署配置模板</h3><div style="font-size:11px;color:var(--t2);margin-top:2px;">基于配置中心生成 · 保存至 /opt 目录即可用于 gs_preinstall</div></div>
-    <a href="/config" class="btn btn-ghost btn-sm">← 配置中心</a>
+<div class="tpl-header">
+  <div>
+    <h3>部署配置模板</h3>
+    <div class="tpl-desc">基于配置中心生成 · 保存至 /opt 目录即可用于 gs_preinstall</div>
+  </div>
+  <a href="/config" class="btn btn-ghost btn-sm">← 配置中心</a>
 </div>
 
 {% if data.templates %}
 {% set official = data.templates.get('preinstall.ini (官方格式·机器可执行)') or data.templates.get('preinstall.ini') %}
 
-<!-- main preinstall.ini — hero block -->
-<div class="card" style="padding:14px 18px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div class="fname"><span class="dot pri"></span><strong style="color:var(--tx);font-size:12.5px;">preinstall.ini</strong><span class="badge bg-info">gs_preinstall 可用</span></div>
-    </div>
-    <div class="cw">
-        <button class="cp" onclick="cp(this,'b0')">📋 复制</button>
-        <div class="code" id="b0">{{ official }}</div>
-    </div>
+<!-- Hero: preinstall.ini -->
+<div class="tpl-hero">
+  <div class="th-head">
+    <span class="th-name"><span class="th-dot"></span> preinstall.ini <span class="badge bg-info" style="font-size:10px;">gs_preinstall 可用</span></span>
+    <button class="btn btn-ghost btn-sm" onclick="copyText('tpl-hero-code', this)">📋 复制</button>
+  </div>
+  <div class="th-body">
+    <div class="code" id="tpl-hero-code">{{ official }}</div>
+  </div>
 </div>
 
-<!-- supporting files — 2 column grid -->
-<div class="g2">
-    {% for name in ['/etc/hosts','/etc/fstab','grub 内核参数','sysctl 参数 (99-dws.conf)','分区脚本 (parted_mkfs.sh)','网络配置脚本 (setup_network.sh)'] %}
-    {% if data.templates.get(name) %}
-    <div class="card" style="padding:12px 16px;">
-        <div class="fname"><span class="dot sec"></span><strong style="color:var(--tx);font-size:12px;">{{ name }}</strong></div>
-        <div class="cw">
-            <button class="cp" onclick="cp(this,'b{{ loop.index }}')">📋 复制</button>
-            <div class="code code-sm" id="b{{ loop.index }}">{{ data.templates[name] }}</div>
-        </div>
-        <span class="exp" onclick="var e=document.getElementById('b{{ loop.index }}');e.classList.toggle('code-sm');this.textContent=e.classList.contains('code-sm')?'展开':'收起';">展开</span>
+<!-- Supporting files -->
+<div class="tpl-grid">
+  {% for name in ['/etc/hosts','/etc/fstab','grub 内核参数','sysctl 参数 (99-dws.conf)','分区脚本 (parted_mkfs.sh)','网络配置脚本 (setup_network.sh)'] %}
+  {% if data.templates.get(name) %}
+  <div class="tpl-card">
+    <div class="tc-head"><span><span class="tc-dot"></span>{{ name }}</span><button class="btn btn-ghost btn-sm" onclick="copyText('tpl-{{ loop.index }}', this)" style="padding:2px 8px;font-size:10px;">📋</button></div>
+    <div class="tc-body">
+      <div class="code" id="tpl-{{ loop.index }}">{{ data.templates[name] }}</div>
+      <span class="tc-expand" onclick="toggleExpand(this)">展开</span>
     </div>
-    {% endif %}{% endfor %}
+  </div>
+  {% endif %}{% endfor %}
 </div>
 
 {% if data.templates.get('LLD 拓扑总览') %}
-<div class="card" style="padding:12px 16px;">
-    <div class="fname"><span class="dot sec"></span><strong style="color:var(--tx);font-size:12px;">LLD 拓扑总览</strong></div>
-    <div class="cw"><button class="cp" onclick="cp(this,'btopo')">📋 复制</button><div class="code code-sm" id="btopo">{{ data.templates['LLD 拓扑总览'] }}</div></div>
-    <span class="exp" onclick="var e=document.getElementById('btopo');e.classList.toggle('code-sm');this.textContent=e.classList.contains('code-sm')?'展开':'收起';">展开</span>
+<div class="tpl-card" style="margin-top:14px;">
+  <div class="tc-head"><span><span class="tc-dot"></span>LLD 拓扑总览</span><button class="btn btn-ghost btn-sm" onclick="copyText('tpl-topo', this)" style="padding:2px 8px;font-size:10px;">📋</button></div>
+  <div class="tc-body">
+    <div class="code" id="tpl-topo">{{ data.templates['LLD 拓扑总览'] }}</div>
+    <span class="tc-expand" onclick="toggleExpand(this)">展开</span>
+  </div>
 </div>
 {% endif %}
 
 {% else %}
-<div class="card" style="text-align:center;padding:60px 20px;">
-    <div style="font-size:40px;margin-bottom:12px;">📄</div>
-    <div style="color:var(--t2);font-size:14px;">暂未生成模板</div>
-    <div style="color:var(--t3);font-size:12px;margin-top:4px;">请先在配置中心填写并保存 LLD 参数</div>
-    <a href="/config" class="btn btn-primary" style="margin-top:16px;">进入配置中心</a>
+<div class="empty-state">
+  <div class="empty-icon">📄</div>
+  <div class="empty-title">暂未生成模板</div>
+  <div class="empty-desc">请先在配置中心填写并保存 LLD 参数</div>
+  <a href="/config" class="btn btn-primary">进入配置中心</a>
 </div>
 {% endif %}
 
 <script>
-function cp(b,id){var e=document.getElementById(id);if(!e)return;var t=e.textContent||e.innerText;navigator.clipboard.writeText(t).then(function(){b.textContent='✓ 已复制';b.classList.add('done');setTimeout(function(){b.textContent='📋 复制';b.classList.remove('done')},2000)}).catch(function(){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);b.textContent='✓ 已复制';b.classList.add('done');setTimeout(function(){b.textContent='📋 复制';b.classList.remove('done')},2000)})}
+function copyText(id, btn){
+  var el = document.getElementById(id);
+  if(!el) return;
+  var text = el.textContent || el.innerText;
+  navigator.clipboard.writeText(text).then(function(){
+    btn.textContent = '✓ 已复制';
+    btn.classList.add('done');
+    setTimeout(function(){
+      btn.textContent = '📋 复制';
+      btn.classList.remove('done');
+    }, 2000);
+  }).catch(function(){
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✓ 已复制';
+    setTimeout(function(){ btn.textContent = '📋 复制'; }, 2000);
+  });
+}
+
+function toggleExpand(el){
+  var code = el.parentElement.querySelector('.code');
+  code.classList.toggle('expanded');
+  el.textContent = code.classList.contains('expanded') ? '收起' : '展开';
+}
 </script>
 {% endblock %}

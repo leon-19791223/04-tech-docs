@@ -4,81 +4,69 @@
 {% block content %}
 
 <style>
-/* 场景选择栏 */
-.arch-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding:14px 20px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius)}
-.arch-toolbar select{padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);font-size:13px;background:var(--card);color:var(--text);min-width:120px}
-.arch-toolbar label{font-size:12px;color:var(--gray);font-weight:600}
-.arch-toolbar input[type=number]{width:52px;padding:4px 8px;border-radius:6px;border:1px solid var(--gray3);font-size:13px;text-align:center;background:var(--card);color:var(--text)}
-.arch-toolbar .btn{padding:5px 14px;font-size:12px}
+.arch-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 18px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius)}
+.arch-bar label{font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px}
+.arch-bar select{padding:5px 10px;border-radius:6px;border:1px solid var(--gray3);font-size:13px;background:var(--card);color:var(--text)}
+.arch-bar input[type=number]{width:50px;padding:4px 8px;border-radius:6px;border:1px solid var(--gray3);font-size:13px;text-align:center;background:var(--card);color:var(--text)}
+.arch-bar .sep{width:1px;height:20px;background:var(--gray3)}
 
-/* 统计行 */
-.arch-stats{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-.stat-card{flex:1;min-width:100px;padding:14px 18px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);text-align:center;min-height:70px;display:flex;flex-direction:column;justify-content:center}
-.stat-card .num{font-size:24px;font-weight:700;color:var(--primary)}
-.stat-card .lbl{font-size:11px;color:var(--gray2);margin-top:2px}
-.stat-card .env-badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:600;background:var(--accent-bg);color:var(--accent);margin-top:4px}
+.arch-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:700px){.arch-stats{grid-template-columns:repeat(2,1fr)}}
+.arch-stat{padding:14px 16px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);text-align:center}
+.arch-stat .as-num{font-size:24px;font-weight:700;color:var(--primary)}
+.arch-stat .as-lbl{font-size:11px;color:var(--gray2);margin-top:2px}
 
-/* 硬件面板 */
-.hw-panel{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-.hw-chip{padding:8px 14px;background:var(--card);border:1px solid var(--gray3);border-radius:8px;font-size:11px;display:flex;align-items:center;gap:8px;color:var(--gray)}
-.hw-chip b{color:var(--text)}.hw-chip .dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.arch-hw{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.arch-hw .hw-tag{padding:6px 12px;background:var(--g50);border:1px solid var(--gray3);border-radius:6px;font-size:11px;color:var(--gray);display:flex;align-items:center;gap:6px}
+.arch-hw .hw-tag b{color:var(--text)}
 
-/* 物理节点区域 - 合设场景 */
-.node-section{margin-bottom:18px}
-.node-section-title{font-size:13px;font-weight:600;color:var(--gray);margin-bottom:10px;padding-left:4px}
-.node-grid{display:flex;gap:16px;flex-wrap:wrap}
-.node-card{background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);padding:16px;width:240px;transition:box-shadow .2s}
-.node-card:hover{box-shadow:var(--shadow-h);border-color:var(--accent)}
-.node-card .node-host{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
-.node-card .node-ip{font-size:11px;color:var(--gray2);margin-bottom:10px}
-.node-card .node-prime{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;background:#e6f6f0;color:#0e7c4b;margin-left:6px;font-weight:600}
-.node-role-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.node-role{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;font-size:11px;font-weight:500;background:var(--bg)}
-.node-role .role-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.node-role .role-name{color:var(--text)}
-.node-role .role-label{color:var(--gray2);font-size:10px}
-.node-card-mono .node-role{grid-column:1/-1;justify-content:center;padding:10px;font-size:13px}
+/* 合设场景：物理节点卡片 */
+.co-section{margin-bottom:20px}
+.co-grid{display:flex;gap:16px;flex-wrap:wrap}
+.co-card{background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);width:230px;overflow:hidden;transition:all .2s}
+.co-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);border-color:var(--accent)}
+.co-card .co-host{padding:12px 14px 8px;border-bottom:1px solid var(--g100)}
+.co-card .co-host .hname{font-size:13px;font-weight:600;color:var(--text)}
+.co-card .co-host .hip{font-size:10px;color:var(--gray2);margin-top:1px}
+.co-card .co-roles{padding:8px 10px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.co-card .co-role{display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:5px;font-size:11px;font-weight:500}
+.co-card .co-role .rd{width:7px;height:7px;border-radius:2px;flex-shrink:0}
 
-/* 角色分区 - 分离场景 */
-.role-zone{margin-bottom:16px;border:1px solid var(--gray3);border-radius:var(--radius);overflow:hidden}
-.zone-header{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--gray3)}
-.zone-body{display:flex;gap:12px;padding:14px;flex-wrap:wrap;background:var(--card)}
-.zone-node{background:var(--bg);border:1px solid var(--gray3);border-radius:8px;padding:10px 14px;min-width:130px;flex:1}
-.zone-node .zn-host{font-size:12px;font-weight:600;color:var(--text)}
-.zone-node .zn-ip{font-size:10px;color:var(--gray2);margin-top:2px}
-.zone-node .zn-role{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:11px;font-weight:500;color:var(--text)}
+/* 分离场景：角色分区 */
+.sep-section{margin-bottom:16px}
+.sep-zone{border:1px solid var(--gray3);border-radius:var(--radius);overflow:hidden;margin-bottom:14px}
+.sep-zone .sz-head{padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--gray3)}
+.sep-zone .sz-head .sz-count{font-size:11px;color:var(--gray2);font-weight:400}
+.sep-zone .sz-body{padding:12px 14px;display:flex;gap:10px;flex-wrap:wrap}
+.sep-zone .sz-node{padding:8px 14px;background:var(--g50);border:1px solid var(--gray3);border-radius:8px;min-width:120px}
+.sep-zone .sz-node .szn-host{font-size:12px;font-weight:600;color:var(--text)}
+.sep-zone .sz-node .szn-ip{font-size:10px;color:var(--gray2);margin-top:1px}
+.sep-zone .sz-node .szn-role{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:11px;font-weight:500;color:var(--text)}
 
-/* 网络平面标识 */
-.net-plane{display:flex;align-items:center;gap:10px;padding:8px 14px;margin-bottom:16px;border-radius:8px;font-size:12px;font-weight:600}
-.net-plane.mgmt{background:#e8f0fe;color:#1a73e8;border:1px solid #d2e3fc}
-.net-plane.biz{background:#fce8e6;color:#d93025;border:1px solid #f5c6c4}
+/* 网络平面 */
+.arch-planes{display:flex;gap:12px;margin-bottom:16px}
+.arch-plane{flex:1;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px}
+.arch-plane.mgmt{background:#EFF6FF;color:#1d4ed8;border:1px solid #d2e3fc}
+.arch-plane.biz{background:#FEF2F2;color:#991b1b;border:1px solid #f5c6c4}
 
 /* 图例 */
-.legend-bar{display:flex;gap:16px;padding:10px 18px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);align-items:center;flex-wrap:wrap;font-size:12px}
-.legend-item{display:flex;align-items:center;gap:5px;color:var(--gray)}
-.legend-item .ld{width:10px;height:10px;border-radius:3px}
+.arch-legend{display:flex;gap:16px;padding:8px 16px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);flex-wrap:wrap;align-items:center;font-size:12px}
+.arch-legend .lg-item{display:flex;align-items:center;gap:5px;color:var(--gray)}
+.arch-legend .lg-item .lg-dot{width:10px;height:10px;border-radius:3px}
+.arch-legend .lg-info{margin-left:auto;font-size:11px;color:var(--gray2)}
 
-/* 空状态 */
-.empty-state{padding:60px 20px;text-align:center;color:var(--gray2);font-size:14px}
-
-/* 加载状态 */
-.loading-overlay{display:none;position:absolute;inset:0;background:rgba(255,255,255,.7);align-items:center;justify-content:center;z-index:5;border-radius:var(--radius)}
-.loading-overlay.show{display:flex}
-.arch-container{position:relative;min-height:200px}
-
-/* 响应式 */
-@media(max-width:900px){.node-card{width:100%}.stat-card{min-width:80px}.arch-stats{grid-template-columns:1fr 1fr}}
+.arch-loading{display:none;text-align:center;padding:40px;color:var(--gray2);font-size:13px;font-weight:600}
 </style>
 
 <div class="arch-stats">
-  <div class="stat-card"><div class="num" id="stNodes">-</div><div class="lbl">物理节点</div></div>
-  <div class="stat-card"><div class="num" id="stRoles">-</div><div class="lbl">角色总数</div></div>
-  <div class="stat-card"><div class="num" id="stMode">-</div><div class="lbl">部署模式</div></div>
-  <div class="stat-card"><div class="num" id="stScenario" style="font-size:18px;">-</div><div class="lbl">当前场景</div></div>
+  <div class="arch-stat"><div class="as-num" id="stNodes">-</div><div class="as-lbl">物理节点</div></div>
+  <div class="arch-stat"><div class="as-num" id="stRoles">-</div><div class="as-lbl">角色总数</div></div>
+  <div class="arch-stat"><div class="as-num" id="stMode">-</div><div class="as-lbl">部署模式</div></div>
+  <div class="arch-stat"><div class="as-num" id="stScenario" style="font-size:18px;">-</div><div class="as-lbl">当前场景</div></div>
 </div>
 
-<div class="arch-toolbar">
-  <label for="scSelect">场景</label>
+<div class="arch-bar">
+  <label>场景</label>
   <select id="scSelect">
     <option value="uat">UAT 验收环境 (3合设)</option>
     <option value="dev">DEV 开发环境 (3合设)</option>
@@ -87,195 +75,137 @@
     <option value="expand">扩容场景 (2+8 大规模)</option>
     <option value="custom">自定义规模</option>
   </select>
-  <span style="width:1px;height:20px;background:var(--gray3);"></span>
-  <label for="cnInput">CN</label>
-  <input type="number" id="cnInput" value="2" min="1" max="64">
-  <label for="dnInput">DN</label>
-  <input type="number" id="dnInput" value="3" min="2" max="256">
-  <span style="width:1px;height:20px;background:var(--gray3);"></span>
+  <span class="sep"></span>
+  <label>CN</label><input type="number" id="cnInput" value="2" min="1" max="64">
+  <label>DN</label><input type="number" id="dnInput" value="3" min="2" max="256">
+  <span class="sep"></span>
   <button class="btn btn-ghost btn-sm" id="coToggle" data-co="0">角色分离</button>
-  <button class="btn btn-primary btn-sm" id="applyBtn" style="margin-left:4px;">应用</button>
+  <button class="btn btn-primary btn-sm" id="applyBtn">应用</button>
 </div>
 
-<div class="hw-panel" id="hwPanel"></div>
+<div class="arch-hw" id="hwPanel"></div>
 
-<div class="arch-container" id="archContainer">
-  <div class="loading-overlay" id="loadingOverlay"><span style="color:var(--accent);font-weight:600;">加载中...</span></div>
-  <div id="archContent"></div>
-</div>
+<div id="archContent"></div>
 
-<div class="legend-bar" id="legendBar"></div>
+<div class="arch-legend" id="legendBar"></div>
 
 <script>
-var ROLE_META = {};
-var CURRENT_DATA = null;
+var RM = {};
+var COLORS = {OM:'#1a73e8',CN:'#10b981',DN:'#6366f1',GTM:'#f59e0b'};
+var LABELS = {OM:'OM 管理',CN:'Coordinator',DN:'DataNode',GTM:'GTM'};
 
-function loadScenario(scenario, cn, dn, co_deploy) {
+function loadScenario(sc, cn, dn, co){
   var p = new URLSearchParams();
-  p.set('scenario', scenario || 'uat');
-  if (cn !== undefined && cn !== null) p.set('cn', cn);
-  if (dn !== undefined && dn !== null) p.set('dn', dn);
-  if (co_deploy !== undefined) p.set('co_deploy', co_deploy ? '1' : '0');
-
-  document.getElementById('loadingOverlay').classList.add('show');
-
-  fetch('/api/architecture?' + p.toString()).then(function(r) { return r.json(); }).then(function(d) {
-    CURRENT_DATA = d;
-    ROLE_META = d.role_meta || {};
-    render(d, scenario);
-    document.getElementById('loadingOverlay').classList.remove('show');
-  }).catch(function() {
-    document.getElementById('loadingOverlay').classList.remove('show');
+  if(sc) p.set('scenario',sc);
+  if(cn) p.set('cn',cn); if(dn) p.set('dn',dn);
+  if(co!==undefined) p.set('co_deploy',co?'1':'0');
+  document.getElementById('archContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray2);">加载中...</div>';
+  fetch('/api/architecture?'+p).then(function(r){return r.json()}).then(function(d){
+    RM = d.role_meta||{};
+    render(d, sc);
+  }).catch(function(){
+    document.getElementById('archContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray);">加载失败</div>';
   });
 }
 
-function render(d, scenario) {
-  var pn = d.physical_nodes || [];
-  var co = d.co_deploy;
-  var nodes = d.nodes || [];
-  var hw = d.hardware || {};
+function render(d, sc){
+  var pn = d.physical_nodes||[], co = d.co_deploy, nodes = d.nodes||[];
+  var hw = d.hardware||{}, rm = d.role_meta||{};
 
   // 统计
-  document.getElementById('stNodes').textContent = d.total_nodes || pn.length || '-';
-  document.getElementById('stRoles').textContent = (nodes.length || 0);
-  document.getElementById('stMode').textContent = co ? '合设' : '分离';
-  var scName = (d.scenarios && d.scenarios[scenario] && d.scenarios[scenario].name) || (scenario || '').toUpperCase();
+  document.getElementById('stNodes').textContent = d.total_nodes||pn.length||'-';
+  document.getElementById('stRoles').textContent = nodes.length||0;
+  document.getElementById('stMode').textContent = co?'合设':'分离';
+  var scName = (d.scenarios&&d.scenarios[sc]&&d.scenarios[sc].name)||(sc||'').toUpperCase();
   document.getElementById('stScenario').textContent = scName;
 
-  // 场景下拉同步
+  // 下拉同步
   var sel = document.getElementById('scSelect');
-  for (var i = 0; i < sel.options.length; i++) {
-    sel.options[i].selected = sel.options[i].value === scenario;
-  }
+  for(var i=0;i<sel.options.length;i++) sel.options[i].selected = sel.options[i].value===sc;
+
+  // 硬件
+  var hh = '';
+  if(hw.common) hh += '<div class="hw-tag"><span style="width:6px;height:6px;border-radius:2px;background:var(--accent);display:inline-block"></span><b>合设</b> '+(hw.common.ram||'')+' '+(hw.common.disk||'')+'</div>';
+  if(hw.ctrl) hh += '<div class="hw-tag"><span style="width:6px;height:6px;border-radius:2px;background:#1a73e8;display:inline-block"></span><b>管控</b> '+(hw.ctrl.ram||'')+' '+(hw.ctrl.disk||'')+'</div>';
+  if(hw.data) hh += '<div class="hw-tag"><span style="width:6px;height:6px;border-radius:2px;background:#6366f1;display:inline-block"></span><b>数据</b> '+(hw.data.ram||'')+' '+(hw.data.disk||'')+'</div>';
+  document.getElementById('hwPanel').innerHTML = hh;
 
   // 图例
-  var rm = d.role_meta || {};
-  var legendHtml = '';
-  var order = ['OM','CN','DN','GTM'];
-  for (var i = 0; i < order.length; i++) {
-    var r = order[i];
-    var info = rm[r] || { label: r, color: '#666' };
-    legendHtml += '<span class="legend-item"><span class="ld" style="background:' + info.color + '"></span>' + info.label + '</span>';
-  }
-  legendHtml += '<span class="legend-item" style="margin-left:auto;font-size:11px;color:var(--gray2);">' +
-    (d.total_nodes || 0) + ' 物理节点 · ' + (nodes.length || 0) + ' 角色' + (co ? ' · 合设' : '');
-  // 显示硬件概要
-  if (hw.common) {
-    legendHtml += ' · ' + (hw.common.ram || '') + '</span>';
-  } else if (hw.ctrl && hw.data) {
-    legendHtml += ' · 管控:' + (hw.ctrl.ram || '') + ' 数据:' + (hw.data.ram || '') + '</span>';
-  } else {
-    legendHtml += '</span>';
-  }
-  document.getElementById('legendBar').innerHTML = legendHtml;
+  var lh = '';
+  ['OM','CN','DN','GTM'].forEach(function(r){
+    var info = rm[r]||{label:r,color:COLORS[r]||'#666'};
+    lh += '<span class="lg-item"><span class="lg-dot" style="background:'+info.color+'"></span>'+info.label+'</span>';
+  });
+  lh += '<span class="lg-info">'+(d.total_nodes||0)+' 节点 · '+(nodes.length||0)+' 角色'+(co?' · 合设':'')+'</span>';
+  document.getElementById('legendBar').innerHTML = lh;
 
-  // 硬件面板
-  var hwHtml = '';
-  if (hw.common) hwHtml += '<div class="hw-chip"><span class="dot" style="background:var(--accent)"></span><b>统一合设</b> ' + (hw.common.cpu||'') + ' · ' + (hw.common.ram||'') + ' · ' + (hw.common.disk||'') + ' · ' + (hw.common.raid||'') + '</div>';
-  if (hw.ctrl) hwHtml += '<div class="hw-chip"><span class="dot" style="background:#1a73e8"></span><b>管控节点</b> ' + (hw.ctrl.cpu||'') + ' · ' + (hw.ctrl.ram||'') + ' · ' + (hw.ctrl.disk||'') + ' · ' + (hw.ctrl.raid||'') + '</div>';
-  if (hw.data) hwHtml += '<div class="hw-chip"><span class="dot" style="background:#6366f1"></span><b>数据节点</b> ' + (hw.data.cpu||'') + ' · ' + (hw.data.ram||'') + ' · ' + (hw.data.disk||'') + ' · ' + (hw.data.raid||'') + '</div>';
-  document.getElementById('hwPanel').innerHTML = hwHtml;
-
-  // 渲染主内容
-  if (co && pn.length > 0) {
-    renderCoDeploy(pn, rm);
-  } else if (!co && nodes.length > 0) {
-    renderSeparate(d, rm);
-  } else {
-    document.getElementById('archContent').innerHTML = '<div class="empty-state">暂无节点数据</div>';
-  }
+  // 主内容
+  if(co && pn.length) renderCo(pn, rm);
+  else if(!co && nodes.length) renderSep(d, rm);
+  else document.getElementById('archContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray2);">暂无节点数据</div>';
 }
 
-function renderCoDeploy(pn, rm) {
-  // 合设场景：物理节点卡片，每卡显示所有角色
-  var html = '<div class="node-section"><div class="node-section-title">物理节点拓扑</div><div class="node-grid">';
-  for (var i = 0; i < pn.length; i++) {
-    var n = pn[i];
-    var roles = n.roles || [];
-    html += '<div class="node-card">';
-    html += '<div class="node-host">' + n.hostname + (n.is_primary ? '<span class="node-prime">主</span>' : '') + '</div>';
-    html += '<div class="node-ip">' + (n.mgmt_ip || n.biz_ip || '') + '</div>';
-    html += '<div class="node-role-grid">';
-    for (var j = 0; j < roles.length; j++) {
-      var info = rm[roles[j]] || { label: roles[j], color: '#666' };
-      html += '<div class="node-role"><span class="role-dot" style="background:' + info.color + '"></span><span class="role-name">' + roles[j] + '</span><span class="role-label">' + info.label + '</span></div>';
+function renderCo(pn, rm){
+  var html = '<div class="co-section"><div class="co-grid">';
+  for(var i=0; i<pn.length; i++){
+    var n = pn[i], roles = n.roles||[];
+    html += '<div class="co-card">';
+    html += '<div class="co-host"><div class="hname">'+n.hostname+(n.is_primary?' <span class="badge bg-ok">主</span>':'')+'</div>';
+    html += '<div class="hip">'+(n.mgmt_ip||'')+'</div></div>';
+    html += '<div class="co-roles">';
+    for(var j=0;j<roles.length;j++){
+      var info = rm[roles[j]]||{label:roles[j]||roles[j],color:COLORS[roles[j]]||'#666'};
+      html += '<div class="co-role" style="background:'+info.color+'15"><span class="rd" style="background:'+info.color+'"></span>'+roles[j]+'<span style="font-size:10px;color:var(--gray2);margin-left:auto;">'+info.label+'</span></div>';
     }
     html += '</div></div>';
   }
   html += '</div></div>';
-
-  // 网络平面
-  html += '<div class="net-plane mgmt">管理平面 · 10GE · bond1 · active-backup</div>';
-  html += '<div class="net-plane biz">业务平面 · 25GE · bond4 · 802.3ad</div>';
-
+  html += '<div class="arch-planes"><div class="arch-plane mgmt">管理平面 · 10GE · bond1 · active-backup</div>';
+  html += '<div class="arch-plane biz">业务平面 · 25GE · bond4 · 802.3ad</div></div>';
   document.getElementById('archContent').innerHTML = html;
 }
 
-function renderSeparate(d, rm) {
-  // 分离场景：按角色分区
-  var nodes = d.nodes || [];
+function renderSep(d, rm){
+  var nodes = d.nodes||[];
   var order = ['OM','GTM','CN','DN'];
-  var roleLabels = { 'OM':'OM 管理层', 'GTM':'GTM 事务层', 'CN':'CN 协调层', 'DN':'DN 数据层' };
-  var roleColors = {};
-  for (var k in rm) { roleColors[k] = rm[k].color || '#666'; }
-
+  var titles = {OM:'OM 管理层',GTM:'GTM 事务层',CN:'CN 协调层',DN:'DN 数据层'};
   var html = '';
-  for (var ri = 0; ri < order.length; ri++) {
-    var r = order[ri];
-    var zoneNodes = [];
-    for (var i = 0; i < nodes.length; i++) {
-      if (nodes[i].role === r && !nodes[i].co_host) zoneNodes.push(nodes[i]);
-    }
-    if (!zoneNodes.length) continue;
-
-    var color = roleColors[r] || '#666';
-    html += '<div class="role-zone" style="border-left:3px solid ' + color + '">';
-    html += '<div class="zone-header" style="color:' + color + '">' + (roleLabels[r] || r) + ' <span style="font-size:11px;color:var(--gray2);font-weight:400;">' + zoneNodes.length + ' 节点</span></div>';
-    html += '<div class="zone-body">';
-    for (var j = 0; j < zoneNodes.length; j++) {
+  for(var ri=0;ri<order.length;ri++){
+    var r = order[ri], zoneNodes = [];
+    for(var i=0;i<nodes.length;i++) if(nodes[i].role===r && !nodes[i].co_host) zoneNodes.push(nodes[i]);
+    if(!zoneNodes.length) continue;
+    var color = (rm[r]&&rm[r].color)||COLORS[r]||'#666';
+    html += '<div class="sep-zone" style="border-left:3px solid '+color+'">';
+    html += '<div class="sz-head" style="color:'+color+'">'+(titles[r]||r)+' <span class="sz-count">'+zoneNodes.length+' 节点</span></div>';
+    html += '<div class="sz-body">';
+    for(var j=0;j<zoneNodes.length;j++){
       var zn = zoneNodes[j];
-      html += '<div class="zone-node"><div class="zn-host">' + (zn.hostname || zn.id) + '</div>';
-      html += '<div class="zn-ip">' + (zn.mgmt_ip || '') + '</div>';
-      html += '<div class="zn-role"><span style="width:8px;height:8px;border-radius:2px;background:' + color + ';display:inline-block"></span>' + (rm[r] ? rm[r].label : r) + '</div></div>';
+      html += '<div class="sz-node"><div class="szn-host">'+(zn.hostname||zn.id)+'</div>';
+      html += '<div class="szn-ip">'+(zn.mgmt_ip||'')+'</div>';
+      html += '<div class="szn-role"><span style="width:7px;height:7px;border-radius:2px;background:'+color+';display:inline-block"></span>'+
+              ((rm[r]&&rm[r].label)||r)+'</div></div>';
     }
     html += '</div></div>';
   }
-
   document.getElementById('archContent').innerHTML = html;
 }
 
-// ── 事件绑定 ──
-document.getElementById('scSelect').addEventListener('change', function() {
-  var sc = this.value;
-  if (sc === 'custom') {
-    document.getElementById('archContent').innerHTML = '<div class="empty-state">调整下方 CN/DN 参数后点击"应用"</div>';
-    return;
-  }
-  loadScenario(sc);
+// 事件
+document.getElementById('scSelect').addEventListener('change',function(){
+  if(this.value==='custom'){document.getElementById('archContent').innerHTML='<div style="text-align:center;padding:40px;color:var(--gray2);">调整 CN/DN 参数后点击"应用"</div>';return;}
+  loadScenario(this.value);
 });
-
-document.getElementById('applyBtn').addEventListener('click', function() {
-  var cn = document.getElementById('cnInput').value;
-  var dn = document.getElementById('dnInput').value;
-  var co = document.getElementById('coToggle').dataset.co === '1';
-  var sc = document.getElementById('scSelect').value;
-  if (sc === 'custom') sc = null;
-  loadScenario(sc, cn, dn, co);
+document.getElementById('applyBtn').addEventListener('click',function(){
+  loadScenario(document.getElementById('scSelect').value,document.getElementById('cnInput').value,document.getElementById('dnInput').value,document.getElementById('coToggle').dataset.co==='1');
 });
-
-document.getElementById('coToggle').addEventListener('click', function() {
-  var co = this.dataset.co === '1';
-  this.dataset.co = co ? '0' : '1';
-  this.textContent = co ? '角色分离' : '角色合设';
-  this.classList.toggle('btn-primary', !co);
-  this.classList.toggle('btn-ghost', co);
+document.getElementById('coToggle').addEventListener('click',function(){
+  var co = this.dataset.co==='1'; this.dataset.co=co?'0':'1';
+  this.textContent=co?'角色分离':'角色合设';
+  this.classList.toggle('btn-primary',!co); this.classList.toggle('btn-ghost',co);
 });
+document.getElementById('cnInput').addEventListener('keyup',function(e){if(e.key==='Enter')document.getElementById('applyBtn').click()});
+document.getElementById('dnInput').addEventListener('keyup',function(e){if(e.key==='Enter')document.getElementById('applyBtn').click()});
 
-// 回车触发应用
-document.getElementById('cnInput').addEventListener('keyup', function(e) { if (e.key === 'Enter') document.getElementById('applyBtn').click(); });
-document.getElementById('dnInput').addEventListener('keyup', function(e) { if (e.key === 'Enter') document.getElementById('applyBtn').click(); });
-
-// 初始化加载
 loadScenario('uat');
 </script>
 {% endblock %}
