@@ -25,6 +25,9 @@ from core.precheck_engine import PRECHECK_ITEMS, PRECHECK_PHASES
 from core.config_generator import DWSConfig, generate_preinstall_ini
 from core.verifier import VERIFY_ITEMS
 
+# ── SSH 执行器 ──
+from engine.ssh_executor import SSHExecutor
+
 # ── 嘉兴引擎（一字不改） ──
 from engine.core_engine import (
     get_or_create_session, reset_session, _init_phases,
@@ -86,6 +89,66 @@ def api_precheck():
     for v in results.values():
         summary[v["status"]] += 1
     return jsonify({"items": PRECHECK_ITEMS, "results": results, "summary": summary})
+
+@app.route("/api/precheck/commands")
+def api_precheck_commands():
+    """获取预检命令文本（demo 模式：复制粘贴执行）"""
+    nodes = request.args.get("nodes", "").split(",")
+    nodes = [n.strip() for n in nodes if n.strip()]
+    if not nodes:
+        nodes = ["node1", "node2", "node3"]
+    executor = SSHExecutor(mode="demo")
+    text = executor.format_node_commands(PRECHECK_ITEMS, nodes)
+    return jsonify({"commands": text, "mode": "demo", "node_count": len(nodes)})
+
+@app.route("/api/precheck/run", methods=["POST"])
+def api_precheck_run():
+    """执行预检 — 双模式（demo/ssh）
+
+    POST JSON:
+      mode: "demo" | "ssh"
+      nodes: ["10.134.21.190", "10.134.21.191", ...]
+      username: "root" (ssh模式)
+      password: "xxx"  (ssh模式)
+
+    返回:
+      results: [{item_id, node, mode, status, detail, ...}]
+      summary: {pass, warn, fail, total}
+    """
+    data = request.get_json() or {}
+    mode = data.get("mode", "demo")
+    nodes = data.get("nodes", [])
+    item_ids = data.get("items", None)  # 可选：指定检查项ID列表
+
+    if not nodes:
+        return jsonify({"error": "请提供节点列表 (nodes)"}), 400
+
+    # 筛选要执行的检查项
+    items = PRECHECK_ITEMS
+    if item_ids:
+        id_set = set(item_ids)
+        items = [i for i in PRECHECK_ITEMS if i["id"] in id_set]
+
+    if mode == "ssh":
+        username = data.get("username", "root")
+        password = data.get("password", "")
+        key_file = data.get("key_file", "")
+        port = int(data.get("port", 22))
+        executor = SSHExecutor(mode="ssh", username=username,
+                               password=password, key_file=key_file, port=port)
+    else:
+        executor = SSHExecutor(mode="demo")
+
+    results = executor.run_checks(items, nodes, parallel=(mode == "ssh"))
+
+    # 统计
+    summary = {"pass": 0, "warn": 0, "fail": 0, "pending": 0, "total": len(results)}
+    for r in results:
+        s = r.get("status", "pending")
+        if s in summary:
+            summary[s] += 1
+
+    return jsonify({"results": results, "summary": summary, "mode": mode})
 
 # ================================================================
 # LLD 配置生成（增强版：接入嘉兴引擎 + 保留原有生成器）
