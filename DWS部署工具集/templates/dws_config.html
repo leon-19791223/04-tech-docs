@@ -45,7 +45,7 @@
     <div><h3 style="font-size:15px;font-weight:700;color:var(--tx);margin:0;">LLD 配置中心</h3><div style="font-size:11px;color:var(--t2);">填写参数 → 实时预览 → 保存生成模板</div></div>
     <div class="actions">
         <label class="tgl-label"><input type="checkbox" id="tgl" checked onchange="document.querySelector('.cfg-preview').classList.toggle('hidden')"> 预览</label>
-        <button type="submit" form="cf" class="btn btn-p">保存并生成模板</button>
+        <button type="submit" form="cf" class="btn btn-primary">保存并生成模板</button>
     </div>
 </div>
 
@@ -112,7 +112,7 @@
     <div class="cfg-row"><div class="cfg-f"><label>项目名称</label><input class="ps" name="delivery_project" value="{{ dv.project_name }}"></div><div class="cfg-f"><label>客户</label><input class="ps" name="delivery_customer" value="{{ dv.customer }}"></div><div class="cfg-f"><label>部署地点</label><input class="ps" name="delivery_site" value="{{ dv.site }}"></div><div class="cfg-f"><label>日期</label><input class="ps" name="delivery_date" value="{{ dv.deploy_date }}"></div></div>
 </div>
 
-<div class="actions"><button type="submit" class="btn btn-p" style="font-size:13px;padding:8px 24px;">保存全部配置 → 生成模板</button></div>
+<div class="actions"><button type="submit" class="btn btn-primary" style="font-size:13px;padding:8px 24px;">保存全部配置 → 生成模板</button></div>
 </form>
 
 <!-- Preview panel -->

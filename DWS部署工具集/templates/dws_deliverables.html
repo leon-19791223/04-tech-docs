@@ -36,7 +36,7 @@
     </div>
   </div>
   <div style="margin-top:16px;">
-    <button onclick="generateReport()" id="btn-gen" class="btn btn-pri" style="padding:10px 24px;">
+    <button onclick="generateReport()" id="btn-gen" class="btn btn-primary" style="padding:10px 24px;">
       &#x1F4E6; 生成交付物
     </button>
     <span id="gen-status" style="margin-left:12px;font-size:13px;color:var(--g500);"></span>
@@ -98,7 +98,7 @@ async function generateReport() {
     html += '</ul>';
 
     html += '<div style="margin-top:16px;">';
-    html += '<a href="' + data.download_url + '" class="btn btn-pri" download>&#x2B07; 下载交付物 (.tar.gz)</a>';
+    html += '<a href="' + data.download_url + '" class="btn btn-primary" download>&#x2B07; 下载交付物 (.tar.gz)</a>';
     html += '</div>';
     resultBody.innerHTML = html;
   } catch (e) {
