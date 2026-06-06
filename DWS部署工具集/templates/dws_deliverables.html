@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block page_title %}交付物生成{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x1F4E6;</span> 交付物生成</span>
+  </div>
+  <p style="font-size:13px;color:var(--g500);margin-bottom:16px;">
+    填写交付信息，一键生成部署预检报告、审计日志、验证报告和全部配置文件。
+  </p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div>
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">项目名称</label>
+      <input id="f-project" value="{{ metadata.get('project_name','') }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">客户名称</label>
+      <input id="f-customer" value="{{ metadata.get('customer','') }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">部署地点</label>
+      <input id="f-site" value="{{ metadata.get('site','') }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">部署工程师</label>
+      <input id="f-engineer" value="{{ metadata.get('deploy_engineer','') }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">部署日期</label>
+      <input id="f-date" value="{{ metadata.get('deploy_date','') }}" placeholder="2026-06-06" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">验收标准</label>
+      <input id="f-acceptance" value="{{ metadata.get('acceptance_criteria','') }}" placeholder="例如: TPC-H 10GB <300s" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
+    </div>
+  </div>
+  <div style="margin-top:16px;">
+    <button onclick="generateReport()" id="btn-gen" class="btn btn-pri" style="padding:10px 24px;">
+      &#x1F4E6; 生成交付物
+    </button>
+    <span id="gen-status" style="margin-left:12px;font-size:13px;color:var(--g500);"></span>
+  </div>
+</div>
+
+<div class="card" id="result-card" style="display:none;">
+  <div class="card-hdr">
+    <span class="card-title"><span class="ti">&#x2705;</span> 交付物已生成</span>
+  </div>
+  <div id="result-body"></div>
+</div>
+
+<script>
+async function generateReport() {
+  const btn = document.getElementById('btn-gen');
+  const status = document.getElementById('gen-status');
+  const resultCard = document.getElementById('result-card');
+  const resultBody = document.getElementById('result-body');
+
+  btn.disabled = true;
+  status.textContent = '正在生成...';
+
+  try {
+    const resp = await fetch('/api/report/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        project_name: document.getElementById('f-project').value,
+        customer: document.getElementById('f-customer').value,
+        site: document.getElementById('f-site').value,
+        engineer: document.getElementById('f-engineer').value,
+        date: document.getElementById('f-date').value,
+        acceptance: document.getElementById('f-acceptance').value,
+      })
+    });
+    const data = await resp.json();
+
+    if (!data.ok) {
+      status.textContent = '生成失败: ' + (data.error || '未知错误');
+      btn.disabled = false;
+      return;
+    }
+
+    status.textContent = '生成完成!';
+    resultCard.style.display = 'block';
+
+    let html = '<div style="margin-bottom:12px;">';
+    html += '<p style="font-size:13px;color:var(--g500);margin-bottom:12px;">';
+    html += '会话ID: ' + data.session_id + ' | ';
+    html += '文件数: ' + data.files.length + ' | ';
+    html += '大小: ' + (data.size_bytes / 1024).toFixed(1) + ' KB</p>';
+
+    html += '<h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">生成文件清单</h3>';
+    html += '<ul style="font-size:13px;line-height:1.8;">';
+    for (const f of data.files) {
+      html += '<li>' + f + '</li>';
+    }
+    html += '</ul>';
+
+    html += '<div style="margin-top:16px;">';
+    html += '<a href="' + data.download_url + '" class="btn btn-pri" download>&#x2B07; 下载交付物 (.tar.gz)</a>';
+    html += '</div>';
+    resultBody.innerHTML = html;
+  } catch (e) {
+    status.textContent = '请求失败: ' + e.message;
+  }
+  btn.disabled = false;
+}
+</script>
+{% endblock %}

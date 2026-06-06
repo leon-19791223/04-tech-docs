@@ -1,0 +1,11 @@
+{
+  "project_name": "测试项目",
+  "customer": "测试客户",
+  "site": "数据中心",
+  "engineer": "张三",
+  "date": "2026-06-06",
+  "acceptance_criteria": "TPC-H 10GB <300s，集群状态 Normal，无 ABRT 告警",
+  "cluster_name": "dwsuat",
+  "environment": "UAT",
+  "generated_at": "2026-06-06 11:30:50"
+}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>预检报告 - dwsuat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:#f0f2f5;color:#1a1d26;line-height:1.6;font-size:14px}
+.header{background:linear-gradient(135deg,#1A3C6E,#2A5A9E);color:#fff;padding:40px 48px}
+.header h1{font-size:24px;font-weight:700;margin-bottom:6px}
+.header .meta{font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px}
+.header .meta span{margin-right:24px}
+.summary-row{display:flex;gap:16px;padding:24px 48px;background:#fff;border-bottom:1px solid #e6eaf0}
+.summary-card{flex:1;padding:20px;border-radius:10px;text-align:center}
+.summary-card.pass{background:#e6f6f0;border:1px solid #b2dfc8}
+.summary-card.warn{background:#fff3e0;border:1px solid #ffcc80}
+.summary-card.fail{background:#ffebee;border:1px solid #ef9a9a}
+.summary-card .num{font-size:32px;font-weight:700}
+.summary-card .label{font-size:12px;color:#666;margin-top:4px}
+.summary-card.pass .num{color:#0e7c4b}
+.summary-card.warn .num{color:#e67e22}
+.summary-card.fail .num{color:#c62828}
+.content{padding:24px 48px}
+.section{margin-bottom:24px}
+.section h2{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #1A3C6E;color:#1A3C6E}
+.section h3{font-size:14px;font-weight:600;margin:12px 0 8px;color:#2d2d2d}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px}
+table th{padding:10px 14px;font-weight:600;font-size:11px;color:#6b7285;text-transform:uppercase;background:#f8f9fa;border-bottom:1px solid #e6eaf0;text-align:left}
+table td{padding:10px 14px;border-bottom:1px solid #f0f2f5}
+.tag{display:inline-block;padding:2px 10px;border-radius:5px;font-size:12px;font-weight:500}
+.tag-pass{background:#e6f6f0;color:#0e7c4b}
+.tag-warn{background:#fff3e0;color:#e67e22}
+.tag-fail{background:#ffebee;color:#c62828}
+.solution-box{background:#fff8e1;padding:12px;border-radius:6px;border-left:3px solid #e67e22;margin:8px 0;font-size:13px}
+.footer{text-align:center;padding:24px;color:#9ca0af;font-size:12px;border-top:1px solid #e6eaf0}
+</style></head>
+<body>
+<div class="header">
+  <h1>DWS 集群部署预检报告</h1>
+  <div class="meta">
+    <span>项目: 测试项目</span>
+    <span>客户: 测试客户</span>
+    <span>集群: dwsuat</span>
+    <span>环境: UAT</span>
+    <span>生成: 2026-06-06 11:30:50</span>
+  </div>
+</div>
+
+<div class="summary-row">
+  <div class="summary-card pass"><div class="num">0</div><div class="label">通过</div></div>
+  <div class="summary-card warn"><div class="num">0</div><div class="label">警告</div></div>
+  <div class="summary-card fail"><div class="num">0</div><div class="label">失败</div></div>
+  <div class="summary-card" style="background:#e8eaf6;border:1px solid #c5cae9">
+    <div class="num" style="color:#1A3C6E">42</div>
+    <div class="label">总计</div>
+  </div>
+</div>
+<div class="content">
+  <div class="section">
+    <h2>检查详情</h2><h3>硬件环境 (12项)</h3><table><tr><th>检查项</th><th>状态</th><th>结果</th><th>修复建议</th></tr><tr><td>RAID策略</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">IBMC界面 -> 存储管理 -> RAID策略配置</td></tr><tr><td>磁盘数量</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">确认物理盘数量满足要求</td></tr><tr><td>网卡检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">Hi1822需使用hinicconfig增加中断个数</td></tr><tr><td>SSD确认</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">HDD盘不满足DWS性能要求，需更换SSD</td></tr><tr><td>BIOS/NUMA配置</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">BIOS设置关闭节能; sysctl -w kernel.numa_balancing=0</td></tr><tr><td>BIOS版本检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">升级BIOS固件: 登录IBMC -> 固件升级 -> BIOS固件更新</td></tr><tr><td>UEFI启动模式</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">重装OS时选择UEFI模式: IBMC配置->启动设置->UEFI</td></tr><tr><td>CPU频率检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">BIOS设置关闭节能模式, 确认Performance Policy=Performance</td></tr><tr><td>内存频率检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">确认内存条规格≥2933MT/s, 并安装在正确通道</td></tr><tr><td>PCIe链路状态</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">重新插拔PCIe设备, 检查PCIe插槽是否支持Gen3/Gen4</td></tr><tr><td>RAID缓存配置</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">IBMC -> 存储管理 -> 调整RAID策略: Read Ahead + Write Back With BBU</td></tr><tr><td>RAID BBU状态</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">更换故障BBU电池, 确认充电完成: storcli64 /c0/bbu start learn</td></tr></table><h3>OS配置 (15项)</h3><table><tr><th>检查项</th><th>状态</th><th>结果</th><th>修复建议</th></tr><tr><td>audit服务</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">systemctl stop auditd; systemctl disable auditd</td></tr><tr><td>防火墙</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">systemctl stop firewalld iptables; systemctl disable firewal</td></tr><tr><td>SELinux</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/</td></tr><tr><td>swap关闭</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">swapoff -a; 注释/etc/fstab中swap行</td></tr><tr><td>透明大页</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">grub2-mkconfig; 在GRUB_CMDLINE_LINUX追加transparent_hugepage=ne</td></tr><tr><td>时区</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">timedatectl set-timezone Asia/Shanghai</td></tr><tr><td>字符集</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">echo 'LANG="en_US.UTF-8"' > /etc/locale.conf; source /etc/lo</td></tr><tr><td>内核参数</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">echo 'vm.watermark_scale_factor=100' >> /etc/sysctl.conf; sy</td></tr><tr><td>umask配置</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">echo 'umask 0022' >> /etc/profile && source /etc/profile</td></tr><tr><td>file-max系统限制</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">echo 'fs.file-max=1000000' >> /etc/sysctl.conf && sysctl -p</td></tr><tr><td>TCP内核参数</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">追加到/etc/sysctl.conf: net.ipv4.tcp_tw_reuse=1; net.core.somax</td></tr><tr><td>ARP过滤配置</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">追加到/etc/sysctl.conf: net.ipv4.conf.all.arp_filter=0; net.ipv</td></tr><tr><td>NTP时钟偏移</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">检查chrony配置: server指向NTP服务器; chronyc makestep; 确认防火墙开放123/udp</td></tr><tr><td>SSH连接配置</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">在/etc/ssh/sshd_config中: MaxSessions=1024; UseDNS=no; MaxStar</td></tr><tr><td>密码策略</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">修改/etc/login.defs: PASS_MAX_DAYS=90; PASS_MIN_LEN=8</td></tr></table><h3>网络环境 (8项)</h3><table><tr><th>检查项</th><th>状态</th><th>结果</th><th>修复建议</th></tr><tr><td>交换机MTU检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">确认交换机端口MTU=1500: display interface <端口> | include mtu</td></tr><tr><td>VLAN配置检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">在交换机创建VLAN并将对应端口划入: vlan batch 101 102; port default vlan 10</td></tr><tr><td>路由可达性检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">检查路由表: ip route; 确认下一跳网关正确; 检查交换机路由配置</td></tr><tr><td>节点间带宽测试</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">服务端: iperf3 -s -p 12345; 客户端: iperf3 -c <server_ip> -p 12345</td></tr><tr><td>TCP重传率检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">检查网卡协商速率是否正常; 检查交换机端口是否有CRC错误; 更换网线/光模块</td></tr><tr><td>端口协商速率</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">检查网线/光模块; 交换机端口shutdown/no-shutdown; 强制协商速率</td></tr><tr><td>STP/环路检测</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">交换机确认STP配置: stp enable; stp mode rstp; 边缘端口使能stp edged-port</td></tr><tr><td>MAC表学习检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">检查交换机MAC表是否有漂移: display mac-address flapping record; 确认没有重复M</td></tr></table><h3>存储配置 (5项)</h3><table><tr><th>检查项</th><th>状态</th><th>结果</th><th>修复建议</th></tr><tr><td>磁盘挂载</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">parted GPT分区 -> mkfs.xfs -> /etc/fstab -> mount -a</td></tr><tr><td>fstab持久化</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">blkid获取UUID -> 写入/etc/fstab -> mount -a验证</td></tr><tr><td>条带化配置</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">在RAID配置界面重建虚拟磁盘, 设置条带大小=256KB</td></tr><tr><td>分区对齐检查</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">使用parted创建分区时: mkpart primary 2048s 100%; 避免使用fdisk默认值</td></tr><tr><td>磁盘预读大小</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">blockdev --setra 4096 /dev/<数据盘>; 追加到/etc/rc.local实现持久化</td></tr></table><h3>软件环境 (2项)</h3><table><tr><th>检查项</th><th>状态</th><th>结果</th><th>修复建议</th></tr><tr><td>Python 3.8.5</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">编译安装: ./configure --enable-optimizations --prefix=/usr/local</td></tr><tr><td>yum源/ISO</td><td><span class="tag tag-warn">未检</span></td><td>未检查</td><td style="font-size:12px;color:#666">mount /opt/Kylin-*.iso /media -o loop; 配置local repo</td></tr></table>
+  </div>
+  <div class="section">
+    <h2>交付信息</h2>
+    <table>
+      <tr><td>项目名称</td><td>测试项目</td></tr>
+      <tr><td>客户</td><td>测试客户</td></tr>
+      <tr><td>部署地点</td><td>数据中心</td></tr>
+      <tr><td>部署工程师</td><td>张三</td></tr>
+      <tr><td>部署日期</td><td>2026-06-06</td></tr>
+      <tr><td>验收标准</td><td>TPC-H 10GB <300s，集群状态 Normal，无 ABRT 告警</td></tr>
+    </table>
+  </div>
+</div>
+<div class="footer">DWS 智能部署系统 · 2026-06-06 11:30:50</div>
+</body>
+</html>

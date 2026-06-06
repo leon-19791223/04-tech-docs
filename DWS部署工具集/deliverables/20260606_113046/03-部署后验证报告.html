@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>验证报告 - dwsuat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:#f0f2f5;color:#1a1d26;line-height:1.6;font-size:14px}
+.header{background:linear-gradient(135deg,#1A3C6E,#2A5A9E);color:#fff;padding:40px 48px}
+.header h1{font-size:24px;font-weight:700;margin-bottom:6px}
+.header .meta{font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px}
+.header .meta span{margin-right:24px}
+.summary-row{display:flex;gap:16px;padding:24px 48px;background:#fff;border-bottom:1px solid #e6eaf0}
+.summary-card{flex:1;padding:20px;border-radius:10px;text-align:center}
+.summary-card.pass{background:#e6f6f0;border:1px solid #b2dfc8}
+.summary-card.warn{background:#fff3e0;border:1px solid #ffcc80}
+.summary-card.fail{background:#ffebee;border:1px solid #ef9a9a}
+.summary-card .num{font-size:32px;font-weight:700}
+.summary-card .label{font-size:12px;color:#666;margin-top:4px}
+.summary-card.pass .num{color:#0e7c4b}
+.summary-card.warn .num{color:#e67e22}
+.summary-card.fail .num{color:#c62828}
+.content{padding:24px 48px}
+.section{margin-bottom:24px}
+.section h2{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #1A3C6E;color:#1A3C6E}
+.section h3{font-size:14px;font-weight:600;margin:12px 0 8px;color:#2d2d2d}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px}
+table th{padding:10px 14px;font-weight:600;font-size:11px;color:#6b7285;text-transform:uppercase;background:#f8f9fa;border-bottom:1px solid #e6eaf0;text-align:left}
+table td{padding:10px 14px;border-bottom:1px solid #f0f2f5}
+.tag{display:inline-block;padding:2px 10px;border-radius:5px;font-size:12px;font-weight:500}
+.tag-pass{background:#e6f6f0;color:#0e7c4b}
+.tag-warn{background:#fff3e0;color:#e67e22}
+.tag-fail{background:#ffebee;color:#c62828}
+.solution-box{background:#fff8e1;padding:12px;border-radius:6px;border-left:3px solid #e67e22;margin:8px 0;font-size:13px}
+.footer{text-align:center;padding:24px;color:#9ca0af;font-size:12px;border-top:1px solid #e6eaf0}
+</style></head>
+<body>
+<div class="header">
+  <h1>DWS 集群部署后验证报告</h1>
+  <div class="meta">
+    <span>集群: dwsuat</span>
+    <span>环境: UAT</span>
+    <span>生成: 2026-06-06 11:30:50</span>
+  </div>
+</div>
+
+<div class="summary-row">
+  <div class="summary-card pass"><div class="num">10</div><div class="label">通过</div></div>
+  <div class="summary-card warn"><div class="num">0</div><div class="label">警告</div></div>
+  <div class="summary-card fail"><div class="num">0</div><div class="label">失败</div></div>
+  <div class="summary-card" style="background:#e8eaf6;border:1px solid #c5cae9">
+    <div class="num" style="color:#1A3C6E">10</div>
+    <div class="label">总计</div>
+  </div>
+</div>
+<div class="content">
+  <div class="section">
+    <h2>验证详情</h2>
+    <table>
+      <tr><th>验证项</th><th>状态</th><th>结果</th></tr><tr><td>TPOPS Web访问</td><td><span class="tag tag-pass">通过</span></td><td>https://IP:8002/gaussdb/ 可访问</td></tr><tr><td>GaussDB进程</td><td><span class="tag tag-pass">通过</span></td><td>gaussdb进程运行中</td></tr><tr><td>容器服务</td><td><span class="tag tag-pass">通过</span></td><td>TPOPS容器全部运行中</td></tr><tr><td>gsql连接测试</td><td><span class="tag tag-pass">通过</span></td><td>gsql -d postgres -p 40080 可连接</td></tr><tr><td>基本SQL功能</td><td><span class="tag tag-pass">通过</span></td><td>建表/插入/查询/删除功能正常</td></tr><tr><td>磁盘空间</td><td><span class="tag tag-pass">通过</span></td><td>/data /opt关键目录使用率<80%</td></tr><tr><td>时钟同步</td><td><span class="tag tag-pass">通过</span></td><td>chronyd已同步</td></tr><tr><td>fio磁盘性能</td><td><span class="tag tag-pass">通过</span></td><td>fio顺序写≥800MB/s, 顺序读≥1200MB/s</td></tr><tr><td>网络带宽</td><td><span class="tag tag-pass">通过</span></td><td>10GE网络带宽≥800MB/s, 重传率<0.01%</td></tr><tr><td>备份策略</td><td><span class="tag tag-pass">通过</span></td><td>检查备份策略是否已配置</td></tr></table>
+  </div>
+</div>
+<div class="footer">DWS 智能部署系统 · 2026-06-06 11:30:50</div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "session_id": "20260606_113046",
+  "cluster_name": "dwsuat",
+  "environment": "UAT",
+  "metadata": {
+    "project_name": "测试项目",
+    "customer": "测试客户",
+    "engineer": "张三",
+    "date": "2026-06-06"
+  },
+  "generated_at": "2026-06-06 11:30:50",
+  "audit_log": [
+    {
+      "session": "20260606_113046",
+      "cluster": "dwsuat",
+      "phase": 0,
+      "step": "init",
+      "status": "info",
+      "cmd": "",
+      "output": "部署会话已创建（模拟模式）",
+      "duration_sec": 0,
+      "timestamp": "2026-06-06 11:30:50"
+    }
+  ]
+}

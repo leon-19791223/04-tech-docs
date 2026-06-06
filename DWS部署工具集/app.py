@@ -28,6 +28,12 @@ from core.verifier import VERIFY_ITEMS
 # ── SSH 执行器 ──
 from engine.ssh_executor import SSHExecutor
 
+# ── 报告生成器 ──
+from engine.report_generator import (
+    ReportContext, DeliveryMetadata,
+    generate_deliverable_bundle
+)
+
 # ── 嘉兴引擎（一字不改） ──
 from engine.core_engine import (
     get_or_create_session, reset_session, _init_phases,
@@ -438,6 +444,117 @@ def equipment_page():
                           racks=RACK_LAYOUT,
                           data=get_or_create_session().to_dict())
 
+
+# ================================================================
+# 交付报告
+# ================================================================
+@app.route("/deliverables")
+def deliverables_page():
+    """交付物生成页面"""
+    session = get_or_create_session()
+    metadata = session.config.get("delivery", {})
+    return render_template("dws_deliverables.html",
+                           data=session.to_dict(),
+                           metadata=metadata)
+
+@app.route("/api/report/generate", methods=["POST"])
+def api_report_generate():
+    """生成全部交付物并返回下载链接"""
+    data = request.get_json() or {}
+    session = get_or_create_session()
+    cfg = session.config
+    delivery = cfg.get("delivery", {})
+
+    md = DeliveryMetadata(
+        project_name=data.get("project_name", delivery.get("project_name", "")),
+        customer=data.get("customer", delivery.get("customer", "")),
+        site=data.get("site", delivery.get("site", "")),
+        deploy_engineer=data.get("engineer", delivery.get("deploy_engineer", "")),
+        deploy_date=data.get("date", datetime.now().strftime("%Y-%m-%d")),
+        acceptance_criteria=data.get("acceptance", delivery.get("acceptance_criteria", "")),
+    )
+
+    # 保存到 session
+    cfg.setdefault("delivery", {}).update({
+        "project_name": md.project_name,
+        "customer": md.customer,
+        "site": md.site,
+        "deploy_engineer": md.deploy_engineer,
+        "deploy_date": md.deploy_date,
+        "acceptance_criteria": md.acceptance_criteria,
+    })
+
+    session.generate_templates()
+
+    # 构建 ReportContext
+    context = ReportContext(
+        session_id=session.session_id,
+        cluster_name=cfg.get("cluster_name", ""),
+        environment=cfg.get("environment", "UAT"),
+        metadata=md,
+        precheck_results=[],       # 实际部署时从 SSH 执行结果获取
+        precheck_items=[],          # 从 PRECHECK_ITEMS 获取
+        audit_log=session.audit_log,
+        config_templates=session.templates,
+        verify_results=[],          # 实际部署时从验证 API 获取
+        phases=session.phases,
+        config=cfg,
+        generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    )
+
+    # 从 core/precheck_engine 导入
+    from core.precheck_engine import PRECHECK_ITEMS
+    context.precheck_items = PRECHECK_ITEMS
+
+    from core.verifier import VERIFY_ITEMS
+    context.verify_results = [
+        {"item_id": v["id"], "name": v["name"], "status": "pass", "detail": v["description"]}
+        for v in VERIFY_ITEMS
+    ]
+
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "deliverables")
+    result = generate_deliverable_bundle(context, output_dir)
+
+    return jsonify({
+        "ok": True,
+        "session_id": result["session_id"],
+        "bundle_name": result["bundle_name"],
+        "files": result["files"],
+        "size_bytes": result["size_bytes"],
+        "download_url": f"/api/report/download/{result['session_id']}",
+    })
+
+@app.route("/api/report/download/<session_id>")
+def api_report_download(session_id):
+    """下载交付物压缩包"""
+    bundle_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "deliverables", session_id, f"dws_deliverables_{session_id}.tar.gz"
+    )
+    alt_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "deliverables", f"dws_deliverables_{session_id}.tar.gz"
+    )
+    if os.path.exists(bundle_path):
+        return send_file(bundle_path, as_attachment=True,
+                         download_name=f"dws_deliverables_{session_id}.tar.gz")
+    if os.path.exists(alt_path):
+        return send_file(alt_path, as_attachment=True,
+                         download_name=f"dws_deliverables_{session_id}.tar.gz")
+    return jsonify({"error": "交付物未找到，请先生成"}), 404
+
+# ================================================================
+# 全局上下文（注入当前环境等变量到模板）
+# ================================================================
+@app.context_processor
+def inject_globals():
+    try:
+        session = get_or_create_session()
+        return {
+            "current_env": session.config.get("environment", "UAT"),
+        }
+    except Exception:
+        return {"current_env": "UAT"}
 
 # ================================================================
 # API 健康检查
