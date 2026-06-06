@@ -69,8 +69,12 @@ table tr:hover td{background:#F8F9FA}
   --pr:#6366f1; --pr-bg:#EEF2FF;
   --gr:#10b981; --gr-bg:#ECFDF5;
   --am:#f59e0b; --R1:8px;
+  --s1:var(--card); --s2:var(--bg);
   --grad-accent-soft:linear-gradient(135deg,rgba(74,95,193,0.08),rgba(107,127,213,0.04));
 }
+
+/* tag 兼容别名（页面中有 22 处使用 class="tag"） */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:500;white-space:nowrap}
 
 /* 布局工具 */
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -108,7 +112,7 @@ table tr:hover td{background:#F8F9FA}
 .eq-card{background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);padding:16px}
 .eq-card:hover{box-shadow:var(--shadow-h)}
 .eq-title{font-size:13px;font-weight:600;color:var(--primary);margin-bottom:6px}
-.eq-specs{font-size:12px;color:var(--gray);line-height:1.7}
+.eq-specs{font-size:12px;color:var(--gray);line-height:1.7;display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .net-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray2);font-weight:600;margin-bottom:4px}
 .net-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 
@@ -134,6 +138,17 @@ table tr:hover td{background:#F8F9FA}
 .net-plane{display:flex;align-items:center;gap:10px;padding:8px 14px;margin-bottom:14px;border-radius:8px;font-size:12px;font-weight:600}
 .net-plane.mgmt{background:#EFF6FF;color:#1d4ed8;border:1px solid #d2e3fc}
 .net-plane.biz{background:#FEF2F2;color:#991b1b;border:1px solid #f5c6c4}
+
+/* 网络拓扑节点 */
+.net-node{display:inline-flex;flex-direction:column;align-items:center;padding:8px 14px;background:var(--card);border:1px solid var(--gray3);border-radius:8px;min-width:90px}
+.nn{font-size:12px;font-weight:600;color:var(--text)}
+.nd{font-size:10px;color:var(--gray2);margin-top:2px}
+
+/* 机柜U位 */
+.u{font-size:10px;color:var(--gray2);font-family:monospace;width:28px;flex-shrink:0}
+
+/* 节标题装饰线 */
+.line{display:inline-block;width:3px;height:14px;border-radius:2px;background:var(--accent);margin-right:8px;vertical-align:middle}
 @media(max-width:1024px){.g2{grid-template-columns:1fr}}
 @media(max-width:768px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}.page{padding:16px}}
 </style>

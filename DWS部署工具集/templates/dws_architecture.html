@@ -49,9 +49,9 @@
 .zone-node .zn-role{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:11px;font-weight:500;color:var(--text)}
 
 /* 网络平面标识 */
-net-plane{display:flex;align-items:center;gap:10px;padding:8px 14px;margin-bottom:16px;border-radius:8px;font-size:12px;font-weight:600}
-net-plane.mgmt{background:#e8f0fe;color:#1a73e8;border:1px solid #d2e3fc}
-net-plane.biz{background:#fce8e6;color:#d93025;border:1px solid #f5c6c4}
+.net-plane{display:flex;align-items:center;gap:10px;padding:8px 14px;margin-bottom:16px;border-radius:8px;font-size:12px;font-weight:600}
+.net-plane.mgmt{background:#e8f0fe;color:#1a73e8;border:1px solid #d2e3fc}
+.net-plane.biz{background:#fce8e6;color:#d93025;border:1px solid #f5c6c4}
 
 /* 图例 */
 .legend-bar{display:flex;gap:16px;padding:10px 18px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);align-items:center;flex-wrap:wrap;font-size:12px}
@@ -205,8 +205,8 @@ function renderCoDeploy(pn, rm) {
   html += '</div></div>';
 
   // 网络平面
-  html += '<net-plane class="mgmt">管理平面 · 10GE · bond1 · active-backup</net-plane>';
-  html += '<net-plane class="biz">业务平面 · 25GE · bond4 · 802.3ad</net-plane>';
+  html += '<div class="net-plane mgmt">管理平面 · 10GE · bond1 · active-backup</div>';
+  html += '<div class="net-plane biz">业务平面 · 25GE · bond4 · 802.3ad</div>';
 
   document.getElementById('archContent').innerHTML = html;
 }
