@@ -560,11 +560,6 @@ def api_config_generate():
     use_engine = data.get("use_engine", False)
 
     if mode == "official":
-        from core.config_generator import (
-            ClusterConfig, NodeSpec, OMSConfig,
-            generate_preinstall_ini, generate_host_inis,
-            generate_install_oms_ini, generate_cluster_install_template
-        )
         oms = OMSConfig(
             oms_ip1=data.get("oms_ip1", ""),
             oms_ip2=data.get("oms_ip2", ""),
@@ -626,16 +621,19 @@ def api_config_generate():
             }
         })
     else:
-        # 原有简单生成
-        cfg = DWSConfig(
+        # 简单生成（兼容旧接口，使用新格式）
+        node1 = data.get("master_node1_ip", "")
+        node2 = data.get("master_node2_ip", "")
+        node_ips = data.get("data_node_ips", "")
+        all_ips = [ip for ip in [node1, node2] + node_ips.split(",") if ip]
+        nodes = []
+        for i, ip in enumerate(all_ips):
+            nodes.append(NodeSpec(hostname=f"node{i+1}", mgmt_ip=ip))
+        if not nodes:
+            nodes = [NodeSpec(hostname="node1", mgmt_ip="127.0.0.1")]
+        cfg = ClusterConfig(
             cluster_name=data.get("cluster_name", "dws_cluster"),
-            master_node1_ip=data.get("master_node1_ip", ""),
-            master_node2_ip=data.get("master_node2_ip", ""),
-            data_node_ips=data.get("data_node_ips", ""),
-            cn_num=int(data.get("cn_num", 3)),
-            dn_num=int(data.get("dn_num", 3)),
-            db_port=int(data.get("db_port", 40080)),
-            timezone=data.get("timezone", "Asia/Shanghai"),
+            nodes=nodes, oms=OMSConfig(),
         )
         ini_content = generate_preinstall_ini(cfg)
         return jsonify({"content": ini_content})
