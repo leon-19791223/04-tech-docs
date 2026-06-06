@@ -2,74 +2,184 @@
 {% block page_title %}DWS 部署仪表盘{% endblock %}
 {% block content %}
 
+<style>
+.db-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:900px){.db-stats{grid-template-columns:repeat(2,1fr)}}
+.db-stat{background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px}
+.db-stat .ds-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.db-stat .ds-val{font-size:22px;font-weight:700;color:var(--primary)}
+.db-stat .ds-lbl{font-size:11px;color:var(--gray2);margin-top:1px}
+
+.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:900px){.db-grid{grid-template-columns:1fr}}
+
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick-card{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);text-decoration:none;transition:all .15s}
+.quick-card:hover{box-shadow:var(--shadow-h);border-color:var(--accent);transform:translateY(-1px)}
+.quick-card .qc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.quick-card .qc-name{font-size:13px;font-weight:600;color:var(--text)}
+.quick-card .qc-desc{font-size:11px;color:var(--gray2);margin-top:1px}
+.quick-card .qc-arrow{color:var(--gray3);font-size:16px;margin-left:auto}
+
+.progress-card{padding:16px 20px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius)}
+.progress-card .pc-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.progress-bar{height:8px;background:var(--g100);border-radius:4px;overflow:hidden;margin-bottom:6px}
+.progress-bar .pb-fill{height:100%;border-radius:4px;transition:width .5s}
+.progress-steps{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.progress-steps .ps-item{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;font-size:12px;transition:background .15s;cursor:pointer}
+.progress-steps .ps-item:hover{background:var(--g50)}
+.progress-steps .ps-item.active{background:var(--accent-bg)}
+.progress-steps .ps-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.progress-steps .ps-name{flex:1;color:var(--text);font-weight:500}
+.progress-steps .ps-status{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:600}
+
+.toolchain-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.toolchain-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--radius);text-decoration:none;transition:background .15s}
+.toolchain-item:hover{background:var(--g50)}
+.toolchain-item .tc-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#fff}
+.toolchain-item .tc-body{flex:1}
+.toolchain-item .tc-name{font-size:13px;font-weight:600;color:var(--text)}
+.toolchain-item .tc-desc{font-size:11px;color:var(--gray2)}
+.toolchain-item .tc-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600}
+</style>
+
+<!-- ===== 统计卡片 ===== -->
+<div class="db-stats">
+  <div class="db-stat">
+    <div class="ds-icon" style="background:var(--green-bg);color:var(--green);">✓</div>
+    <div><div class="ds-val" id="dsPrecheck">-</div><div class="ds-lbl">预检通过率</div></div>
+  </div>
+  <div class="db-stat">
+    <div class="ds-icon" style="background:var(--accent-bg);color:var(--accent);">▤</div>
+    <div><div class="ds-val">42</div><div class="ds-lbl">预检项目</div></div>
+  </div>
+  <div class="db-stat">
+    <div class="ds-icon" style="background:var(--orange-bg);color:var(--orange);">⊞</div>
+    <div><div class="ds-val" id="dsNodes">-</div><div class="ds-lbl">集群节点</div></div>
+  </div>
+  <div class="db-stat">
+    <div class="ds-icon" style="background:var(--red-bg);color:var(--red);">◎</div>
+    <div><div class="ds-val" id="dsEnv">-</div><div class="ds-lbl">当前环境</div></div>
+  </div>
+</div>
+
+<div class="db-grid">
+  <!-- ===== 快速入口 ===== -->
+  <div class="card">
+    <div class="card-hdr" style="margin-bottom:12px;"><span class="card-title">⚡ 快速入口</span></div>
+    <div class="quick-grid">
+      <a href="/precheck" class="quick-card">
+        <div class="qc-icon" style="background:var(--green-bg);color:var(--green);">✓</div>
+        <div><div class="qc-name">环境预检</div><div class="qc-desc">42 项检查 · 双模式</div></div>
+        <span class="qc-arrow">→</span>
+      </a>
+      <a href="/config" class="quick-card">
+        <div class="qc-icon" style="background:var(--accent-bg);color:var(--accent);">⚙</div>
+        <div><div class="qc-name">配置生成</div><div class="qc-desc">LLD 参数 · 60+ 项</div></div>
+        <span class="qc-arrow">→</span>
+      </a>
+      <a href="/deploy" class="quick-card">
+        <div class="qc-icon" style="background:var(--orange-bg);color:var(--orange);">🚀</div>
+        <div><div class="qc-name">部署引导</div><div class="qc-desc">7 阶段 · 逐步执行</div></div>
+        <span class="qc-arrow">→</span>
+      </a>
+      <a href="/architecture" class="quick-card">
+        <div class="qc-icon" style="background:var(--red-bg);color:var(--red);">🏗</div>
+        <div><div class="qc-name">架构图</div><div class="qc-desc">6 种场景 · 可视化</div></div>
+        <span class="qc-arrow">→</span>
+      </a>
+      <a href="/deliverables" class="quick-card">
+        <div class="qc-icon" style="background:#F5F3FF;color:#5b21b6;">📦</div>
+        <div><div class="qc-name">交付物</div><div class="qc-desc">报告 · 一键打包</div></div>
+        <span class="qc-arrow">→</span>
+      </a>
+      <a href="/equipment" class="quick-card">
+        <div class="qc-icon" style="background:#FEF3C7;color:#92400e;">📡</div>
+        <div><div class="qc-name">设备清单</div><div class="qc-desc">机柜 · 网络拓扑</div></div>
+        <span class="qc-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ===== 部署进度 ===== -->
+  <div class="card">
+    <div class="card-hdr" style="margin-bottom:12px;"><span class="card-title">📊 部署流程</span></div>
+    <div id="deployProgress"></div>
+  </div>
+</div>
+
+<!-- ===== 工具链联动 ===== -->
 <div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F3AF;</span> DWS MPP 数仓部署工具集</span></div>
-  <div style="display:flex;flex-direction:column;gap:16px;padding:8px 0;">
-    <div style="padding:12px 16px;background:var(--grad-accent-soft);border-radius:var(--rs);font-size:13px;">
-      <strong>&#x26A0; 与 Z-DBMate 的区别：</strong> 此工具集用于 <strong>GaussDB(DWS) MPP 数仓</strong> 的部署（管理平台：FusionInsight Manager）。<br>
-      GaussDB OLTP（单机/主备）的部署请使用 <a href="http://127.0.0.1:5052" target="_blank" style="color:var(--accent);">Z-DBMate 工具集 &rarr;</a>
+  <div class="card-hdr" style="margin-bottom:8px;"><span class="card-title">🔗 工具链联动</span></div>
+  <div class="toolchain-grid">
+    <div class="toolchain-item" style="background:var(--g50);">
+      <div class="tc-num" style="background:var(--gray2);">1</div>
+      <div class="tc-body">
+        <div class="tc-name">迁移智能评估系统</div>
+        <div class="tc-desc">评估源库到 DWS 的兼容性 · GP/Oracle/MySQL → DWS</div>
+      </div>
+      <a href="http://127.0.0.1:5010" target="_blank" class="btn btn-ghost btn-sm">打开 →</a>
     </div>
+    <div class="toolchain-item" style="background:var(--g50);">
+      <div class="tc-num" style="background:var(--gray2);">2</div>
+      <div class="tc-body">
+        <div class="tc-name">Z-DBMate 工具集</div>
+        <div class="tc-desc">GaussDB OLTP 轻量化部署 · 单机/主备 · TPOPS 管理</div>
+      </div>
+      <a href="http://127.0.0.1:5052" target="_blank" class="btn btn-ghost btn-sm">打开 →</a>
+    </div>
+    <div class="toolchain-item" style="background:var(--accent-bg);border-radius:var(--radius);">
+      <div class="tc-num" style="background:var(--accent);">3</div>
+      <div class="tc-body">
+        <div class="tc-name" style="color:var(--accent);">DWS 部署工具集</div>
+        <div class="tc-desc">DWS MPP 数仓部署 · FusionInsight Manager · 7 阶段流程</div>
+      </div>
+      <span class="tc-tag" style="background:var(--accent-bg);color:var(--accent);">当前</span>
+    </div>
+  </div>
+  <div style="margin-top:10px;padding:10px 14px;background:var(--g50);border-radius:8px;font-size:12px;color:var(--gray);display:flex;align-items:center;gap:8px;">
+    <span>🔄 部署完成后，使用 DRS/DataX 迁移数据到目标集群</span>
   </div>
 </div>
 
-<div class="two">
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4C5;</span> 7阶段部署流程</span></div>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
-        <span style="font-weight:600;font-size:13px;">Phase 1 环境准备</span>
-        <span class="tag tg-gry">RAID/BIOS/网络</span>
-      </div>
-      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
-        <span style="font-weight:600;font-size:13px;">Phase 2 OS配置</span>
-        <span class="tag tg-gry">内核/SELinux/防火墙</span>
-      </div>
-      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
-        <span style="font-weight:600;font-size:13px;">Phase 3 磁盘分区</span>
-        <span class="tag tg-gry">LVM/XFS/挂载</span>
-      </div>
-      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
-        <span style="font-weight:600;font-size:13px;">Phase 4 软件安装</span>
-        <span class="tag tg-gry">Python 3.8.5/依赖/ISO</span>
-      </div>
-      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
-        <span style="font-weight:600;font-size:13px;">Phase 5 集群部署</span>
-        <span class="tag tg-gry">FusionInsight Setup</span>
-      </div>
-      <div class="fsb" style="padding:10px 0;border-bottom:1px solid var(--g100);">
-        <span style="font-weight:600;font-size:13px;">Phase 6 性能测试</span>
-        <span class="tag tg-gry">fio/dd/网络压测</span>
-      </div>
-      <div class="fsb" style="padding:10px 0;">
-        <span style="font-weight:600;font-size:13px;">Phase 7 验收交付</span>
-        <span class="tag tg-gry">功能验证/备份</span>
-      </div>
-    </div>
-    <div style="margin-top:12px;"><a href="/flow" class="btn btn-primary" style="width:100%;justify-content:center;">查看详细流程</a></div>
-  </div>
+<script>
+// 加载统计数据
+fetch('/api/health').then(function(r){return r.json()}).then(function(d){
+  document.getElementById('dsNodes').textContent = d.nodes || '-';
+  document.getElementById('dsEnv').textContent = d.environment || '-';
+}).catch(function(){});
+fetch('/api/precheck/summary').then(function(r){return r.json()}).then(function(d){
+  var t = d.total;
+  var pct = (t.pass / (t.pass + t.warn + t.fail)) * 100;
+  document.getElementById('dsPrecheck').textContent = Math.round(pct) + '%';
+}).catch(function(){});
 
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F517;</span> 与迁移评估系统联动</span></div>
-    <div style="padding:8px 0;">
-      <div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--rs);background:var(--g50);margin-bottom:8px;">
-        <span style="font-size:24px;">1&#xFE0F&#x20E3;</span>
-        <div><div style="font-weight:600;font-size:13px;">迁移智能评估系统</div><div style="font-size:12px;color:var(--g500);">评估源库到 DWS 的兼容性</div></div>
-        <a href="http://127.0.0.1:5010" target="_blank" class="btn btn-ghost btn-sm">打开 &rarr;</a>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--rs);background:var(--g50);margin-bottom:8px;">
-        <span style="font-size:24px;">2&#xFE0F&#x20E3;</span>
-        <div><div style="font-weight:600;font-size:13px;">Z-DBMate 工具集</div><div style="font-size:12px;color:var(--g500);">部署 GaussDB OLTP</div></div>
-        <a href="http://127.0.0.1:5052" target="_blank" class="btn btn-ghost btn-sm">打开 &rarr;</a>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--rs);background:var(--accent-bg, #E8EAF6);margin-bottom:8px;">
-        <span style="font-size:24px;">3&#xFE0F&#x20E3;</span>
-        <div><div style="font-weight:600;font-size:13px;color:var(--accent);">DWS 部署工具集</div><div style="font-size:12px;color:var(--g500);">部署 DWS MPP 数仓</div></div>
-        <span class="tag tg-blu" style="margin-left:auto;">当前</span>
-      </div>
-    </div>
-    <div style="padding:10px;background:var(--g50);border-radius:var(--rs);font-size:12px;color:var(--g500);margin-top:8px;">
-      &#x1F504; 部署完成后，使用 DRS/DataX 迁移数据
-    </div>
-  </div>
-</div>
+// 部署进度
+(function(){
+  var phases = [
+    {n:'环境准备',s:'done',p:100},{n:'OS配置',s:'done',p:100},
+    {n:'磁盘分区',s:'ready',p:55},{n:'软件安装',s:'ready',p:30},
+    {n:'集群部署',s:'pending',p:0},{n:'性能测试',s:'pending',p:0},{n:'验收交付',s:'pending',p:0}
+  ];
+  var done = phases.filter(function(p){return p.s === 'done'}).length;
+  var total = phases.length;
+  var overall = Math.round(done / total * 100);
+  var colors = {done:'var(--green)',ready:'var(--orange)',pending:'var(--gray2)'};
+  var labels = {done:'已完成',ready:'待执行',pending:'未开始'};
+
+  var html = '<div class="progress-card"><div class="pc-title">总体进度 ' + done + '/' + total + '</div>';
+  html += '<div class="progress-bar"><div class="pb-fill" style="width:' + overall + '%;background:var(--green);"></div></div>';
+  html += '<div style="font-size:11px;color:var(--gray2);margin-bottom:10px;">已完成 ' + done + ' / ' + total + ' 阶段 (' + overall + '%)</div>';
+  html += '<div class="progress-steps">';
+  phases.forEach(function(p,i){
+    html += '<div class="ps-item' + (p.s === 'ready' && i === 2 ? ' active' : '') + '">';
+    html += '<span class="ps-dot" style="background:' + colors[p.s] + '"></span>';
+    html += '<span class="ps-name">Phase ' + (i+1) + ' ' + p.n + '</span>';
+    html += '<span class="ps-status" style="background:' + colors[p.s] + '15;color:' + colors[p.s] + '">' + labels[p.s] + '</span>';
+    html += '</div>';
+  });
+  html += '</div></div>';
+  document.getElementById('deployProgress').innerHTML = html;
+})();
+</script>
 {% endblock %}
