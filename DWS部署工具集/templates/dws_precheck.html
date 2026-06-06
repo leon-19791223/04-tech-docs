@@ -5,11 +5,21 @@
 <div class="card">
   <div class="card-hdr">
     <span class="card-title"><span class="ti">&#x2705;</span> DWS 部署预检 (42项)</span>
-    <div class="fsbc">
+    <div>
       <span class="tag tg-grn" id="pc-pass">0 通过</span>
       <span class="tag tg-org" id="pc-warn">0 警告</span>
       <span class="tag tg-red" id="pc-fail">0 失败</span>
     </div>
+  </div>
+</div>
+
+<!-- 雷达图 + 节点对比 -->
+<div class="g2" style="margin-bottom:16px;">
+  <div class="card" style="text-align:center;">
+    <canvas id="radarChart" width="360" height="300" style="max-width:100%;"></canvas>
+  </div>
+  <div class="card" style="text-align:center;">
+    <canvas id="barChart" width="400" height="200" style="max-width:100%;"></canvas>
   </div>
 </div>
 
@@ -22,29 +32,46 @@
   {% set r = mock_data.get(item.id, {"status":"pass","detail":""}) %}
   <div class="pc-item" data-id="{{ item.id }}" style="display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--g100);">
     <div class="pc-icon" style="font-size:18px;min-width:24px;text-align:center;">
-      {% if r.status == "pass" %}✅{% elif r.status == "warn" %}⚠️{% else %}❌{% endif %}
+      {% if r.status == "pass" %}🟢{% elif r.status == "warn" %}🟡{% else %}🔴{% endif %}
     </div>
     <div style="flex:1;">
       <div style="font-weight:600;font-size:13px;">{{ item.name }}</div>
       <div style="font-size:12px;color:var(--g500);">{{ item.description }}</div>
       <div class="pc-detail" style="font-size:11px;color:var(--g400);margin-top:2px;">{{ r.detail }}</div>
     </div>
-    <div>
+    <div style="display:flex;align-items:center;gap:8px;">
       <span class="tag {% if r.status == 'pass' %}tg-grn{% elif r.status == 'warn' %}tg-org{% else %}tg-red{% endif %}">
         {% if r.status == "pass" %}通过{% elif r.status == "warn" %}警告{% else %}失败{% endif %}
       </span>
+      {% if r.status != "pass" and item.solution %}
+      <button class="btn btn-ghost btn-sm" onclick="showFix('{{ item.id }}','{{ item.name }}','{{ item.solution|e }}')"
+              style="padding:4px 8px;font-size:11px;">修复</button>
+      {% endif %}
     </div>
   </div>
   {% endfor %}
 </div>
 {% endfor %}
 
+<!-- 一键修复弹出 -->
+<div id="fixModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:24px;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+    <h3 style="margin-bottom:8px;font-size:15px;" id="fixTitle">修复建议</h3>
+    <pre id="fixContent" style="background:#f8f9fa;padding:14px;border-radius:8px;font-size:12px;line-height:1.6;max-height:300px;overflow-y:auto;white-space:pre-wrap;"></pre>
+    <div style="margin-top:16px;text-align:right;">
+      <button class="btn btn-ghost" onclick="closeFix()" style="margin-right:8px;">关闭</button>
+    </div>
+  </div>
+</div>
+
 <div style="text-align:center;">
   <a href="/deploy" class="btn btn-pri">&#x1F680; 通过预检，开始部署</a>
 </div>
 
+<script src="/static/dws_charts.js"></script>
 <script>
   (function(){
+    // 统计
     var pass=0,warn=0,fail=0;
     document.querySelectorAll('.pc-item').forEach(function(el){
       var t = el.querySelector('.tag');
@@ -55,6 +82,35 @@
     document.getElementById('pc-pass').textContent = pass + ' 通过';
     document.getElementById('pc-warn').textContent = warn + ' 警告';
     document.getElementById('pc-fail').textContent = fail + ' 失败';
+
+    // 加载雷达图数据
+    fetch('/api/precheck/summary').then(function(r){ return r.json(); }).then(function(data){
+      if(window.DWSCharts && data.categories){
+        DWSCharts.drawRadarChart('radarChart', {
+          categories: data.categories,
+          width: 360, height: 300
+        });
+        // 柱状图（3 节点模拟）
+        var barData = {
+          title: '节点对比（模拟）',
+          bars: [
+            {label: 'Node-1', value: pass, color: '#10b981'},
+            {label: 'Node-2', value: Math.max(0, pass-1), color: '#4A5FC1'},
+            {label: 'Node-3', value: Math.max(0, pass-2), color: '#6366f1'}
+          ]
+        };
+        DWSCharts.drawBarChart('barChart', barData);
+      }
+    }).catch(function(){});
   })();
+
+  function showFix(id, name, solution){
+    document.getElementById('fixTitle').textContent = name + ' - 修复建议';
+    document.getElementById('fixContent').textContent = solution;
+    document.getElementById('fixModal').style.display = 'flex';
+  }
+  function closeFix(){
+    document.getElementById('fixModal').style.display = 'none';
+  }
 </script>
 {% endblock %}

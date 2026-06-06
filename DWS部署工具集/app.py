@@ -330,6 +330,74 @@ def api_precheck_run():
     })
 
 # ================================================================
+# 预检统计 API（供雷达图使用）
+# ================================================================
+@app.route("/api/precheck/summary")
+def api_precheck_summary():
+    """预检结果分类统计（供前端雷达图渲染）
+
+    返回:
+      categories: [{name, key, pass, warn, fail, total}]
+      total: {pass, warn, fail}
+    """
+    results = MOCK_PRECHECK
+    categories = {
+        "hardware": {"name": "硬件", "key": "hardware", "pass": 0, "warn": 0, "fail": 0, "total": 0},
+        "os": {"name": "OS系统", "key": "os", "pass": 0, "warn": 0, "fail": 0, "total": 0},
+        "network": {"name": "网络", "key": "network", "pass": 0, "warn": 0, "fail": 0, "total": 0},
+        "storage": {"name": "存储", "key": "storage", "pass": 0, "warn": 0, "fail": 0, "total": 0},
+        "software": {"name": "软件", "key": "software", "pass": 0, "warn": 0, "fail": 0, "total": 0},
+    }
+    cat_map = {}
+    for item in PRECHECK_ITEMS:
+        cat_map[item["id"]] = item.get("category", "os")
+
+    for item_id, result in results.items():
+        cat = cat_map.get(item_id, "os")
+        if cat in categories:
+            categories[cat][result["status"]] += 1
+            categories[cat]["total"] += 1
+
+    return jsonify({
+        "categories": list(categories.values()),
+        "total": {
+            "pass": sum(c["pass"] for c in categories.values()),
+            "warn": sum(c["warn"] for c in categories.values()),
+            "fail": sum(c["fail"] for c in categories.values()),
+        }
+    })
+
+# ================================================================
+# SSE 实时进度流
+# ================================================================
+@app.route("/api/stream")
+def api_stream():
+    """SSE 实时进度推送（用于部署步骤执行监控）
+
+    使用 Server-Sent Events 推送引擎状态。
+    前端使用 EventSource 接收。
+    """
+    from flask import Response
+    def event_stream():
+        import time
+        for i in range(60):
+            session = get_or_create_session()
+            env = session.config.get("environment", "UAT")
+            data = {
+                "type": "heartbeat",
+                "environment": env,
+                "mode": "demo",
+                "timestamp": time.time(),
+                "precheck": len(PRECHECK_ITEMS),
+                "verify": len(VERIFY_ITEMS),
+                "phases": len(session.phases),
+            }
+            yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+            time.sleep(2)
+    return Response(event_stream(), mimetype="text/event-stream",
+                    headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+# ================================================================
 # 凭据管理（安全加固）
 # ================================================================
 @app.route("/api/credential/store", methods=["POST"])
