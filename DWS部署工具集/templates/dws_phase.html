@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}阶段{{ phase.id }} · DWS{% endblock %}
+{% block content %}
+
+<style>.term{background:#0d1117;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.2);border:1px solid #30363d}.term-head{background:#161b22;padding:8px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #30363d}.term-head span{width:10px;height:10px;border-radius:50%}.term-head .r{background:#ef4444}.term-head .y{background:#eab308}.term-head .g{background:#22c55e}.term-title{flex:1;text-align:center;font-size:12px;color:#8b949e;font-family:monospace}.term-body{padding:16px 20px;min-height:360px;max-height:55vh;overflow-y:auto;font:13px/1.6 'JetBrains Mono','Fira Code',monospace;color:#c9d1d9}.term-body .dim{color:#8b949e}.term-body .info{color:#79c0ff}.term-body .ok{color:#56d364}.term-body .warn{color:#d29922}.term-body .err{color:#f85149}.term-body .ban{color:#bc8cff}.term-foot{background:#161b22;padding:8px 14px;display:flex;align-items:center;gap:8px;border-top:1px solid #30363d}.term-foot .pfx{color:#58a6ff;font-family:monospace;font-size:12px}.term-foot .cmp{color:#7ee787;font-family:monospace;font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.term-foot button{background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:5px 12px;border-radius:5px;font-size:12px;cursor:pointer;font-family:inherit}.term-foot button:hover{background:#30363d}.term-foot button.pri{background:#1f6feb;border-color:#1f6feb;color:#fff}.term-foot button.pri:hover{background:#388bfd}@keyframes b{50%{opacity:0}}</style>
+
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+    <a href="/" class="btn btn-s btn-sm">←</a>
+    <span style="font-size:18px;">{{ phase.icon }}</span>
+    <strong>{{ phase.name }}</strong>
+    <span class="badge bg-{{ phase.status }}">{{ phase.steps|selectattr('status','in',('passed','skipped'))|list|length }}/{{ phase.steps|length }}</span>
+</div>
+
+<div class="term">
+    <div class="term-head"><span class="r"></span><span class="y"></span><span class="g"></span><span class="term-title">dws_deploy — {{ data.config.cluster_name }}:phase{{ phase.id }}</span></div>
+    <div class="term-body" id="tb">
+        <div class="ban">╔══════════════════════════════════╗</div>
+        <div class="ban">║  DWS 部署交互助手 — {{ phase.name }}  ║</div>
+        <div class="ban">╚══════════════════════════════════╝</div><div>&nbsp;</div>
+        {% for s in phase.steps %}
+        <div><span class="dim">[{{ loop.index }}/{{ phase.steps|length }}]</span> <span class="info">{{ s.name }}</span>
+            {% if s.status=='passed' %}<span class="ok">✔</span><span class="dim"> {{ s.duration }}s</span>
+            {% elif s.status=='failed' %}<span class="err">✘</span>
+            {% elif s.status=='skipped' %}<span class="warn">⊘</span>
+            {% elif loop.index==(phase.steps|selectattr('status','in',('passed','skipped'))|list|length+1) %}<span style="color:#d2a8ff;animation:b 1s step-end infinite;">▊</span>{% endif %}
+        </div>{% if s.output and s.status!='pending' %}<div class="dim" style="margin-left:24px;font-size:11px;white-space:pre-wrap;">{{ s.output }}</div>{% endif %}
+        {% endfor %}<div>&nbsp;</div>
+    </div>
+    {% set ns=phase.steps|selectattr('status','equalto','pending')|first %}
+    {% if ns %}
+    <div class="term-foot"><span class="pfx">[root@{{ data.config.nodes[0].hostname }} ~]#</span><span class="cmp">{{ ns.cmd[:80] }}{% if ns.cmd|length>80 %}...{% endif %}</span><button class="pri" onclick="run({{ phase.id }},'{{ ns.id }}',0)" id="be">⏎</button><button onclick="run({{ phase.id }},'{{ ns.id }}',1)" id="bs">⊘</button></div>
+    {% else %}<div class="term-foot"><span class="ok">✔ 完成</span>{% if phase.id<8 %}<a href="/phase/{{ phase.id+1 }}" class="btn btn-p btn-sm" style="text-decoration:none;">→</a>{% endif %}</div>{% endif %}
+</div>
+
+<script>
+function run(p,s,k){var be=document.getElementById('be'),bs=document.getElementById('bs');if(be){be.disabled=1;be.textContent='...';}if(bs)bs.disabled=1;fetch('/execute',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phase_id:p,step_id:s,skip:k})}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();else{alert(d.error);if(be){be.disabled=0;be.textContent='⏎';}if(bs)bs.disabled=0;}}).catch(()=>{if(be){be.disabled=0;be.textContent='⏎';}});}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('be')&&!e.target.closest('a')){e.preventDefault();document.getElementById('be').click();}});
+document.getElementById('tb').scrollTop=document.getElementById('tb').scrollHeight;
+</script>
+{% endblock %}

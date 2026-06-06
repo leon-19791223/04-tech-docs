@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}模板 · DWS{% endblock %}
+{% block content %}
+
+<style>
+.cw{position:relative;margin-bottom:4px}
+.cw .cp{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--t2);padding:3px 10px;border-radius:5px;font-size:11px;cursor:pointer;transition:.15s;z-index:10;display:flex;align-items:center;gap:4px}
+.cw .cp:hover{background:rgba(255,255,255,.12);color:var(--tx)}
+.cw .cp.done{background:var(--gr-bg);border-color:var(--gr);color:var(--gr)}
+.fname{font-size:10.5px;color:var(--t2);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.fname .dot{width:6px;height:6px;border-radius:50%}.fname .dot.pri{background:var(--ac)}.fname .dot.sec{background:var(--t3)}
+.code-sm{max-height:200px;overflow:hidden;position:relative}
+.code-sm::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--bg));pointer-events:none}
+.exp{display:block;text-align:center;padding:4px;color:var(--ac);font-size:11px;cursor:pointer;background:var(--ac-bg);border-radius:0 0 var(--R1) var(--R1);margin-top:-1px}
+.exp:hover{background:rgba(88,166,255,.15)}
+</style>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <div><h3 style="font-size:15px;font-weight:700;color:var(--tx);margin:0;">部署配置模板</h3><div style="font-size:11px;color:var(--t2);margin-top:2px;">基于配置中心生成 · 保存至 /opt 目录即可用于 gs_preinstall</div></div>
+    <a href="/config" class="btn btn-s btn-sm">← 配置中心</a>
+</div>
+
+{% if data.templates %}
+{% set official = data.templates.get('preinstall.ini (官方格式·机器可执行)') or data.templates.get('preinstall.ini') %}
+
+<!-- main preinstall.ini — hero block -->
+<div class="card" style="padding:14px 18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="fname"><span class="dot pri"></span><strong style="color:var(--tx);font-size:12.5px;">preinstall.ini</strong><span class="badge bg-info">gs_preinstall 可用</span></div>
+    </div>
+    <div class="cw">
+        <button class="cp" onclick="cp(this,'b0')">📋 复制</button>
+        <div class="code" id="b0">{{ official }}</div>
+    </div>
+</div>
+
+<!-- supporting files — 2 column grid -->
+<div class="g2">
+    {% for name in ['/etc/hosts','/etc/fstab','grub 内核参数','sysctl 参数 (99-dws.conf)','分区脚本 (parted_mkfs.sh)','网络配置脚本 (setup_network.sh)'] %}
+    {% if data.templates.get(name) %}
+    <div class="card" style="padding:12px 16px;">
+        <div class="fname"><span class="dot sec"></span><strong style="color:var(--tx);font-size:12px;">{{ name }}</strong></div>
+        <div class="cw">
+            <button class="cp" onclick="cp(this,'b{{ loop.index }}')">📋 复制</button>
+            <div class="code code-sm" id="b{{ loop.index }}">{{ data.templates[name] }}</div>
+        </div>
+        <span class="exp" onclick="var e=document.getElementById('b{{ loop.index }}');e.classList.toggle('code-sm');this.textContent=e.classList.contains('code-sm')?'展开':'收起';">展开</span>
+    </div>
+    {% endif %}{% endfor %}
+</div>
+
+{% if data.templates.get('LLD 拓扑总览') %}
+<div class="card" style="padding:12px 16px;">
+    <div class="fname"><span class="dot sec"></span><strong style="color:var(--tx);font-size:12px;">LLD 拓扑总览</strong></div>
+    <div class="cw"><button class="cp" onclick="cp(this,'btopo')">📋 复制</button><div class="code code-sm" id="btopo">{{ data.templates['LLD 拓扑总览'] }}</div></div>
+    <span class="exp" onclick="var e=document.getElementById('btopo');e.classList.toggle('code-sm');this.textContent=e.classList.contains('code-sm')?'展开':'收起';">展开</span>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card" style="text-align:center;padding:60px 20px;">
+    <div style="font-size:40px;margin-bottom:12px;">📄</div>
+    <div style="color:var(--t2);font-size:14px;">暂未生成模板</div>
+    <div style="color:var(--t3);font-size:12px;margin-top:4px;">请先在配置中心填写并保存 LLD 参数</div>
+    <a href="/config" class="btn btn-p" style="margin-top:16px;">进入配置中心</a>
+</div>
+{% endif %}
+
+<script>
+function cp(b,id){var e=document.getElementById(id);if(!e)return;var t=e.textContent||e.innerText;navigator.clipboard.writeText(t).then(function(){b.textContent='✓ 已复制';b.classList.add('done');setTimeout(function(){b.textContent='📋 复制';b.classList.remove('done')},2000)}).catch(function(){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);b.textContent='✓ 已复制';b.classList.add('done');setTimeout(function(){b.textContent='📋 复制';b.classList.remove('done')},2000)})}
+</script>
+{% endblock %}

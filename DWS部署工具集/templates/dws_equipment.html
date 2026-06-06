@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}设备 · DWS{% endblock %}
+{% block content %}
+
+<div class="stats">
+    {% set st=equipment.servers|sum(attribute='qty') %}{% set nt=equipment.network|sum(attribute='qty') %}{% set sc=equipment.security|sum(attribute='qty') %}
+    <div class="stat"><div class="si blue">⊞</div><div><div class="sn">{{ st }}</div><div class="sl">{{ data.config.environment }} · DWS 节点</div></div></div>
+    <div class="stat"><div class="si green">◎</div><div><div class="sn">{{ nt }}</div><div class="sl">网络设备</div></div></div>
+    <div class="stat"><div class="si amber">◈</div><div><div class="sn">{{ sc }}</div><div class="sl">安全设备</div></div></div>
+    <div class="stat"><div class="si purple">⊡</div><div><div class="sn">KylinOS</div><div class="sl">SP3 ARM64</div></div></div>
+</div>
+
+<!-- DWS Servers -->
+<div class="card"><h3><span class="line"></span>DWS 服务器</h3>
+    <div class="eq-grid">
+        {% for s in equipment.servers %}{% if 'DWS' in s.type %}
+        <div class="eq-card" style="border-left-color:{{ '#58a6ff' if '管控' in s.type else '#bc8cff' }};">
+            <div class="eq-title">{{ s.type }}<span class="badge bg-info">×{{ s.qty }}</span></div>
+            <div class="eq-specs">
+                <div>CPU <b>{{ s.model }}</b></div><div>内存 <b>{{ s.ram }}</b></div>
+                <div style="grid-column:1/-1;">磁盘 <b style="font-size:10.5px;">{{ s.disk }}</b></div>
+                <div>网卡 <b>{{ s.nic }}</b></div>
+                <div style="grid-column:1/-1;">主机 <b style="font-size:10.5px;">{{ s.hosts }}</b></div>
+            </div>
+        </div>{% endif %}{% endfor %}
+    </div>
+</div>
+
+<!-- Network + Security -->
+<div class="g2">
+    <div class="card"><h3><span class="line"></span>网络设备</h3>
+        <table class="tbl"><tr><th>类型</th><th>型号</th><th>数量</th><th>端口</th></tr>
+        {% for n in equipment.network %}<tr><td>{{ n.type }}</td><td style="font-size:11px;">{{ n.model }}</td><td><b>{{ n.qty }}</b></td><td style="font-size:10.5px;">{{ n.ports }}</td></tr>{% endfor %}</table>
+    </div>
+    <div class="card"><h3><span class="line"></span>安全设备 & 版本</h3>
+        <table class="tbl"><tr><th>类型</th><th>型号</th><th>数量</th></tr>
+        {% for s in equipment.security %}<tr><td>{{ s.type }}</td><td>{{ s.model }}</td><td><b>{{ s.qty }}</b></td></tr>{% endfor %}</table>
+        <div style="margin-top:12px;padding:10px 12px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--t2);">
+            <b style="color:var(--ac);">GaussDB DWS</b> 9.1.0 · <b style="color:var(--gr);">KylinOS</b> V10-SP3 ARM64
+        </div>
+    </div>
+</div>
+
+<!-- Rack Layout -->
+<div class="card"><h3><span class="line"></span>机柜分布</h3>
+    <div class="rack-grid">
+        {% for rack in racks %}
+        <div class="rack-panel">
+            <h4>{{ rack.rack }}</h4>
+            {% for slot in range(rack.u_start,0,-1) %}{% set dev=rack.devices|selectattr('u','equalto',slot)|first %}
+            <div class="rack-slot" style="{% if dev and 'DWS-MN' in dev.name %}background:rgba(88,166,255,.06);{% elif dev and 'DWS-DN' in dev.name %}background:rgba(188,140,255,.06);{% elif dev and '交换机' in dev.name %}background:rgba(63,185,80,.04);{% endif %}">
+                <span class="u">{{ slot }}U</span>
+                <span>{% if dev and ('DWS' in dev.name or '交换机' in dev.name or 'DataArk' in dev.name) %}{{ dev.name }}{% endif %}</span>
+            </div>{% endfor %}
+        </div>{% endfor %}
+    </div>
+    <div style="display:flex;gap:16px;margin-top:8px;font-size:10.5px;color:var(--t2);">
+        <span><span style="color:var(--ac);">■</span> DWS管控</span><span><span style="color:var(--pr);">■</span> DWS数据</span><span><span style="color:var(--gr);">■</span> 交换机</span>
+    </div>
+</div>
+
+<!-- Network Topology -->
+<div class="card"><h3><span class="line"></span>网络拓扑</h3>
+    <div class="net-label">核心层 · 100GE</div>
+    <div class="net-row">
+        <div class="net-node" style="border-color:var(--ac);"><div class="nn">Core-1</div><div class="nd">CE8850 · 64×100GE</div></div>
+        <span style="color:var(--t3);">⇄</span>
+        <div class="net-node" style="border-color:var(--ac);"><div class="nn">Core-2</div><div class="nd">CE8850 · 64×100GE</div></div>
+    </div>
+    <div class="net-row">
+        <div class="net-node" style="border-color:var(--am);"><div class="nn">FW-1</div><div class="nd">USG6635F</div></div>
+        <span style="color:var(--t3);">⇄</span>
+        <div class="net-node" style="border-color:var(--am);"><div class="nn">FW-2</div><div class="nd">USG6635F</div></div>
+    </div>
+    <div class="net-label">汇聚层 · 10GE</div>
+    <div class="net-row" style="gap:32px;">
+        <div><div style="font-size:10px;color:var(--ac);text-align:center;margin-bottom:4px;">管理平面</div><div class="net-row" style="gap:12px;"><div class="net-node"><div class="nn">汇聚-1</div></div><span style="color:var(--t3);font-size:10px;">⇄</span><div class="net-node"><div class="nn">汇聚-2</div></div></div></div>
+        <div><div style="font-size:10px;color:#f85149;text-align:center;margin-bottom:4px;">业务平面</div><div class="net-row" style="gap:12px;"><div class="net-node" style="border-color:#f85149;"><div class="nn">汇聚-1</div></div><span style="color:var(--t3);font-size:10px;">⇄</span><div class="net-node" style="border-color:#f85149;"><div class="nn">汇聚-2</div></div></div></div>
+    </div>
+    <div class="net-label">接入层 · 10GE Bond</div>
+    <div class="net-row" style="gap:8px;">
+        <span class="badge bg-info">DWS ×5</span><span class="badge bg-dim">BMC ×2</span>
+    </div>
+</div>
+{% endblock %}

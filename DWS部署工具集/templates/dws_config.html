@@ -1,71 +1,134 @@
 {% extends "base.html" %}
-{% block page_title %}配置生成{% endblock %}
+{% block title %}配置 · DWS{% endblock %}
 {% block content %}
 
-<div class="two">
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x2699;</span> FusionInsight 配置</span></div>
-    <div style="margin-bottom:14px;">
-      <label style="font-size:13px;font-weight:600;">集群名称</label>
-      <input id="cfg-name" value="dws_cluster" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
+<style>
+.cfg-layout{display:flex;gap:14px}
+.cfg-main{flex:1;min-width:0}
+.cfg-preview{width:440px;flex-shrink:0;position:sticky;top:62px;align-self:flex-start;max-height:calc(100vh - 80px);display:flex;flex-direction:column}
+.cfg-preview .card{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.cfg-preview .card .code{flex:1;max-height:none}
+.cfg-preview.hidden{display:none}
+
+.cfg-section{margin-bottom:14px}
+.cfg-section h4{font-size:13px;font-weight:600;color:var(--ac);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:6px}
+.cfg-section h4 .s-icon{font-size:15px}
+
+.cfg-row{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-bottom:8px}
+.cfg-row.col3{grid-template-columns:1fr 1fr 1fr}
+.cfg-row.col4{grid-template-columns:1fr 1fr 1fr 1fr}
+.cfg-row.col1{grid-template-columns:1fr}
+
+.cfg-f{display:flex;flex-direction:column}
+.cfg-f label{font-size:10.5px;font-weight:600;color:var(--t2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.cfg-f input,.cfg-f select{width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;font-size:12.5px;color:var(--tx);transition:.15s}
+.cfg-f input:focus,.cfg-f select:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 2px var(--ac-bg)}
+.cfg-f select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:28px}
+.cfg-f .hint{font-size:10px;color:var(--t3);margin-top:2px}
+
+.node-card{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-bottom:8px}
+.node-card .nc-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;font-size:12.5px}
+.node-card .nc-head input{width:130px;padding:5px 8px;background:var(--s1);border:1px solid var(--bd);border-radius:5px;font-size:12px;color:var(--tx)}
+.node-card .nc-head select{width:90px;padding:5px 8px;background:var(--s1);border:1px solid var(--bd);border-radius:5px;font-size:12px;color:var(--tx)}
+.node-card .nc-head .nc-tag{font-size:10.5px;padding:1px 8px;border-radius:8px;font-weight:600}
+.node-card .nc-head .nc-tag.ctrl{background:var(--ac-bg);color:var(--ac)}
+.node-card .nc-head .nc-tag.data{background:var(--pr-bg);color:var(--pr)}
+
+.actions{display:flex;gap:10px;align-items:center;padding:12px 0}
+.tgl-label{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--t2);cursor:pointer}
+.tgl-label input{accent-color:var(--ac)}
+
+@media(max-width:1100px){.cfg-layout{flex-direction:column}.cfg-preview{width:100%;position:static;max-height:none}}
+</style>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div><h3 style="font-size:15px;font-weight:700;color:var(--tx);margin:0;">LLD 配置中心</h3><div style="font-size:11px;color:var(--t2);">填写参数 → 实时预览 → 保存生成模板</div></div>
+    <div class="actions">
+        <label class="tgl-label"><input type="checkbox" id="tgl" checked onchange="document.querySelector('.cfg-preview').classList.toggle('hidden')"> 预览</label>
+        <button type="submit" form="cf" class="btn btn-p">保存并生成模板</button>
     </div>
-    <div style="margin-bottom:14px;">
-      <label style="font-size:13px;font-weight:600;">管理节点IP</label>
-      <input id="cfg-m1" placeholder="192.168.0.1" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
+</div>
+
+<div class="cfg-layout">
+<form id="cf" class="cfg-main" method="POST" action="/config">
+
+<!-- Cluster -->
+<div class="card cfg-section">
+    <h4><span class="s-icon">⊞</span>集群与节点</h4>
+    <div class="cfg-row"><div class="cfg-f"><label>集群名称</label><input class="ps" name="cluster_name" value="{{ data.config.cluster_name }}"></div><div class="cfg-f"><label>集群 ID</label><input class="ps" name="cluster_id" value="{{ data.config.cluster_id }}"></div><div class="cfg-f"><label>部署模式</label><select class="ps" name="deploy_mode"><option>Single_Cluster</option><option>Active_Standby</option></select></div><div class="cfg-f"><label>AZ 模式</label><select class="ps" name="az_mode"><option>Single_AZ</option><option>Cross_AZ</option></select></div></div>
+    {% for n in data.config.nodes %}
+    <div class="node-card">
+        <div class="nc-head">
+            <span>节点 {{ loop.index }}</span>
+            <input class="ps" name="node_hostname_{{ loop.index0 }}" value="{{ n.hostname }}">
+            <select class="ps" name="node_role_{{ loop.index0 }}"><option value="OM">OM</option><option value="CN">CN</option><option value="DN">DN</option><option value="GTM">GTM</option></select>
+            <span class="nc-tag {{ 'ctrl' if n.role in ('OM','GTM') else 'data' }}">{{ {'OM':'管控','CN':'协调','DN':'数据','GTM':'事务'}.get(n.role,n.role) }}</span>
+        </div>
+        <div class="cfg-row col3">
+            <div class="cfg-f"><label>管理 IP</label><input class="ps" name="node_mgmt_ip_{{ loop.index0 }}" value="{{ n.mgmt_ip }}"></div>
+            <div class="cfg-f"><label>掩码</label><input class="ps" name="node_mgmt_netmask_{{ loop.index0 }}" value="{{ n.mgmt_netmask }}"></div>
+            <div class="cfg-f"><label>网关</label><input class="ps" name="node_mgmt_gateway_{{ loop.index0 }}" value="{{ n.mgmt_gateway }}"></div>
+            <div class="cfg-f"><label>业务 IP</label><input class="ps" name="node_biz_ip_{{ loop.index0 }}" value="{{ n.biz_ip }}"></div>
+            <div class="cfg-f"><label>CPU</label><input class="ps" name="node_cpu_{{ loop.index0 }}" value="{{ n.cpu_cores }}"></div>
+            <div class="cfg-f"><label>RAM (GB)</label><input class="ps" name="node_mem_{{ loop.index0 }}" value="{{ n.memory_gb }}"></div>
+        </div>
+    </div>{% endfor %}
+    <div class="cfg-row"><div class="cfg-f"><label>管理 VIP</label><input class="ps" name="float_mgmt" value="{{ data.config.float_ips.mgmt_float }}"></div><div class="cfg-f"><label>业务 VIP</label><input class="ps" name="float_biz" value="{{ data.config.float_ips.biz_float }}"></div></div>
+</div>
+
+<!-- Network + OS -->
+<div class="card cfg-section">
+    <h4><span class="s-icon">◎</span>网络与操作系统</h4>
+    {% set net=data.config.network %}
+    <div class="cfg-row"><div class="cfg-f"><label>管理面 Bond 名称</label><input class="ps" name="mgmt_bond_name" value="{{ net.mgmt_bond_name }}"></div><div class="cfg-f"><label>模式</label><input class="ps" name="mgmt_bond_mode" value="{{ net.mgmt_bond_mode }}"></div><div class="cfg-f"><label>业务面 Bond 名称</label><input class="ps" name="biz_bond_name" value="{{ net.biz_bond_name }}"></div><div class="cfg-f"><label>模式</label><input class="ps" name="biz_bond_mode" value="{{ net.biz_bond_mode }}"></div><div class="cfg-f"><label>MTU</label><input class="ps" name="mtu" type="number" value="{{ net.mtu }}"></div><div class="cfg-f"><label>带宽 (Mbps)</label><input class="ps" name="bandwidth" type="number" value="{{ net.bandwidth_required_mbps }}"></div></div>
+    <div class="cfg-row"><div class="cfg-f"><label>DNS</label><input class="ps" name="dns_servers" value="{{ net.dns_servers|join(',') }}"></div><div class="cfg-f"><label>NTP</label><input class="ps" name="ntp_servers" value="{{ net.ntp_servers|join(',') }}"></div><div class="cfg-f"><label>域名</label><input class="ps" name="domain" value="{{ net.domain }}"></div></div>
+    <div class="cfg-row"><div class="cfg-f"><label>OS 版本</label><input class="ps" name="os_version" value="{{ data.config.os_version }}"></div><div class="cfg-f"><label>架构</label><select class="ps" name="os_arch"><option>ARM64</option><option>x86_64</option></select></div><div class="cfg-f"><label>内核</label><input class="ps" name="kernel_version" value="{{ data.config.kernel_version }}"></div><div class="cfg-f"><label>Python</label><input class="ps" name="python_version" value="{{ data.config.python_version }}"></div><div class="cfg-f"><label>ISO 路径</label><input class="ps" name="iso_path" value="{{ data.config.iso_path }}"></div></div>
+</div>
+
+<!-- Storage + GaussDB -->
+<div class="card cfg-section">
+    <h4><span class="s-icon">◫</span>存储与数据库</h4>
+    {% set st=data.config.storage %}{% set g=data.config.gaussdb %}
+    <div class="cfg-row"><div class="cfg-f"><label>数据盘设备</label><input class="ps" name="data_disks" value="{{ st.data_disks|join(',') }}"></div><div class="cfg-f"><label>磁盘类型</label><select class="ps" name="disk_type"><option>SSD</option><option>HDD</option></select></div><div class="cfg-f"><label>RAID</label><select class="ps" name="raid_level"><option>RAID0</option><option>RAID1</option><option>RAID5</option><option>RAID10</option></select></div><div class="cfg-f"><label>文件系统</label><select class="ps" name="fs_type"><option>xfs</option><option>ext4</option></select></div></div>
+    <div class="cfg-row"><div class="cfg-f"><label>GaussDB 版本</label><input class="ps" name="gdb_version" value="{{ g.version }}"></div><div class="cfg-f"><label>安装包路径</label><input class="ps" name="gdb_pkg" value="{{ g.package_path }}"></div><div class="cfg-f"><label>安装目录</label><input class="ps" name="gdb_install" value="{{ g.install_path }}"></div><div class="cfg-f"><label>数据目录</label><input class="ps" name="gdb_data" value="{{ g.data_path }}"></div></div>
+    <div class="cfg-row col4"><div class="cfg-f"><label>DB 端口</label><input class="ps" name="gdb_port" type="number" value="{{ g.port }}"></div><div class="cfg-f"><label>Pooler</label><input class="ps" name="gdb_pooler_port" type="number" value="{{ g.pooler_port }}"></div><div class="cfg-f"><label>CM</label><input class="ps" name="gdb_cm_port" type="number" value="{{ g.cm_server_port }}"></div><div class="cfg-f"><label>GTM</label><input class="ps" name="gdb_gtm_port" type="number" value="{{ g.gtm_port }}"></div></div>
+</div>
+
+<!-- Capacity + Deploy + OMS -->
+<div class="card cfg-section">
+    <h4><span class="s-icon">◉</span>容量规划 & 部署参数</h4>
+    {% set cap=data.config.capacity %}{% set dp=data.config.deploy_params %}{% set oms=data.config.oms_float_ips %}
+    <div class="cfg-row col4"><div class="cfg-f"><label>全量数据(GB)</label><input class="ps" name="cap_data_gb" type="number" value="{{ cap.total_data_gb }}"></div><div class="cfg-f"><label>保留(天)</label><input class="ps" name="cap_retention" type="number" value="{{ cap.retention_days }}"></div><div class="cfg-f"><label>日增量(GB)</label><input class="ps" name="cap_daily" type="number" value="{{ cap.daily_increment_gb }}"></div><div class="cfg-f"><label>磁盘数/节点</label><input class="ps" name="cap_disks" type="number" value="{{ cap.disks_per_node }}"></div></div>
+    <div class="cfg-row"><div class="cfg-f"><label>产品</label><input class="ps" name="dp_product" value="{{ dp.product_name }}"></div><div class="cfg-f"><label>安装模式</label><select class="ps" name="dp_install_mode"><option>new_cluster</option><option>expand</option></select></div><div class="cfg-f"><label>认证</label><select class="ps" name="dp_auth"><option>normal</option><option>kerberos</option></select></div><div class="cfg-f"><label>用户</label><select class="ps" name="dp_user"><option>root</option><option>omm</option></select></div></div>
+    <div class="cfg-row col3"><div class="cfg-f"><label>OMS Server</label><input class="ps" name="oms_server" value="{{ oms.oms_server }}"></div><div class="cfg-f"><label>OMWeb</label><input class="ps" name="oms_web" value="{{ oms.oms_web }}"></div><div class="cfg-f"><label>LVS</label><input class="ps" name="oms_lvs" value="{{ oms.lvs }}"></div></div>
+</div>
+
+<!-- Manager + Security + Delivery -->
+<div class="card cfg-section">
+    <h4><span class="s-icon">◈</span>Manager · 安全 · 交付</h4>
+    {% set fi=data.config.fi_manager %}{% set res=data.config.resource %}{% set sec=data.config.security %}{% set dv=data.config.delivery %}
+    <div class="cfg-row"><div class="cfg-f"><label>FI 版本</label><input class="ps" name="fi_version" value="{{ fi.version }}"></div><div class="cfg-f"><label>SSH 端口</label><input class="ps" name="fi_ssh_port" type="number" value="{{ fi.ssh_port }}"></div><div class="cfg-f"><label>Web 端口</label><input class="ps" name="fi_web_port" type="number" value="{{ fi.web_port }}"></div><div class="cfg-f"><label>内存上限%</label><input class="ps" name="mem_limit_pct" type="number" value="{{ res.memory_limit_percent }}"></div></div>
+    <div class="cfg-row col4">{% for k,l in [('selinux_mode','SELinux'),('firewall','防火墙'),('ipv6','IPv6'),('swap','Swap'),('thp','透明大页'),('numa','NUMA'),('audit','审计')] %}<div class="cfg-f"><label>{{ l }}</label><select class="ps" name="sec_{{ k }}"><option value="disabled">disabled</option><option value="enabled">enabled</option></select></div>{% endfor %}</div>
+    <div class="cfg-row"><div class="cfg-f"><label>项目名称</label><input class="ps" name="delivery_project" value="{{ dv.project_name }}"></div><div class="cfg-f"><label>客户</label><input class="ps" name="delivery_customer" value="{{ dv.customer }}"></div><div class="cfg-f"><label>部署地点</label><input class="ps" name="delivery_site" value="{{ dv.site }}"></div><div class="cfg-f"><label>日期</label><input class="ps" name="delivery_date" value="{{ dv.deploy_date }}"></div></div>
+</div>
+
+<div class="actions"><button type="submit" class="btn btn-p" style="font-size:13px;padding:8px 24px;">保存全部配置 → 生成模板</button></div>
+</form>
+
+<!-- Preview panel -->
+<div class="cfg-preview">
+    <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="padding:10px 14px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:11px;color:var(--t2);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:6px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--ac);"></span>preinstall.ini 实时预览
+        </div>
+        <div class="code" id="pv" style="flex:1;max-height:none;border-radius:0;border:none;font-size:11.5px;line-height:1.55;padding:12px 14px;"></div>
     </div>
-    <div style="margin-bottom:14px;">
-      <label style="font-size:13px;font-weight:600;">管理节点2(HA选填)</label>
-      <input id="cfg-m2" placeholder="192.168.0.2" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
-    </div>
-    <div style="margin-bottom:14px;">
-      <label style="font-size:13px;font-weight:600;">数据节点IP(s)</label>
-      <input id="cfg-dn" placeholder="192.168.0.11,192.168.0.12,192.168.0.13" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
-    </div>
-    <div class="two" style="gap:10px;">
-      <div>
-        <label style="font-size:13px;font-weight:600;">CN数量</label>
-        <input id="cfg-cn" value="3" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
-      </div>
-      <div>
-        <label style="font-size:13px;font-weight:600;">DN数量</label>
-        <input id="cfg-dn-num" value="3" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
-      </div>
-    </div>
-    <div style="margin-bottom:14px;">
-      <label style="font-size:13px;font-weight:600;">数据库端口</label>
-      <input id="cfg-port" value="40080" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;margin-top:4px;">
-    </div>
-    <button class="btn btn-pri" style="width:100%;justify-content:center;" onclick="genConfig()">&#x2699; 生成 preinstall.ini</button>
-  </div>
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4DD;</span> 生成预览</span></div>
-    <pre id="cfg-output" style="background:#1a1d26;color:#e0e0e0;padding:16px;border-radius:var(--rs);font-size:12px;max-height:400px;overflow-y:auto;white-space:pre-wrap;">等待生成...</pre>
-    <button class="btn btn-ghost btn-sm mt12" onclick="copyConfig()">&#x1F4CB; 复制</button>
-  </div>
+</div>
 </div>
 
 <script>
-function genConfig(){
-  var data = {
-    cluster_name: document.getElementById('cfg-name').value,
-    master_node1_ip: document.getElementById('cfg-m1').value,
-    master_node2_ip: document.getElementById('cfg-m2').value,
-    data_node_ips: document.getElementById('cfg-dn').value,
-    cn_num: document.getElementById('cfg-cn').value,
-    dn_num: document.getElementById('cfg-dn-num').value,
-    db_port: document.getElementById('cfg-port').value,
-  };
-  fetch('/api/config/generate', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(data)
-  }).then(function(r){return r.json();}).then(function(d){
-    document.getElementById('cfg-output').textContent = d.content;
-  });
-}
-function copyConfig(){
-  var t = document.getElementById('cfg-output').textContent;
-  navigator.clipboard.writeText(t).then(function(){ alert('已复制!'); });
-}
+function gv(s){var e=document.querySelector('[name="'+s+'"]');return e?e.value:''}
+function build(){var c=gv('cluster_name')||'dwsuat',ns=[],gd=function(k,d){return gv(k)||d};for(var i=0;i<3;i++)ns.push({h:gv('node_hostname_'+i)||'node'+i,m:gv('node_mgmt_ip_'+i)||'-',b:gv('node_biz_ip_'+i)||'-',c:gv('node_cpu_'+i)||'-',r:gv('node_mem_'+i)||'-'});var i='<span style="color:#8b949e">;; preinstall.ini 实时预览</span>\n\n';i+='<span style="color:#58a6ff;font-weight:600">g_hosts</span>=<span style="color:#7ee787">"'+ns.map(function(x){return x.m}).join(',')+'"</span>\n';i+='<span style="color:#58a6ff;font-weight:600">g_user_name</span>=<span style="color:#7ee787">"'+gd('dp_user','root')+'"</span>\n';i+='<span style="color:#58a6ff;font-weight:600">g_port</span>=<span style="color:#7ee787">'+gd('fi_ssh_port','22')+'</span>\n';i+='<span style="color:#58a6ff;font-weight:600">g_parted</span>=<span style="color:#7ee787">2</span>\n';i+='<span style="color:#58a6ff;font-weight:600">g_platform</span>=<span style="color:#7ee787">"'+gd('os_arch','aarch64')+'"</span>\n';i+='<span style="color:#58a6ff;font-weight:600">g_swap_off</span>=<span style="color:#7ee787">1</span>\n';i+='<span style="color:#58a6ff;font-weight:600">g_wce_conf</span>=<span style="color:#7ee787">0</span>\n\n';i+='<span style="color:#8b949e">;; 产品: '+gd('dp_product','GaussDB_DWS')+'  · 版本: '+gd('gdb_version','9.1.0')+'</span>\n';i+='<span style="color:#8b949e">;; 存储: '+gd('disk_type','SSD')+' · '+gd('raid_level','RAID0')+' · '+gd('data_disks','-')+'</span>\n';i+='<span style="color:#8b949e">;; 保存后将生成完整 preinstall.ini</span>';document.getElementById('pv').innerHTML=i}
+document.addEventListener('DOMContentLoaded',function(){build();document.querySelectorAll('.ps').forEach(function(e){e.addEventListener('input',build);e.addEventListener('change',build)})});
 </script>
 {% endblock %}
