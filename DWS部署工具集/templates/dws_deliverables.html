@@ -2,51 +2,43 @@
 {% block page_title %}交付物生成{% endblock %}
 {% block content %}
 
+<style>
+.dl-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:700px){.dl-form{grid-template-columns:1fr}}
+.dl-field{display:flex;flex-direction:column}
+.dl-field label{font-size:11px;font-weight:600;color:var(--gray);margin-bottom:4px}
+.dl-field input{padding:8px 12px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;color:var(--text);background:var(--card);transition:border-color .15s}
+.dl-field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
+
+.dl-result{display:none;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);padding:20px;margin-top:16px}
+.dl-result.show{display:block}
+.dl-result .dlr-head{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--green);margin-bottom:12px}
+.dl-files{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+@media(max-width:700px){.dl-files{grid-template-columns:1fr}}
+.dl-files li{padding:6px 10px;font-size:12px;color:var(--text);border-radius:4px;display:flex;align-items:center;gap:6px}
+.dl-files li:nth-child(odd){background:var(--g50)}
+</style>
+
 <div class="card">
   <div class="card-hdr">
-    <span class="card-title"><span class="ti">&#x1F4E6;</span> 交付物生成</span>
+    <span class="card-title">📦 交付物生成</span>
   </div>
-  <p style="font-size:13px;color:var(--g500);margin-bottom:16px;">
-    填写交付信息，一键生成部署预检报告、审计日志、验证报告和全部配置文件。
-  </p>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-    <div>
-      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">项目名称</label>
-      <input id="f-project" value="{{ metadata.get('project_name','') }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
-    </div>
-    <div>
-      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">客户名称</label>
-      <input id="f-customer" value="{{ metadata.get('customer','') }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
-    </div>
-    <div>
-      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">部署地点</label>
-      <input id="f-site" value="{{ metadata.get('site','') }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
-    </div>
-    <div>
-      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">部署工程师</label>
-      <input id="f-engineer" value="{{ metadata.get('deploy_engineer','') }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
-    </div>
-    <div>
-      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">部署日期</label>
-      <input id="f-date" value="{{ metadata.get('deploy_date','') }}" placeholder="2026-06-06" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
-    </div>
-    <div>
-      <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">验收标准</label>
-      <input id="f-acceptance" value="{{ metadata.get('acceptance_criteria','') }}" placeholder="例如: TPC-H 10GB <300s" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--g200);font-size:13px;">
-    </div>
+  <p style="font-size:13px;color:var(--gray2);margin-bottom:16px;">填写交付信息，一键生成部署预检报告、审计日志、验证报告和全部配置文件。</p>
+
+  <div class="dl-form">
+    <div class="dl-field"><label>项目名称</label><input id="f-project" value="{{ metadata.get('project_name','') }}" placeholder="例: 嘉兴银行DWS部署"></div>
+    <div class="dl-field"><label>客户名称</label><input id="f-customer" value="{{ metadata.get('customer','') }}" placeholder="例: 嘉兴银行"></div>
+    <div class="dl-field"><label>部署地点</label><input id="f-site" value="{{ metadata.get('site','') }}" placeholder="例: 嘉兴银行数据中心"></div>
+    <div class="dl-field"><label>部署工程师</label><input id="f-engineer" value="{{ metadata.get('deploy_engineer','') }}" placeholder="姓名"></div>
+    <div class="dl-field"><label>部署日期</label><input id="f-date" value="{{ metadata.get('deploy_date','') }}" placeholder="2026-06-06"></div>
+    <div class="dl-field"><label>验收标准</label><input id="f-acceptance" value="{{ metadata.get('acceptance_criteria','') }}" placeholder="例: TPC-H 10GB <300s"></div>
   </div>
-  <div style="margin-top:16px;">
-    <button onclick="generateReport()" id="btn-gen" class="btn btn-primary" style="padding:10px 24px;">
-      &#x1F4E6; 生成交付物
-    </button>
-    <span id="gen-status" style="margin-left:12px;font-size:13px;color:var(--g500);"></span>
-  </div>
+
+  <div><button onclick="generateReport()" id="btn-gen" class="btn btn-primary" style="padding:10px 24px;">📦 生成交付物</button><span id="gen-status" style="margin-left:12px;font-size:13px;color:var(--gray2);"></span></div>
 </div>
 
-<div class="card" id="result-card" style="display:none;">
-  <div class="card-hdr">
-    <span class="card-title"><span class="ti">&#x2705;</span> 交付物已生成</span>
-  </div>
+<div class="dl-result" id="result-card">
+  <div class="dlr-head">✅ 交付物已生成</div>
   <div id="result-body"></div>
 </div>
 
@@ -81,24 +73,21 @@ async function generateReport() {
       return;
     }
 
-    status.textContent = '生成完成!';
-    resultCard.style.display = 'block';
+    status.textContent = '✅ 生成完成!';
+    resultCard.classList.add('show');
 
-    let html = '<div style="margin-bottom:12px;">';
-    html += '<p style="font-size:13px;color:var(--g500);margin-bottom:12px;">';
-    html += '会话ID: ' + data.session_id + ' | ';
-    html += '文件数: ' + data.files.length + ' | ';
-    html += '大小: ' + (data.size_bytes / 1024).toFixed(1) + ' KB</p>';
+    let html = '<div style="margin-bottom:12px;padding:10px 14px;background:var(--g50);border-radius:8px;display:flex;gap:20px;flex-wrap:wrap;">';
+    html += '<span style="font-size:12px;color:var(--gray);">会话ID: <b style="color:var(--text);font-family:monospace;">' + data.session_id + '</b></span>';
+    html += '<span style="font-size:12px;color:var(--gray);">文件数: <b style="color:var(--text);">' + data.files.length + '</b></span>';
+    html += '<span style="font-size:12px;color:var(--gray);">大小: <b style="color:var(--text);">' + (data.size_bytes / 1024).toFixed(1) + ' KB</b></span></div>';
 
-    html += '<h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">生成文件清单</h3>';
-    html += '<ul style="font-size:13px;line-height:1.8;">';
-    for (const f of data.files) {
-      html += '<li>' + f + '</li>';
-    }
+    html += '<h4 style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text);">文件清单</h4>';
+    html += '<ul class="dl-files">';
+    for (const f of data.files) html += '<li>📄 ' + f + '</li>';
     html += '</ul>';
 
     html += '<div style="margin-top:16px;">';
-    html += '<a href="' + data.download_url + '" class="btn btn-primary" download>&#x2B07; 下载交付物 (.tar.gz)</a>';
+    html += '<a href="' + data.download_url + '" class="btn btn-primary" download>⬇ 下载交付物 (.tar.gz)</a>';
     html += '</div>';
     resultBody.innerHTML = html;
   } catch (e) {

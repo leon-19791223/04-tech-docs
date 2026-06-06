@@ -2,43 +2,68 @@
 {% block page_title %}DWS 部署流程{% endblock %}
 {% block content %}
 
-<div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4C8;</span> DWS 7阶段部署流程图</span></div>
-  <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:16px;font-size:12px;">
-    <span class="tag tg-blu" style="font-size:13px;padding:10px 14px;">1. 环境准备<br><span style="font-size:10px;">RAID/BIOS/网络</span></span>
-    <span style="color:var(--g300);font-size:16px;">&rarr;</span>
-    <span class="tag tg-blu" style="font-size:13px;padding:10px 14px;">2. OS配置<br><span style="font-size:10px;">内核/SELinux/时钟</span></span>
-    <span style="color:var(--g300);font-size:16px;">&rarr;</span>
-    <span class="tag tg-org" style="font-size:13px;padding:10px 14px;">3. 磁盘分区<br><span style="font-size:10px;">LVM/XFS挂载</span></span>
-    <span style="color:var(--g300);font-size:16px;">&rarr;</span>
-    <span class="tag tg-org" style="font-size:13px;padding:10px 14px;">4. 软件安装<br><span style="font-size:10px;">Python/依赖/ISO</span></span>
-    <span style="color:var(--g300);font-size:16px;">&rarr;</span>
-    <span class="tag tg-grn" style="font-size:13px;padding:10px 14px;">5. 集群部署<br><span style="font-size:10px;">FusionInsight</span></span>
-    <span style="color:var(--g300);font-size:16px;">&rarr;</span>
-    <span class="tag tg-grn" style="font-size:13px;padding:10px 14px;">6. 性能测试<br><span style="font-size:10px;">fio/网络</span></span>
-    <span style="color:var(--g300);font-size:16px;">&rarr;</span>
-    <span class="tag tg-grn" style="font-size:13px;padding:10px 14px;">7. 验收交付<br><span style="font-size:10px;">验证/文档</span></span>
-  </div>
+<style>
+.flow-header{font-size:13px;color:var(--gray);margin-bottom:16px}
+.flow-grid{display:flex;gap:0;margin-bottom:20px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);overflow:hidden}
+.flow-step{flex:1;text-align:center;padding:14px 8px;cursor:pointer;transition:all .15s;border-right:1px solid var(--gray3);position:relative}
+.flow-step:last-child{border-right:none}
+.flow-step:hover{background:var(--g50)}
+.flow-step.active{background:var(--accent-bg)}
+.flow-step .fs-num{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-bottom:4px;color:#fff}
+.flow-step .fs-name{font-size:11px;font-weight:600;color:var(--text)}
+.flow-step .fs-sub{font-size:10px;color:var(--gray2);margin-top:2px}
+
+.flow-detail{background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);padding:20px 24px}
+.flow-detail h3{font-size:15px;font-weight:700;color:var(--primary);margin-bottom:4px}
+.flow-detail .fd-desc{font-size:12px;color:var(--gray2);margin-bottom:14px}
+.flow-steps{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media(max-width:700px){.flow-steps{grid-template-columns:1fr}}
+.flow-steps .fs-item{padding:8px 12px;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px}
+.flow-steps .fs-item .fs-bullet{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+</style>
+
+<div class="flow-header">GaussDB(DWS) 部署分为 7 个阶段，点击阶段查看详细步骤</div>
+
+<div class="flow-grid" id="flowGrid"></div>
+<div class="flow-detail" id="flowDetail">
+  <div class="empty-state" style="padding:30px">选择上方阶段查看详细步骤</div>
 </div>
 
-{% set phases = [
-  ("1. 环境准备", ["RAID策略: Read Ahead + Write Back", "网卡检查(Hi1822需单独处理)", "MTU一致性检查(1500)", "主机名设置", "ISO镜像确认", "root密码一致性"]),
-  ("2. OS配置", ["关闭 auditd", "关闭 firewalld + iptables", "关闭 SELinux", "关闭 swap", "关闭透明大页", "设置时区 Asia/Shanghai", "内存水位线优化", "NUMA平衡关闭", "OOM策略配置", "字符集 en_US.UTF-8"]),
-  ("3. 磁盘分区", ["parted GPT分区", "XFS格式化", "创建挂载目录", "配置 /etc/fstab", "mount -a 验证", "SSD确认(ROTA=0)"]),
-  ("4. 软件安装", ["Python 3.8.5 编译安装", "依赖包安装", "ISO挂载 + yum源配置", "fio 压测工具上传", "网络压测工具上传"]),
-  ("5. 集群部署", ["配置 preinstall.ini", "执行 FusionInsight SetupTool", "安装集群", "创建管理员用户", "配置备份策略"]),
-  ("6. 性能测试", ["fio 磁盘性能测试(4K/8K/128K/1M)", "dd 顺序写/读/读写测试", "网络带宽压测(≥800MB/s)", "网络重传率检查(<0.01%)", "内存参数设置(cstore_buffers)", "并行参数设置"]),
-  ("7. 验收交付", ["TPOPS Web登录验证", "gsql 连接测试", "实例运行状态检查", "备份功能验证", "交付文档归档"]),
-] %}
+<script>
+var phases = [
+  {name:"环境准备",sub:"RAID/BIOS/网络",color:"var(--green)",bg:"var(--green-bg)",items:["RAID策略: Read Ahead + Write Back","检查网卡MTU=1500","Hi1822中断配置","主机名设定","ISO镜像确认","root密码一致性"]},
+  {name:"OS配置",sub:"内核/SELinux/时钟",color:"var(--green)",bg:"var(--green-bg)",items:["关闭auditd","关闭firewalld+iptables","SELinux=disabled","关闭swap","关闭透明大页","时区Asia/Shanghai","内存水位线优化","NUMA关闭","OOM策略","字符集en_US.UTF-8"]},
+  {name:"磁盘分区",sub:"LVM/XFS/挂载",color:"var(--orange)",bg:"var(--orange-bg)",items:["parted GPT分区","XFS格式化","创建挂载目录","配置/etc/fstab","mount -a验证","SSD确认(ROTA=0)"]},
+  {name:"软件安装",sub:"Python/依赖/ISO",color:"var(--orange)",bg:"var(--orange-bg)",items:["Python 3.8.5编译安装","依赖包安装","ISO挂载+yum源","fio压测工具","网络压测工具"]},
+  {name:"集群部署",sub:"FusionInsight",color:"var(--accent)",bg:"var(--accent-bg)",items:["配置preinstall.ini","执行SetupTool","安装集群","创建管理员用户","配置备份策略"]},
+  {name:"性能测试",sub:"fio/网络",color:"var(--accent)",bg:"var(--accent-bg)",items:["fio磁盘压测(4K/8K/128K/1M)","dd顺序写/读测试","网络带宽≥800MB/s","重传率<0.01%","内存参数设置","并行参数优化"]},
+  {name:"验收交付",sub:"验证/文档",color:"var(--accent)",bg:"var(--accent-bg)",items:["TPOPS Web登录","gsql连接测试","实例状态检查","备份功能验证","交付文档归档"]}
+];
 
-{% for title, items in phases %}
-<div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">{{ loop.index }}&#xFE0F&#x20E3;</span> {{ title }}</span></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-    {% for item in items %}
-    <div style="padding:8px 12px;border-radius:6px;background:var(--g50);font-size:13px;">{{ item }}</div>
-    {% endfor %}
-  </div>
-</div>
-{% endfor %}
+function renderGrid(){
+  var h = '';
+  phases.forEach(function(p,i){
+    h += '<div class="flow-step" onclick="showPhase('+i+')" id="fs-'+i+'">';
+    h += '<div class="fs-num" style="background:'+p.color+'">'+(i+1)+'</div>';
+    h += '<div class="fs-name">'+p.name+'</div>';
+    h += '<div class="fs-sub">'+p.sub+'</div></div>';
+  });
+  document.getElementById('flowGrid').innerHTML = h;
+}
+
+function showPhase(idx){
+  var p = phases[idx];
+  document.querySelectorAll('.flow-step').forEach(function(el,i){el.classList.toggle('active',i===idx)});
+  var h = '<h3>'+p.name+'</h3><div class="fd-desc">共 '+p.items.length+' 步</div>';
+  h += '<div class="flow-steps">';
+  p.items.forEach(function(item){
+    h += '<div class="fs-item" style="background:'+p.bg+'"><span class="fs-bullet" style="background:'+p.color+'"></span>'+item+'</div>';
+  });
+  h += '</div>';
+  document.getElementById('flowDetail').innerHTML = h;
+}
+
+renderGrid();
+showPhase(0);
+</script>
 {% endblock %}

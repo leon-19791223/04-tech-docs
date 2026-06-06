@@ -1,13 +1,8 @@
 {% extends "base.html" %}
-{% block page_title %}检查清单{% endblock %}
+{% block page_title %}部署检查清单{% endblock %}
 {% block content %}
 
-<div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">&#x1F4CB;</span> DWS 部署检查清单</span></div>
-  <p style="font-size:13px;color:var(--g500);margin-bottom:16px;">逐项确认后勾选：<span class="tag tg-grn">✅ 已完成</span> <span class="tag tg-gry">⬜ 未完成</span></p>
-</div>
-
-{% set checklist_sections = [
+{% set sections = [
   ("硬件环境", [
     ("RAID策略: Read Ahead + Write Back With BBU", True),
     ("网卡MTU一致性 1500", True),
@@ -46,15 +41,59 @@
   ]),
 ] %}
 
-{% for section_name, items in checklist_sections %}
-<div class="card">
-  <div class="card-hdr"><span class="card-title"><span class="ti">{{ loop.index }}&#xFE0F&#x20E3;</span> {{ section_name }}</span></div>
-  {% for item, default in items %}
-  <div class="cl-item" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--g100);cursor:pointer;" onclick="toggleCheck(this)">
-    <span style="font-size:16px;">{% if default %}✅{% else %}⬜{% endif %}</span>
-    <span style="font-size:13px;flex:1;">{{ item }}</span>
+{% set total = 0 %}
+{% for sn, items in sections %}{% set total = total + items|length %}{% endfor %}
+{% set done = 0 %}
+{% for sn, items in sections %}{% for i,d in items %}{% if d %}{% set done = done + 1 %}{% endif %}{% endfor %}{% endfor %}
+{% set pct = (done / total * 100)|round if total > 0 else 0 %}
+
+<style>
+.cl-stats{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.cl-stat{flex:1;min-width:100px;padding:12px 16px;background:var(--card);border:1px solid var(--gray3);border-radius:var(--radius);text-align:center}
+.cl-stat .cv{font-size:20px;font-weight:700;color:var(--primary)}
+.cl-stat .cl{font-size:11px;color:var(--gray2);margin-top:2px}
+
+.cl-progress{height:8px;background:var(--g100);border-radius:4px;overflow:hidden;margin-bottom:4px}
+.cl-progress .cp-fill{height:100%;border-radius:4px;background:var(--green);transition:width .5s}
+
+.cl-section{margin-bottom:16px}
+.cl-section .cs-title{font-size:13px;font-weight:600;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.cl-section .cs-bar{height:4px;background:var(--g100);border-radius:2px;overflow:hidden;margin-bottom:8px;width:120px}
+.cl-section .cs-bar .cs-fill{height:100%;border-radius:2px;transition:width .5s}
+</style>
+
+<div class="cl-stats">
+  <div class="cl-stat"><div class="cv" id="clTotal">{{ total }}</div><div class="cl">总项目</div></div>
+  <div class="cl-stat"><div class="cv" style="color:var(--green);">{{ done }}</div><div class="cl">已完成</div></div>
+  <div class="cl-stat"><div class="cv" style="color:var(--orange);">{{ total - done }}</div><div class="cl">待完成</div></div>
+  <div class="cl-stat"><div class="cv" style="color:var(--accent);">{{ pct }}%</div><div class="cl">完成率</div></div>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+  <div class="card-hdr" style="margin-bottom:4px;"><span class="card-title">📊 总体进度</span></div>
+  <div class="cl-progress"><div class="cp-fill" style="width:{{ pct }}%"></div></div>
+  <div style="font-size:11px;color:var(--gray2);">已完成 {{ done }}/{{ total }} 项 ({{ pct }}%)</div>
+</div>
+
+{% for section_name, items in sections %}
+{% set st = 0 %}{% for i,d in items %}{% if d %}{% set st = st + 1 %}{% endif %}{% endfor %}
+{% set sp = (st / items|length * 100)|round %}
+<div class="cl-section">
+  <div class="card">
+    <div class="card-hdr" style="margin-bottom:8px;">
+      <span class="card-title">{{ section_name }}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="cs-bar"><div class="cs-fill" style="width:{{ sp }}%;background:{{ 'var(--green)' if sp==100 else 'var(--orange)' if sp>=50 else 'var(--gray2)' }}"></div></div>
+        <span style="font-size:11px;color:var(--gray2);">{{ st }}/{{ items|length }}</span>
+      </div>
+    </div>
+    {% for item, default in items %}
+    <div class="cl-item" style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--g100);cursor:pointer;" onclick="toggleCheck(this)">
+      <span style="font-size:16px;min-width:20px;">{% if default %}✅{% else %}⬜{% endif %}</span>
+      <span style="font-size:13px;flex:1;color:var(--text);">{{ item }}</span>
+    </div>
+    {% endfor %}
   </div>
-  {% endfor %}
 </div>
 {% endfor %}
 
@@ -63,8 +102,6 @@ function toggleCheck(el){
   var icon = el.querySelector('span:first-child');
   icon.textContent = icon.textContent === '⬜' ? '✅' : '⬜';
   el.style.background = icon.textContent === '✅' ? 'linear-gradient(135deg,#E6F7EE,#F0FBF4)' : 'transparent';
-  el.style.borderRadius = icon.textContent === '✅' ? '4px' : '0';
-  el.style.padding = icon.textContent === '✅' ? '10px' : '10px 0';
 }
 </script>
 {% endblock %}
