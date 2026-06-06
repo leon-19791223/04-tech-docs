@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}会话管理 - DWS 部署系统{% endblock %}
+{% block page_title %}会话管理{% endblock %}
+{% block content %}
+<div style="margin-bottom:20px;">
+  <p style="font-size:13px;color:var(--gray2);">自动保存最近 20 个会话，重启不丢失。</p>
+</div>
+
+{% if sessions %}
+<div style="display:grid;gap:12px;">
+  {% for s in sessions %}
+  <div class="card" style="padding:16px 20px;{% if s.session_id == current_session %}border-color:var(--accent);background:var(--accent-bg);{% endif %}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:13px;font-weight:600;color:var(--accent);font-family:monospace;">{{ s.session_id[:16] }}</span>
+      <span class="tg {% if s.environment == 'DEV' %}tg-blu{% elif s.environment == 'SIT' %}tg-org{% elif s.environment == 'UAT' %}tg-grn{% else %}tg-red{% endif %}">{{ s.environment }}</span>
+    </div>
+    <div style="font-size:12px;color:var(--gray);display:flex;gap:16px;flex-wrap:wrap;">
+      <span>集群: {{ s.cluster or '—' }}</span>
+      <span>节点: {{ s.nodes }}</span>
+      <span>更新: {{ s.updated_at[:16] }}</span>
+      {% if s.session_id == current_session %}<span style="color:var(--accent);font-weight:600;">当前会话</span>{% endif %}
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;">
+      {% if s.session_id != current_session %}
+      <a href="/api/sessions/load/{{ s.session_id }}" class="btn btn-primary btn-sm">恢复</a>
+      {% endif %}
+      <form method="POST" action="/api/sessions/delete/{{ s.session_id }}" style="display:inline" onsubmit="return confirm('确认删除此会话？')">
+        <button type="submit" class="btn btn-ghost btn-sm" style="border-color:var(--red-bg);color:var(--red);">删除</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div style="text-align:center;padding:60px 20px;color:var(--gray2);font-size:14px;">
+  <p style="margin-bottom:8px;">暂无保存的会话</p>
+  <p style="font-size:12px;">配置变更和环境切换后自动保存</p>
+</div>
+{% endif %}
+{% endblock %}

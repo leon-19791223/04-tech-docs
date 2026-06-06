@@ -126,7 +126,32 @@ def require_auth(f):
 
 # ─── 凭据管理器（全局单例） ──────────────────────────────
 credential_manager: CredentialManager = get_credential_manager(ttl=300)
-_source_ip = "127.0.0.1"  # 将在请求上下文中更新
+_source_ip = "127.0.0.1"
+
+# ─── 会话持久化（SQLite，重启不丢失） ──────────────────
+from engine.session_store import SessionStore
+session_store = SessionStore()
+_last_session_id = "default"
+
+def _save_current_session():
+    """持久化当前会话到 SQLite"""
+    try:
+        session = get_or_create_session()
+        data = {
+            "summary": {
+                "environment": session.config.get("environment", "UAT"),
+                "cluster_name": session.config.get("cluster_name", ""),
+                "node_count": len(session.config.get("nodes", [])),
+            },
+            "config": {k: v for k, v in session.config.items()
+                       if k != "nodes"},
+            "environment": session.config.get("environment", "UAT"),
+            "audit_log": getattr(session, 'audit_log', [])[-100:],
+            "templates": getattr(session, 'templates', {}),
+        }
+        session_store.save(_last_session_id, data)
+    except Exception:
+        pass  # 持久化失败不阻塞业务  # 将在请求上下文中更新
 
 @app.before_request
 def _update_source_ip():
@@ -744,6 +769,74 @@ def api_health():
         "phases": len(session.phases),
         "nodes": len(session.config.get("nodes", [])),
     })
+
+
+# ================================================================
+# 会话管理（B-2: 数据持久化）
+# ================================================================
+@app.route("/sessions")
+def sessions_page():
+    """会话管理页面"""
+    sessions = session_store.list_sessions(limit=20)
+    return render_template("dws_sessions.html",
+                           sessions=sessions,
+                           current_session=_last_session_id,
+                           total_count=session_store.session_count)
+
+
+@app.route("/api/sessions")
+def api_sessions():
+    """获取会话列表"""
+    sessions = session_store.list_sessions(limit=20)
+    return jsonify({
+        "sessions": sessions,
+        "current": _last_session_id,
+        "total": session_store.session_count,
+    })
+
+
+@app.route("/api/sessions/load/<session_id>")
+def api_session_load(session_id):
+    """加载历史会话（恢复配置到当前会话）"""
+    data = session_store.load(session_id)
+    if not data:
+        return jsonify({"error": "会话不存在"}), 404
+    try:
+        session = get_or_create_session()
+        env = data.get("environment", "UAT")
+        from engine.core_engine import switch_environment, _init_phases
+        cfg = switch_environment(env)
+        if cfg:
+            session.config = cfg
+            session.phases = _init_phases(cfg)
+            session.generate_templates()
+        if "audit_log" in data:
+            session.audit_log = data["audit_log"]
+        config_data = data.get("config", {})
+        if "delivery" in config_data:
+            session.config["delivery"] = config_data["delivery"]
+        _save_current_session()
+        return jsonify({"ok": True, "session_id": session_id, "environment": env})
+    except Exception as e:
+        return jsonify({"error": f"恢复失败: {e}"}), 500
+
+
+@app.route("/api/sessions/delete/<session_id>", methods=["POST"])
+def api_session_delete(session_id):
+    """删除历史会话"""
+    ok = session_store.delete(session_id)
+    return jsonify({"ok": ok})
+
+
+# 每次请求后自动保存会话
+@app.after_request
+def _auto_save_session(response):
+    if response.status_code < 400:
+        try:
+            _save_current_session()
+        except Exception:
+            pass
+    return response
 
 
 if __name__ == "__main__":
