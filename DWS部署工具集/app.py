@@ -53,10 +53,27 @@ from engine.report_generator import (
 
 # ── 嘉兴引擎（vendor 代码，一字不改） ──
 from engine.core_engine import (
-    get_or_create_session, reset_session, _init_phases,
+    get_or_create_session, reset_session,
     get_architecture_data, switch_environment,
     DEPLOY_TOPOLOGIES,
 )
+
+# ── 部署阶段（完整10阶段，取代 core_engine 的8阶段） ──
+from core.deployment_phases import build_phases as _init_phases
+# 将新阶段注入 core_engine，使其内部也使用10阶段
+import engine.core_engine as _ce
+_ce._init_phases = _init_phases
+_ce.build_phases = _init_phases
+
+# 修复 core_engine 的 get_progress/to_dict 兼容新步骤格式
+# 步骤无 status 时默认 pending
+_orig_get_progress = _ce.DeploymentSession.get_progress
+def _patched_get_progress(self):
+    for p in self.phases:
+        for s in p.get("steps", []):
+            s.setdefault("status", "pending")
+    return _orig_get_progress(self)
+_ce.DeploymentSession.get_progress = _patched_get_progress
 
 # ── 供应商数据加载器（JSON 优先，fallback 到 vendor） ──
 _VENDOR_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "conf", "environment_presets.json")
@@ -1043,7 +1060,7 @@ def api_session_load(session_id):
     try:
         session = get_or_create_session()
         env = data.get("environment", "UAT")
-        from engine.core_engine import switch_environment, _init_phases
+        from engine.core_engine import switch_environment
         cfg = switch_environment(env)
         if cfg:
             session.config = cfg
