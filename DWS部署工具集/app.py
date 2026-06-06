@@ -25,7 +25,11 @@ from functools import wraps
 
 # ── 自有规则模块 ──
 from core.precheck_engine import PRECHECK_ITEMS, PRECHECK_PHASES
-from core.config_generator import DWSConfig, generate_preinstall_ini
+from core.config_generator import (
+    DWSConfig, ClusterConfig, NodeSpec, OMSConfig,
+    generate_preinstall_ini, generate_host_inis,
+    generate_install_oms_ini, generate_cluster_install_template
+)
 from core.verifier import VERIFY_ITEMS
 
 # ── SSH 执行器（含安全策略） ──
@@ -526,9 +530,61 @@ def config():
 
 @app.route("/api/config/generate", methods=["POST"])
 def api_config_generate():
-    """生成 preinstall.ini — 双模式：简单/引擎 + 参数校验"""
+    """生成配置文件 — 支持三种模式
+
+    POST JSON:
+      mode: "official" | "simple" (default) | "engine"
+      official: 生成 FusionInsight 标准格式 preinstall.ini + host.ini + install_oms.ini
+      simple:   旧版简单生成（向后兼容）
+      engine:   嘉兴引擎完整 LLD 配置
+    """
     data = request.get_json() or {}
+    mode = data.get("mode", "simple")
     use_engine = data.get("use_engine", False)
+
+    if mode == "official":
+        from core.config_generator import (
+            ClusterConfig, NodeSpec, OMSConfig,
+            generate_preinstall_ini, generate_host_inis,
+            generate_install_oms_ini, generate_cluster_install_template
+        )
+        oms = OMSConfig(
+            oms_ip1=data.get("oms_ip1", ""),
+            oms_ip2=data.get("oms_ip2", ""),
+            oms_float_ip=data.get("oms_float_ip", ""),
+            ws_float_ip=data.get("ws_float_ip", ""),
+            gateway=data.get("gateway", ""),
+        )
+        nodes_raw = data.get("nodes", [])
+        nodes = []
+        for i, n in enumerate(nodes_raw):
+            nodes.append(NodeSpec(
+                hostname=n.get("hostname", f"node{i+1}"),
+                mgmt_ip=n.get("mgmt_ip", ""),
+                biz_ip=n.get("biz_ip", n.get("mgmt_ip", "")),
+            ))
+        cfg = ClusterConfig(
+            cluster_name=data.get("cluster_name", "dws_cluster"),
+            oms=oms, nodes=nodes,
+            chip_type=data.get("chip_type", "aarch64"),
+            os_type=data.get("os_type", "kylin-V10-SP2"),
+            os_user=data.get("os_user", "root"),
+        )
+        ini = generate_preinstall_ini(cfg)
+        host_inis = generate_host_inis(cfg.nodes)
+        oms_ini = generate_install_oms_ini(cfg, is_primary=True)
+        cluster_tpl = generate_cluster_install_template(cfg)
+        result = {
+            "content": ini,
+            "all_templates": {
+                "preinstall.ini": ini,
+                "install_oms.ini": oms_ini,
+                "cluster_install_template.txt": cluster_tpl,
+            }
+        }
+        for name, content in host_inis.items():
+            result["all_templates"][name] = content
+        return jsonify(result)
 
     # 参数校验（非 engine 模式）
     if not use_engine:
