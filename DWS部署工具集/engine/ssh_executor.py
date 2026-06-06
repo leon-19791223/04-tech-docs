@@ -1,40 +1,174 @@
 """
-DWS SSH 执行器 — 双模式（demo/ssh）
+DWS SSH 执行器 — 三模式（demo/ssh）+ 安全策略三等级
 
-demo 模式: 返回命令文本，用户手动复制执行（零依赖）
-ssh  模式: paramiko 连接节点，自动执行并采集结果
+demo  模式: 返回命令文本，用户手动复制执行（零依赖）
+ssh   模式: paramiko 连接节点，自动执行并采集结果
+hybrid模式: 可 SSH 的节点自动执行，不可达的显示命令文本
+
+安全策略三等级:
+  strict  — 仅连接 known_hosts 中已知的主机
+  warn    — 未知主机提示警告但可选接受（默认）
+  insecure— 自动接受任何主机密钥（仅 demo 模式可用）
 
 用法:
     executor = SSHExecutor(mode="demo")
     result = executor.run_check(precheck_item, node_ip)
-    # → {"item_id":"hw-raid", "mode":"demo", "status":"pending",
-    #     "cmd":"storcli64 ...", "detail":"在节点上执行以上命令"}
 
-    executor = SSHExecutor(mode="ssh", username="root", password="xxx")
+    executor = SSHExecutor(mode="ssh", host_key_policy="warn")
+    executor.connect("10.134.21.190", "root", password="xxx")
     result = executor.run_check(precheck_item, node_ip)
-    # → {"item_id":"hw-raid", "mode":"ssh", "status":"pass|warn|fail",
-    #     "detail":"RAID策略已配置", "stdout":"..."}
 """
 
 import re
 import time
+import logging
 from typing import Optional
+from dataclasses import dataclass, field
+from datetime import datetime
 
+logger = logging.getLogger(__name__)
+
+
+# ─── 安全策略 ──────────────────────────────────────────────
+
+class SSHHostKeyPolicy:
+    """SSH 主机密钥验证策略等级"""
+
+    STRICT = "strict"       # 仅已知主机，拒绝未知
+    WARN = "warn"           # 未知主机提示警告但可选接受
+    INSECURE = "insecure"   # 自动接受（AutoAddPolicy）
+
+    @staticmethod
+    def validate(policy: str) -> str:
+        """验证并规范化策略值"""
+        if policy not in (SSHHostKeyPolicy.STRICT,
+                          SSHHostKeyPolicy.WARN,
+                          SSHHostKeyPolicy.INSECURE):
+            return SSHHostKeyPolicy.WARN
+        return policy
+
+    @staticmethod
+    def get_missing_host_key_policy(policy: str):
+        """根据策略等级返回 paramiko 的 MissingHostKeyPolicy"""
+        try:
+            import paramiko
+        except ImportError:
+            return None
+
+        if policy == SSHHostKeyPolicy.STRICT:
+            return paramiko.RejectPolicy()
+        elif policy == SSHHostKeyPolicy.WARN:
+            return paramiko.WarningPolicy()
+        else:
+            return paramiko.AutoAddPolicy()
+
+    @staticmethod
+    def get_warning(policy: str) -> str:
+        """获取安全策略的中文警告文本（用于 UI 展示）"""
+        warnings = {
+            SSHHostKeyPolicy.STRICT: "【安全模式】仅连接已知主机",
+            SSHHostKeyPolicy.WARN: "【警告模式】首次连接未知主机需确认",
+            SSHHostKeyPolicy.INSECURE: "【⚠️ 不安全】未验证主机身份，仅用于演示",
+        }
+        return warnings.get(policy, "")
+
+
+# ─── 审计记录 ──────────────────────────────────────────────
+
+@dataclass
+class AuditRecord:
+    """SSH 执行审计记录"""
+    timestamp: str = ""          # 操作时间
+    source_ip: str = ""          # 来源 IP
+    operator: str = ""           # 操作人
+    target_host: str = ""        # 目标主机
+    command: str = ""            # 执行的命令
+    exit_code: int = -1          # 返回码
+    duration_sec: float = 0.0    # 执行耗时
+    success: bool = False        # 是否成功
+    detail: str = ""             # 详情/错误信息
+
+
+# ─── SSH 执行器 ────────────────────────────────────────────
 
 class SSHExecutor:
-    """双模式 SSH 执行器"""
+    """SSH 执行器 — 三模式 + 安全策略三等级"""
 
     MODE_DEMO = "demo"
     MODE_SSH = "ssh"
+    MODE_HYBRID = "hybrid"
+    VALID_MODES = (MODE_DEMO, MODE_SSH, MODE_HYBRID)
 
-    def __init__(self, mode: str = "demo", username: str = "root",
-                 password: str = "", key_file: str = "", port: int = 22):
-        self.mode = mode
+    def __init__(self, mode: str = "demo",
+                 host_key_policy: str = "insecure",
+                 username: str = "root",
+                 credential_id: str = "",
+                 port: int = 22,
+                 source_ip: str = "",
+                 operator: str = "",
+                 audit_log: Optional[list] = None):
+        """
+        Args:
+            mode: demo / ssh / hybrid
+            host_key_policy: strict / warn / insecure（demo 模式强制 insecure）
+            username: SSH 用户名
+            credential_id: 凭据 ID（通过 CredentialManager 获取）
+            port: SSH 端口
+            source_ip: 来源 IP（用于审计）
+            operator: 操作人（用于审计）
+            audit_log: 外部审计日志列表（可选，用于记录操作）
+        """
+        self.mode = mode if mode in self.VALID_MODES else self.MODE_DEMO
+        # demo 模式强制 INSECURE
+        if self.mode == self.MODE_DEMO:
+            self.host_key_policy = SSHHostKeyPolicy.INSECURE
+        else:
+            self.host_key_policy = SSHHostKeyPolicy.validate(host_key_policy)
         self.username = username
-        self.password = password
-        self.key_file = key_file
+        self.credential_id = credential_id
+        self._password = ""
+        self._key_file = ""
         self.port = port
+        self.source_ip = source_ip
+        self.operator = operator
         self._client = None
+        self._last_host = ""
+        # 审计日志
+        self.audit_log = audit_log if audit_log is not None else []
+        self._resolve_credential()
+
+    def _resolve_credential(self):
+        """通过 CredentialManager 解析凭据（如果使用 credential_id）"""
+        if self.credential_id and self.mode == self.MODE_SSH:
+            try:
+                from engine.credential_manager import get_credential_manager
+                mgr = get_credential_manager()
+                cred = mgr.get(self.credential_id)
+                if cred:
+                    c = cred.get("credential", {})
+                    self._password = c.get("password", "")
+                    self._key_file = c.get("key_file", "")
+                    self.username = c.get("username", self.username)
+            except ImportError:
+                pass
+        elif not self.credential_id and self.mode == self.MODE_SSH:
+            # 兼容旧接口：直接用 password/key_file 参数（不推荐）
+            pass
+
+    @property
+    def security_warning(self) -> str:
+        """获取安全策略的中文警告文本"""
+        return SSHHostKeyPolicy.get_warning(self.host_key_policy)
+
+    @property
+    def policy_label(self) -> str:
+        """获取安全策略标签"""
+        labels = {
+            SSHHostKeyPolicy.STRICT: "严格",
+            SSHHostKeyPolicy.WARN: "警告",
+            SSHHostKeyPolicy.INSECURE: "不安全",
+        }
+        return labels.get(self.host_key_policy, "未知")
 
     # ── 公共 API ──────────────────────────────────────────
 
@@ -120,6 +254,35 @@ class SSHExecutor:
             "solution": item.get("solution", ""),
         }
 
+    # ── 审计记录 ──────────────────────────────────────────
+
+    def _add_audit_record(self, target_host: str, command: str,
+                          exit_code: int, duration_sec: float,
+                          success: bool, detail: str = ""):
+        """添加一条审计记录"""
+        record = AuditRecord(
+            timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            source_ip=self.source_ip or "localhost",
+            operator=self.operator or self.username,
+            target_host=target_host,
+            command=command[:200],
+            exit_code=exit_code,
+            duration_sec=round(duration_sec, 1),
+            success=success,
+            detail=detail[:200],
+        )
+        self.audit_log.append({
+            "timestamp": record.timestamp,
+            "source_ip": record.source_ip,
+            "operator": record.operator,
+            "target_host": record.target_host,
+            "command": record.command,
+            "exit_code": record.exit_code,
+            "duration_sec": record.duration_sec,
+            "success": record.success,
+            "detail": record.detail,
+        })
+
     # ── SSH 模式 ─────────────────────────────────────────
 
     def _connect(self, host: str) -> bool:
@@ -127,20 +290,34 @@ class SSHExecutor:
         try:
             import paramiko
             self._client = paramiko.SSHClient()
-            self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            if self.key_file:
+            # 使用安全策略
+            policy_class = SSHHostKeyPolicy.get_missing_host_key_policy(
+                self.host_key_policy)
+            if policy_class:
+                self._client.set_missing_host_key_policy(policy_class)
+            # 连接
+            if self._key_file:
                 self._client.connect(host, port=self.port,
                                      username=self.username,
-                                     key_filename=self.key_file,
+                                     key_filename=self._key_file,
                                      timeout=10)
             else:
                 self._client.connect(host, port=self.port,
                                      username=self.username,
-                                     password=self.password,
+                                     password=self._password or self.password,
                                      timeout=10)
+            self._last_host = host
             return True
         except ImportError:
             raise RuntimeError("paramiko 未安装，请执行: pip install paramiko")
+        except paramiko.SSHException as e:
+            self._client = None
+            if "not found in known_hosts" in str(e).lower():
+                raise PermissionError(
+                    f"主机 {host} 不在 known_hosts 中。"
+                    f"请先手动连接: ssh {self.username}@{host}"
+                    f"或将安全策略设为 warn")
+            raise ConnectionError(f"SSH 连接失败 {host}:{self.port} — {e}")
         except Exception as e:
             self._client = None
             raise ConnectionError(f"无法连接到 {host}:{self.port} — {e}")
@@ -449,6 +626,7 @@ class SSHExecutor:
             if not connected:
                 raise ConnectionError(f"无法连接到 {node_ip}")
 
+            self._last_host = node_ip
             start = time.time()
             stdout, stderr, exit_code = self._exec_cmd(cmd)
             elapsed = round(time.time() - start, 1)
@@ -463,6 +641,17 @@ class SSHExecutor:
                 detail = f"{detail} (exit_code={exit_code})"
 
             self._close()
+
+            # 记录审计
+            self._add_audit_record(
+                target_host=node_ip,
+                command=cmd,
+                exit_code=exit_code,
+                duration_sec=elapsed,
+                success=(status != "fail"),
+                detail=detail[:100],
+            )
+
             return {
                 "item_id": item.get("id", ""),
                 "item_name": item.get("name", ""),

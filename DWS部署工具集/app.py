@@ -20,14 +20,18 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for
+from functools import wraps
 
 # ── 自有规则模块 ──
 from core.precheck_engine import PRECHECK_ITEMS, PRECHECK_PHASES
 from core.config_generator import DWSConfig, generate_preinstall_ini
 from core.verifier import VERIFY_ITEMS
 
-# ── SSH 执行器 ──
-from engine.ssh_executor import SSHExecutor
+# ── SSH 执行器（含安全策略） ──
+from engine.ssh_executor import SSHExecutor, SSHHostKeyPolicy
+
+# ── 凭据管理器 ──
+from engine.credential_manager import get_credential_manager, CredentialManager
 
 # ── 报告生成器 ──
 from engine.report_generator import (
@@ -103,6 +107,31 @@ RACK_LAYOUT = _load_vendor_data("RACK_LAYOUT", [])
 
 app = Flask(__name__)
 app.jinja_env.auto_reload = True
+
+# ─── 鉴权配置（可选） ─────────────────────────────────────
+app.config['AUTH_ENABLED'] = os.environ.get('DWS_AUTH_ENABLED', 'false').lower() == 'true'
+app.config['AUTH_TOKEN'] = os.environ.get('DWS_AUTH_TOKEN', 'dws-default-token')
+
+def require_auth(f):
+    """可选鉴权中间件 — 仅 SSH 模式受保护，demo 模式开放"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not app.config['AUTH_ENABLED']:
+            return f(*args, **kwargs)
+        token = request.headers.get('X-Auth-Token') or request.args.get('token')
+        if token != app.config['AUTH_TOKEN']:
+            return jsonify({"error": "未授权访问，请提供有效 Token"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+# ─── 凭据管理器（全局单例） ──────────────────────────────
+credential_manager: CredentialManager = get_credential_manager(ttl=300)
+_source_ip = "127.0.0.1"  # 将在请求上下文中更新
+
+@app.before_request
+def _update_source_ip():
+    global _source_ip
+    _source_ip = request.remote_addr or "127.0.0.1"
 
 # ─── 模拟预检数据（demo 模式用, 40项） ───
 MOCK_PRECHECK = {
@@ -198,22 +227,27 @@ def api_precheck_commands():
 
 @app.route("/api/precheck/run", methods=["POST"])
 def api_precheck_run():
-    """执行预检 — 双模式（demo/ssh）
+    """执行预检 — 三模式（demo/ssh/hybrid）+ 安全策略
 
     POST JSON:
-      mode: "demo" | "ssh"
+      mode: "demo" | "ssh" | "hybrid"
       nodes: ["10.134.21.190", "10.134.21.191", ...]
-      username: "root" (ssh模式)
-      password: "xxx"  (ssh模式)
+      host_key_policy: "strict" | "warn" | "insecure"（仅ssh/hybrid模式）
+      credential_id: "xxx"       （推荐：通过 /api/credential/store 获取）
+      username/password/key_file （兼容旧接口：直接传凭据）
+      port: 22
+      items: ["hw-raid", ...]    （可选：指定检查项）
 
     返回:
       results: [{item_id, node, mode, status, detail, ...}]
       summary: {pass, warn, fail, total}
+      mode: "demo" | "ssh"
+      security_warning: "..."    （安全策略警告文本）
     """
     data = request.get_json() or {}
     mode = data.get("mode", "demo")
     nodes = data.get("nodes", [])
-    item_ids = data.get("items", None)  # 可选：指定检查项ID列表
+    item_ids = data.get("items", None)
 
     if not nodes:
         return jsonify({"error": "请提供节点列表 (nodes)"}), 400
@@ -225,14 +259,26 @@ def api_precheck_run():
         items = [i for i in PRECHECK_ITEMS if i["id"] in id_set]
 
     if mode == "ssh":
-        username = data.get("username", "root")
-        password = data.get("password", "")
-        key_file = data.get("key_file", "")
+        # SSH 模式：使用安全策略 + 凭据管理
+        host_key_policy = data.get("host_key_policy", "warn")
+        credential_id = data.get("credential_id", "")
         port = int(data.get("port", 22))
-        executor = SSHExecutor(mode="ssh", username=username,
-                               password=password, key_file=key_file, port=port)
+        executor = SSHExecutor(
+            mode="ssh",
+            host_key_policy=host_key_policy,
+            credential_id=credential_id,
+            username=data.get("username", "root"),
+            port=port,
+            source_ip=_source_ip,
+            operator=data.get("operator", "admin"),
+        )
+        # 兼容旧接口：直接传 password/key_file（无 credential_id 时生效）
+        if not credential_id:
+            executor._password = data.get("password", "")
+            executor._key_file = data.get("key_file", "")
     else:
-        executor = SSHExecutor(mode="demo")
+        # demo/hybrid 模式
+        executor = SSHExecutor(mode=mode)
 
     results = executor.run_checks(items, nodes, parallel=(mode == "ssh"))
 
@@ -243,7 +289,73 @@ def api_precheck_run():
         if s in summary:
             summary[s] += 1
 
-    return jsonify({"results": results, "summary": summary, "mode": mode})
+    return jsonify({
+        "results": results,
+        "summary": summary,
+        "mode": mode,
+        "security_warning": executor.security_warning,
+        "audit_count": len(executor.audit_log),
+    })
+
+# ================================================================
+# 凭据管理（安全加固）
+# ================================================================
+@app.route("/api/credential/store", methods=["POST"])
+@require_auth
+def api_credential_store():
+    """加密存储 SSH 凭据，返回一次性的 credential_id
+
+    POST JSON:
+      type: "password" | "key_file"
+      username: "root"
+      password: "xxx"        （type=password 时）
+      key_file: "内容..."     （type=key_file 时）
+      passphrase: "..."      （可选，key_file 加密时）
+
+    返回:
+      credential_id: "abc123..."  （一次性，TTL=300秒）
+      expires_in: 300
+    """
+    data = request.get_json() or {}
+    cred_type = data.get("type", "password")
+    username = data.get("username", "root")
+
+    credential = {"username": username}
+    if cred_type == "password":
+        password = data.get("password", "")
+        if not password:
+            return jsonify({"error": "password 不能为空"}), 400
+        credential["password"] = password
+    elif cred_type == "key_file":
+        key_file = data.get("key_file", "")
+        if not key_file:
+            return jsonify({"error": "key_file 不能为空"}), 400
+        credential["key_file"] = key_file
+        if data.get("passphrase"):
+            credential["passphrase"] = data["passphrase"]
+    else:
+        return jsonify({"error": f"不支持的凭据类型: {cred_type}"}), 400
+
+    credential_id = credential_manager.store(
+        credential_type=cred_type,
+        credential=credential,
+        source_ip=_source_ip,
+    )
+
+    return jsonify({
+        "credential_id": credential_id,
+        "expires_in": 300,
+        "warning": "凭据一次性使用，TTL=300秒。请立即用于 SSH 执行。"
+    })
+
+@app.route("/api/credential/status")
+def api_credential_status():
+    """查询凭据管理器状态（不泄露凭据内容）"""
+    return jsonify({
+        "active_count": credential_manager.active_count,
+        "ttl_seconds": 300,
+        "mode": "加密存储",
+    })
 
 # ================================================================
 # LLD 配置生成（增强版：接入嘉兴引擎 + 保留原有生成器）
