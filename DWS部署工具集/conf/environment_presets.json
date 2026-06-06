@@ -1,0 +1,188 @@
+{
+  "_vendor": {
+    "name": "嘉兴银行 DWS-POC",
+    "source": "dws_engine.py",
+    "import_date": "2026-06-06",
+    "import_tag": "dws-v1-engine-import",
+    "notice": "此文件为供应商数据的 JSON 导出，用于部署工具集。原始数据在 engine/core_engine.py 中维护。"
+  },
+  "ENV_PRESETS": {
+    "DEV": {
+      "name": "DEV 开发环境 (3合设)",
+      "desc": "3节点全角色合设 · 10.134.91.x · 鲲鹏920 96C/512GB · 24×4T HDD",
+      "nodes": [
+        {"hostname": "dwsdev0001", "roles": ["OM","CN","DN","GTM"], "mgmt_ip": "10.134.91.194", "cpu": 96, "mem": 512},
+        {"hostname": "dwsdev0002", "roles": ["CN","DN"], "mgmt_ip": "10.134.91.195", "cpu": 96, "mem": 512},
+        {"hostname": "dwsdev0003", "roles": ["CN","DN"], "mgmt_ip": "10.134.91.196", "cpu": 96, "mem": 512}
+      ],
+      "oms": {"ip": "10.134.91.203", "omweb": "10.134.91.204", "lvs": "10.134.91.205"},
+      "co_deploy": true, "om_count": 2, "cn_count": 3, "dn_count": 3, "gtm_count": 2
+    },
+    "SIT": {
+      "name": "SIT 测试环境 (3合设)",
+      "desc": "3节点全角色合设 · 10.134.134.x · 鲲鹏920 96C/512GB · 12×4T HDD",
+      "nodes": [
+        {"hostname": "dwssit0001", "roles": ["OM","CN","DN","GTM"], "mgmt_ip": "10.134.134.194", "cpu": 96, "mem": 512},
+        {"hostname": "dwssit0002", "roles": ["CN","DN"], "mgmt_ip": "10.134.134.195", "cpu": 96, "mem": 512},
+        {"hostname": "dwssit0003", "roles": ["CN","DN"], "mgmt_ip": "10.134.134.196", "cpu": 96, "mem": 512}
+      ],
+      "oms": {"ip": "10.134.134.203", "omweb": "10.134.134.204", "lvs": "10.134.134.205"},
+      "co_deploy": true, "om_count": 2, "cn_count": 3, "dn_count": 3, "gtm_count": 2
+    },
+    "UAT": {
+      "name": "UAT 验收环境 (3合设)",
+      "desc": "3节点全角色合设 · 10.134.21.x · 鲲鹏920 96C/509GB · 24×4T HDD",
+      "nodes": [
+        {"hostname": "dwsuat0001", "roles": ["OM","CN","DN","GTM"], "mgmt_ip": "10.134.21.190", "cpu": 96, "mem": 509},
+        {"hostname": "dwsuat0002", "roles": ["CN","DN"], "mgmt_ip": "10.134.21.191", "cpu": 96, "mem": 509},
+        {"hostname": "dwsuat0003", "roles": ["CN","DN"], "mgmt_ip": "10.134.21.192", "cpu": 96, "mem": 509}
+      ],
+      "oms": {"ip": "10.134.21.202", "omweb": "10.134.21.203", "lvs": "10.134.21.204"},
+      "co_deploy": true, "om_count": 2, "cn_count": 3, "dn_count": 3, "gtm_count": 2
+    },
+    "PREPROD": {
+      "name": "生产环境 (2+5)",
+      "desc": "2管控(64C/256G)+5数据(96C/512G) · 双平面 · 全闪存20×3.84T SSD",
+      "nodes": [
+        {"hostname": "dws-preprod-mn-01", "roles": ["OM"], "mgmt_ip": "10.134.49.10", "biz_ip": "10.134.50.10", "cpu": 64, "mem": 256},
+        {"hostname": "dws-preprod-mn-02", "roles": ["OM","GTM"], "mgmt_ip": "10.134.49.11", "biz_ip": "10.134.50.11", "cpu": 64, "mem": 256},
+        {"hostname": "dws-preprod-dn-01", "roles": ["CN","DN"], "mgmt_ip": "10.134.49.49", "biz_ip": "10.134.50.49", "cpu": 96, "mem": 512},
+        {"hostname": "dws-preprod-dn-02", "roles": ["CN","DN"], "mgmt_ip": "10.134.49.50", "biz_ip": "10.134.50.50", "cpu": 96, "mem": 512},
+        {"hostname": "dws-preprod-dn-03", "roles": ["DN"], "mgmt_ip": "10.134.49.51", "biz_ip": "10.134.50.51", "cpu": 96, "mem": 512},
+        {"hostname": "dws-preprod-dn-04", "roles": ["DN"], "mgmt_ip": "10.134.49.52", "biz_ip": "10.134.50.52", "cpu": 96, "mem": 512},
+        {"hostname": "dws-preprod-dn-05", "roles": ["DN"], "mgmt_ip": "10.134.49.53", "biz_ip": "10.134.50.53", "cpu": 96, "mem": 512}
+      ],
+      "co_deploy": false, "om_count": 2, "cn_count": 2, "dn_count": 5, "gtm_count": 2
+    }
+  },
+  "ARCH_SCENARIOS": {
+    "dev": {
+      "name": "DEV 开发环境 (3合设)",
+      "desc": "3节点全角色合设 · 10.134.91.x · 鲲鹏920 96C/512GB · 12×4T HDD",
+      "om": 2, "gtm": 2, "cn": 3, "dn": 3, "co_deploy": true, "physical_nodes": 3,
+      "hw": {"cpu": "2×鲲鹏920 48C", "ram": "512GB (8×64G)", "disk": "2×960G SSD + 12×4T HDD", "nic": "4×10GE", "raid": "RAID5 · 2逻辑盘"}
+    },
+    "sit": {
+      "name": "SIT 测试环境 (3合设)",
+      "desc": "3节点全角色合设 · 10.134.134.x · 鲲鹏920 96C/512GB · 12×4T HDD RAID5",
+      "om": 2, "gtm": 2, "cn": 3, "dn": 3, "co_deploy": true, "physical_nodes": 3,
+      "hw": {"cpu": "2×鲲鹏920 48C", "ram": "512GB (8×64G)", "disk": "2×960G SSD + 12×4T HDD", "nic": "4×10GE", "raid": "RAID5 · 2逻辑盘"}
+    },
+    "uat": {
+      "name": "UAT 验收环境 (3合设)",
+      "desc": "3节点全角色合设 · 10.134.21.x · 鲲鹏920 96C/509GB · 24×4T HDD RAID5",
+      "om": 2, "gtm": 2, "cn": 3, "dn": 3, "co_deploy": true, "physical_nodes": 3,
+      "hw": {"cpu": "2×鲲鹏920 48C", "ram": "512GB (8×64G)", "disk": "2×960G SSD + 24×4T HDD", "nic": "4×10GE", "raid": "RAID5 · 4逻辑盘"}
+    },
+    "preprod": {
+      "name": "生产环境 (2+5 分离)",
+      "desc": "2管控(64C/256G RAID1)+5数据(96C/512G RAID5) · 双平面 · 全闪存20×3.84T SSD",
+      "om": 2, "gtm": 2, "cn": 2, "dn": 5, "co_deploy": false,
+      "hw_ctrl": {"cpu": "2×鲲鹏920 32C", "ram": "256GB (4×64G)", "disk": "2×480G SSD + 4×960G SSD", "nic": "4×10GE", "raid": "RAID1"},
+      "hw_data": {"cpu": "2×鲲鹏920 48C", "ram": "512GB (8×64G)", "disk": "2×960G SSD + 20×3.84T SSD", "nic": "4×10GE", "raid": "RAID5 · 4逻辑盘"}
+    },
+    "expand": {
+      "name": "扩容场景 (2+8 大规模)",
+      "desc": "2管控+8数据 · 未来大规模扩容 · 全闪存",
+      "om": 2, "gtm": 2, "cn": 3, "dn": 8, "co_deploy": false,
+      "hw_ctrl": {"cpu": "2×鲲鹏920 32C", "ram": "256GB (4×64G)", "disk": "2×480G SSD + 4×960G SSD", "nic": "4×10GE", "raid": "RAID1"},
+      "hw_data": {"cpu": "2×鲲鹏920 48C", "ram": "512GB (8×64G)", "disk": "2×960G SSD + 20×3.84T SSD", "nic": "4×10GE", "raid": "RAID5"}
+    },
+    "custom": {
+      "name": "自定义规模",
+      "desc": "自由调整 OM/CN/DN 数量",
+      "om": 2, "gtm": 2, "cn": 2, "dn": 3, "co_deploy": false
+    }
+  },
+  "ARCH_ENV_MAP": {"DEV": "dev", "SIT": "sit", "UAT": "uat", "PREPROD": "preprod"},
+  "ROLE_META": {
+    "OM":  {"label": "OM 管理",   "color": "#1a73e8", "shape": "hexagon"},
+    "CN":  {"label": "Coordinator", "color": "#10b981", "shape": "rounded"},
+    "DN":  {"label": "DataNode",    "color": "#6366f1", "shape": "rounded"},
+    "GTM": {"label": "GTM",       "color": "#f59e0b", "shape": "diamond"}
+  },
+  "VERSION_SELECTION": {
+    "mrs": {"version": "3.5.1-LTS", "reason": "实际部署版本"},
+    "dws": {"version": "9.1.0", "reason": "稳定版本，POC验证通过"},
+    "upgrade_path": "MRS 3.5.1→3.6.0 (后续升级), DWS 9.1.0→9.1.1 (后续升级)",
+    "os": "Kylin-V10-SP3 (20221125)"
+  },
+  "HARDWARE_BATCHES": [
+    {"batch": "1", "type": "生产/准生产 MRS", "qty": 6, "cpu": "2×鲲鹏920 32C", "ram": "8×64G DDR4", "disk": "2×960G SSD + 14×8T HDD", "note": "管理+HDFS+Yarn+Hive+Spark+Flink"},
+    {"batch": "2", "type": "生产/准生产 DWS", "qty": 6, "cpu": "2×鲲鹏920 48C", "ram": "8×64G DDR4", "disk": "2×960G SSD + 12×4T HDD", "note": "管控+数据合设"},
+    {"batch": "3", "type": "UAT MRS", "qty": 3, "cpu": "2×鲲鹏920 32C", "ram": "8×64G DDR4", "disk": "2×960G SSD + 24×8T HDD", "note": "用户验收测试"},
+    {"batch": "4", "type": "UAT DWS", "qty": 3, "cpu": "2×鲲鹏920 48C", "ram": "8×64G DDR4", "disk": "2×960G SSD + 24×4T HDD", "note": "用户验收测试"},
+    {"batch": "5", "type": "MRS+DWS 管控节点", "qty": 10, "cpu": "2×鲲鹏920 32C", "ram": "4×64G DDR4", "disk": "2×480G SSD + 4×960G SSD", "note": "管控节点，低配内存"},
+    {"batch": "6", "type": "MRS ES+Kafka", "qty": 6, "cpu": "2×鲲鹏920 32C", "ram": "8×64G DDR4", "disk": "2×960G SSD + 12×1.92T SSD", "note": "实时数据总线"},
+    {"batch": "7", "type": "MRS 数据节点", "qty": 8, "cpu": "2×鲲鹏920 32C", "ram": "8×64G DDR4", "disk": "2×960G SSD + 24×7.68T SSD", "note": "大容量数据存储"},
+    {"batch": "8", "type": "DWS 生产数据节点", "qty": 10, "cpu": "2×鲲鹏920 48C", "ram": "8×64G DDR4", "disk": "2×960G SSD + 20×3.84T SSD", "note": "全闪存高性能MPP"}
+  ],
+  "EQUIPMENT_LIST": {
+    "servers": [
+      {"type": "DWS管控节点", "model": "鲲鹏920 2×32C", "qty": 2, "ram": "256GB (8×32GB)", "disk": "2×480GB SSD + 4×960GB SSD", "nic": "4×10GE", "hosts": "DWS-MN-01, DWS-MN-02", "rack": "9号柜/8号柜"},
+      {"type": "DWS数据节点", "model": "鲲鹏920 2×32C", "qty": 3, "ram": "512GB (16×32GB)", "disk": "2×480GB SSD + 12×3.84TB SSD", "nic": "4×10GE", "hosts": "DWS-DN-01, DWS-DN-02, DWS-DN-03", "rack": "8号柜×2, 9号柜×1"},
+      {"type": "MRS管控节点", "model": "鲲鹏920 2×32C", "qty": 2, "ram": "256GB (8×32GB)", "disk": "2×480GB SSD + 4×960GB SSD", "nic": "4×10GE", "hosts": "MRS-MN-01, MRS-MN-02", "rack": "8号柜/9号柜"},
+      {"type": "MRS控制节点", "model": "鲲鹏920 2×32C", "qty": 3, "ram": "256GB (8×32GB)", "disk": "2×480GB SSD + 4×960GB SSD", "nic": "4×10GE", "hosts": "MRS-CN-01~03", "rack": "8号柜×2, 9号柜×1"},
+      {"type": "MRS流处理节点", "model": "鲲鹏920 2×32C", "qty": 3, "ram": "256GB (8×32GB)", "disk": "2×480GB SSD + 4×960GB SSD", "nic": "4×10GE", "hosts": "MRS-Flink-01~03", "rack": "9号柜"},
+      {"type": "MRS计算节点", "model": "鲲鹏920 2×32C", "qty": 3, "ram": "512GB (16×32GB)", "disk": "2×480GB SSD + 12×8TB HDD", "nic": "4×10GE", "hosts": "MRS-Spark-01~03", "rack": "9号柜×1, 8号柜×2"},
+      {"type": "DataArk节点", "model": "鲲鹏920 2×24C", "qty": 4, "ram": "128GB (8×16GB)", "disk": "1×960GB SSD", "nic": "2×10GE", "hosts": "DataArk-01~04", "rack": "9号柜/8号柜/7号柜/6号柜"}
+    ],
+    "network": [
+      {"type": "核心交换机", "model": "CE8850-64CQ-EI", "qty": 2, "ports": "64×100GE QSFP28", "role": "Core-1/2", "rack": "8号柜2U / 4号柜2U"},
+      {"type": "管理汇聚交换机", "model": "CE6881H-48S6CQ-B", "qty": 2, "ports": "48×10GE SFP+ + 6×100GE", "role": "管理平面", "rack": "9号柜31U / 10号柜31U"},
+      {"type": "业务汇聚交换机", "model": "CE6881H-48S6CQ-B", "qty": 2, "ports": "48×10GE SFP+ + 6×100GE", "role": "业务平面", "rack": "9号柜33U / 10号柜33U"},
+      {"type": "BMC管理交换机", "model": "CE5855-48T4XS", "qty": 2, "ports": "48×GE + 4×10GE SFP+", "role": "BMC带外管理", "rack": "9号柜29U / 10号柜29U"}
+    ],
+    "security": [
+      {"type": "防火墙", "model": "USG6635F", "qty": 2, "ports": "8×GE + 4×GE RJ45 + 10×10GE SFP+", "role": "FW-1/2", "rack": "8号柜5U / 4号柜5U", "features": "IPS+AV+URL过滤, 240G SSD"}
+    ],
+    "cabling": {
+      "management": [
+        {"from": "Core-1 100GE1/0/1", "to": "管理汇聚-1 100G1/0/5", "type": "100GE MPO"},
+        {"from": "Core-1 100GE1/0/2", "to": "管理汇聚-2 100G1/0/5", "type": "100GE MPO"},
+        {"from": "Core-2 100GE1/0/1", "to": "管理汇聚-1 100G1/0/6", "type": "100GE MPO"},
+        {"from": "Core-2 100GE1/0/2", "to": "管理汇聚-2 100G1/0/6", "type": "100GE MPO"},
+        {"from": "管理汇聚-1 100GE1/0/3", "to": "管理汇聚-2 100GE1/0/3", "type": "40GE MPO peerlink"},
+        {"from": "管理汇聚-1 100GE1/0/4", "to": "管理汇聚-2 100GE1/0/4", "type": "40GE MPO peerlink"}
+      ],
+      "service": [
+        {"from": "Core-1 100GE1/0/3", "to": "业务汇聚-1 100G1/0/5", "type": "100GE MPO"},
+        {"from": "Core-1 100GE1/0/4", "to": "业务汇聚-2 100G1/0/5", "type": "100GE MPO"},
+        {"from": "Core-2 100GE1/0/3", "to": "业务汇聚-1 100G1/0/6", "type": "100GE MPO"},
+        {"from": "Core-2 100GE1/0/4", "to": "业务汇聚-2 100G1/0/6", "type": "100GE MPO"},
+        {"from": "业务汇聚-1 100GE1/0/3", "to": "业务汇聚-2 100GE1/0/3", "type": "40GE MPO peerlink"},
+        {"from": "业务汇聚-1 100GE1/0/4", "to": "业务汇聚-2 100GE1/0/4", "type": "40GE MPO peerlink"}
+      ]
+    }
+  },
+  "RACK_LAYOUT": [
+    {"rack": "9号柜 (IT)", "u_start": 42, "devices": [
+      {"u": 33, "name": "业务汇聚交换机-1", "h": 1},
+      {"u": 31, "name": "管理汇聚交换机-1", "h": 1},
+      {"u": 29, "name": "BMC交换机-1", "h": 1},
+      {"u": 27, "name": "DataArk-01", "h": 2},
+      {"u": 24, "name": "MRS-MN-02", "h": 2},
+      {"u": 21, "name": "MRS-CN-03", "h": 2},
+      {"u": 18, "name": "MRS-Spark-01", "h": 2},
+      {"u": 15, "name": "MRS-Flink-01", "h": 2},
+      {"u": 12, "name": "MRS-Flink-02", "h": 2},
+      {"u": 9,  "name": "MRS-Flink-03", "h": 2},
+      {"u": 6,  "name": "DWS-DN-03", "h": 2},
+      {"u": 3,  "name": "DWS-MN-02", "h": 2}
+    ]},
+    {"rack": "8号柜 (IT)", "u_start": 42, "devices": [
+      {"u": 33, "name": "业务汇聚交换机-2", "h": 1},
+      {"u": 31, "name": "管理汇聚交换机-2", "h": 1},
+      {"u": 29, "name": "BMC交换机-2", "h": 1},
+      {"u": 27, "name": "DataArk-02", "h": 2},
+      {"u": 24, "name": "MRS-MN-01", "h": 2},
+      {"u": 21, "name": "MRS-CN-01", "h": 2},
+      {"u": 18, "name": "MRS-CN-02", "h": 2},
+      {"u": 15, "name": "MRS-Spark-02", "h": 2},
+      {"u": 12, "name": "MRS-Spark-03", "h": 2},
+      {"u": 9,  "name": "DWS-DN-02", "h": 2},
+      {"u": 6,  "name": "DWS-DN-01", "h": 2},
+      {"u": 3,  "name": "DWS-MN-01", "h": 2}
+    ]}
+  ]
+}

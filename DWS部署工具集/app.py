@@ -7,11 +7,12 @@ DWS 智能部署系统 - Web UI (Flask)
   engine       — 真实引擎驱动（需 SSH 执行器）
 
 架构:
-  engine/core_engine.py  — 嘉兴银行 DWS-POC 引擎（一字不改，1177行）
-  core/precheck_engine.py — 预检规则（17项→逐步扩展）
+  engine/core_engine.py  — ⚠️ VENDOR: 嘉兴银行 DWS-POC（一字不改）
+  core/precheck_engine.py — 预检规则（42项）
   core/verifier.py        — 部署后验证（10项）
 
-集成: 预检 / 配置生成 / 部署引导 / 架构图 / 设备清单 / 审计日志
+集成: 预检 / 配置生成 / 部署引导 / 架构图 / 设备清单 / 审计日志 / 交付报告
+生产化改造: B-0 ~ B-7 (参见 DEVELOPMENT_PLAN.md)
 """
 
 import os, sys, json
@@ -20,7 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 
-# ── 原有规则模块 ──
+# ── 自有规则模块 ──
 from core.precheck_engine import PRECHECK_ITEMS, PRECHECK_PHASES
 from core.config_generator import DWSConfig, generate_preinstall_ini
 from core.verifier import VERIFY_ITEMS
@@ -34,13 +35,71 @@ from engine.report_generator import (
     generate_deliverable_bundle
 )
 
-# ── 嘉兴引擎（一字不改） ──
+# ── 嘉兴引擎（vendor 代码，一字不改） ──
 from engine.core_engine import (
     get_or_create_session, reset_session, _init_phases,
-    get_architecture_data, ARCH_SCENARIOS, ROLE_META,
-    switch_environment, ENV_PRESETS, EQUIPMENT_LIST, RACK_LAYOUT,
-    ARCH_ENV_MAP, DEPLOY_TOPOLOGIES,
+    get_architecture_data, switch_environment,
+    DEPLOY_TOPOLOGIES,
 )
+
+# ── 供应商数据加载器（JSON 优先，fallback 到 vendor） ──
+_VENDOR_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "conf", "environment_presets.json")
+_vendor_data = None
+
+def _load_vendor_data(key: str, default=None):
+    """加载供应商预设数据
+
+    优先级: conf/environment_presets.json > core_engine.py (vendor fallback)
+    这样新增银行预设只需编辑 JSON 文件，无需修改 vendor 代码。
+    """
+    global _vendor_data
+    if _vendor_data is None:
+        if os.path.exists(_VENDOR_DATA_PATH):
+            try:
+                with open(_VENDOR_DATA_PATH, "r", encoding="utf-8") as f:
+                    _vendor_data = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                _vendor_data = {}
+        else:
+            _vendor_data = {}
+    if key in _vendor_data:
+        return _vendor_data[key]
+    # fallback: 从 vendor 引擎获取
+    return _fallback_vendor_data(key, default)
+
+def _fallback_vendor_data(key, default=None):
+    """JSON 加载失败时的 fallback 到 vendor 引擎"""
+    try:
+        if key == "ENV_PRESETS":
+            from engine.core_engine import ENV_PRESETS
+            return ENV_PRESETS
+        elif key == "ARCH_SCENARIOS":
+            from engine.core_engine import ARCH_SCENARIOS
+            return ARCH_SCENARIOS
+        elif key == "ARCH_ENV_MAP":
+            from engine.core_engine import ARCH_ENV_MAP
+            return ARCH_ENV_MAP
+        elif key == "ROLE_META":
+            from engine.core_engine import ROLE_META
+            return ROLE_META
+        elif key == "EQUIPMENT_LIST":
+            from engine.core_engine import EQUIPMENT_LIST
+            return EQUIPMENT_LIST
+        elif key == "RACK_LAYOUT":
+            from engine.core_engine import RACK_LAYOUT
+            return RACK_LAYOUT
+        else:
+            return default
+    except (ImportError, AttributeError):
+        return default
+
+# 导出供路由使用（优先 JSON，fallback vendor）
+ENV_PRESETS = _load_vendor_data("ENV_PRESETS", {})
+ARCH_SCENARIOS = _load_vendor_data("ARCH_SCENARIOS", {})
+ARCH_ENV_MAP = _load_vendor_data("ARCH_ENV_MAP", {})
+ROLE_META = _load_vendor_data("ROLE_META", {})
+EQUIPMENT_LIST = _load_vendor_data("EQUIPMENT_LIST", {})
+RACK_LAYOUT = _load_vendor_data("RACK_LAYOUT", [])
 
 app = Flask(__name__)
 app.jinja_env.auto_reload = True

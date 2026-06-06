@@ -1,4 +1,17 @@
-"""DWS 部署交互助手 — 核心引擎"""
+"""
+DWS 部署交互助手 — 核心引擎
+
+⚠️ VENDORED CODE — 源自嘉兴银行 DWS-POC (dws_engine.py)
+==============================================================
+来源:  02-POC与售前/DWS-POC/嘉兴银行DWS-POC/dws_engine.py
+导入: 2026-06-06 (dws-v1-engine-import, commit b7c052e)
+规则: 此文件不予修改 — 部署工具集的所有扩展在 app.py 层包装
+      或通过 conf/environment_presets.json 配置覆盖。
+同步: 嘉兴 POC 有更新时，git diff 对比后整体替换。
+详情: 参见 VENDOR_NOTICE.md
+==============================================================
+"""
+
 import json
 import time
 import uuid
