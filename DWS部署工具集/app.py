@@ -11,8 +11,9 @@ DWS 智能部署系统 - Web UI (Flask)
   core/precheck_engine.py — 预检规则（42项）
   core/verifier.py        — 部署后验证（10项）
 
-集成: 预检 / 配置生成 / 部署引导 / 架构图 / 设备清单 / 审计日志 / 交付报告
-生产化改造: B-0 ~ B-7 (参见 DEVELOPMENT_PLAN.md)
+集成: 预检 / 配置生成 / 部署引导 / 架构图 / 设备清单 / 审计日志 / 交付报告 / 会话管理
+生产化改造: B-0 ~ B-7 全部完成 (参见 DEVELOPMENT_PLAN.md)
+版本: v2.0
 """
 
 import os, sys, json
