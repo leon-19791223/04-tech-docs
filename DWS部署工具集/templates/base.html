@@ -78,13 +78,29 @@ table tr:hover td{background:#F8F9FA}
     <a href="/config" class="{% if request.path == '/config' %}active{% endif %}"><span class="ni">&#x2699;</span> 配置生成</a>
     <a href="/deploy" class="{% if request.path == '/deploy' %}active{% endif %}"><span class="ni">&#x1F680;</span> 部署引导</a>
     <a href="/verify" class="{% if request.path == '/verify' %}active{% endif %}"><span class="ni">&#x1F50D;</span> 部署验证</a>
+    <div class="nav-label">引擎工具</div>
+    <a href="/architecture" class="{% if request.path == '/architecture' %}active{% endif %}"><span class="ni">&#x1F3D7;</span> 架构图</a>
+    <a href="/equipment" class="{% if request.path == '/equipment' %}active{% endif %}"><span class="ni">&#x1F4E1;</span> 设备清单</a>
+    <a href="/audit_log" class="{% if request.path == '/audit_log' %}active{% endif %}"><span class="ni">&#x1F4DD;</span> 审计日志</a>
+    <a href="/templates" class="{% if request.path == '/templates' %}active{% endif %}"><span class="ni">&#x1F4C4;</span> 配置模板</a>
+    <div class="nav-label">交付</div>
+    <a href="/deliverables" class="{% if request.path == '/deliverables' %}active{% endif %}"><span class="ni">&#x1F4E6;</span> 交付物</a>
     <div class="nav-label">参考</div>
     <a href="/flow" class="{% if request.path == '/flow' %}active{% endif %}"><span class="ni">&#x1F4C5;</span> 部署流程</a>
     <a href="/checklist" class="{% if request.path == '/checklist' %}active{% endif %}"><span class="ni">&#x1F4CB;</span> 检查清单</a>
   </nav>
   <div class="sidebar-footer">
-    <a href="http://127.0.0.1:8080">&#x2190; 返回门户</a>
-    v1.0 &middot; 2026
+    <div style="margin-bottom:8px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.25);margin-bottom:6px;">&#x73AF;&#x5883;&#x5207;&#x6362;</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <a href="/env/switch/DEV" style="font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);text-decoration:none;{{ 'font-weight:700;color:#fff;background:rgba(74,95,193,0.25);' if current_env=='DEV' else '' }}">DEV</a>
+        <a href="/env/switch/SIT" style="font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);text-decoration:none;{{ 'font-weight:700;color:#fff;background:rgba(74,95,193,0.25);' if current_env=='SIT' else '' }}">SIT</a>
+        <a href="/env/switch/UAT" style="font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);text-decoration:none;{{ 'font-weight:700;color:#fff;background:rgba(74,95,193,0.25);' if current_env=='UAT' else '' }}">UAT</a>
+        <a href="/env/switch/PREPROD" style="font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);text-decoration:none;{{ 'font-weight:700;color:#fff;background:rgba(74,95,193,0.25);' if current_env=='PREPROD' else '' }}">PROD</a>
+      </div>
+    </div>
+    <a href="http://127.0.0.1:8080" style="display:block;font-size:11px;color:rgba(255,255,255,0.35);text-decoration:none;padding:4px 0;">&#x2190; 返回门户</a>
+    v2.0 &middot; 2026
   </div>
 </div>
 <div class="main">
