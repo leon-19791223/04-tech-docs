@@ -695,8 +695,48 @@ def api_architecture():
     current_env = get_or_create_session().config.get("environment", "UAT")
     default_scenario = ARCH_ENV_MAP.get(current_env, "uat")
 
+    # 构建物理节点分组（按物理机器分组，合设角色归入同一节点）
+    nodes = result.get("nodes", [])
+    physical_map = {}
+    for n in nodes:
+        co_host = n.get("co_host")
+        if co_host:
+            # 这是合设的虚拟角色，找到物理节点
+            if co_host in physical_map:
+                physical_map[co_host]["virtual_roles"].append({
+                    "id": n["id"], "role": n["role"]
+                })
+                physical_map[co_host]["roles_raw"].append(n["role"])
+        else:
+            # 物理节点
+            key = n["id"]
+            # 使用 n["roles"] 完整角色列表（n["role"] 只是主角色）
+            full_roles = n.get("roles", [n["role"]])
+            physical_map[key] = {
+                "id": key,
+                "hostname": n.get("hostname", key),
+                "mgmt_ip": n.get("mgmt_ip", ""),
+                "biz_ip": n.get("biz_ip", ""),
+                "is_primary": n.get("is_primary", False),
+                "is_control": "OM" in full_roles,
+                "roles_raw": list(full_roles),
+                "virtual_roles": [],
+            }
+
+    physical_nodes = []
+    for key, pn in physical_map.items():
+        pn["roles"] = sorted(set(pn["roles_raw"]))
+        pn["role_count"] = len(pn["roles"])
+        pn["role_labels"] = [ROLE_META.get(r, {}).get("label", r) for r in pn["roles"]]
+        pn["role_colors"] = [ROLE_META.get(r, {}).get("color", "#666") for r in pn["roles"]]
+        physical_nodes.append(pn)
+
+    # 按管控节点→数据节点排序
+    physical_nodes.sort(key=lambda x: (0 if x["is_control"] else 1, x["hostname"]))
+
     return jsonify({
         **result,
+        "physical_nodes": physical_nodes,
         "scenarios": {k: {"name": v["name"], "desc": v["desc"]} for k, v in ARCH_SCENARIOS.items()},
         "role_meta": {k: v for k, v in ROLE_META.items()},
         "hardware": {"common": hw, "ctrl": hw_ctrl, "data": hw_data},
