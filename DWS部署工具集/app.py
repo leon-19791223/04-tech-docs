@@ -39,6 +39,13 @@ from engine.report_generator import (
     generate_deliverable_bundle
 )
 
+# ── 配置校验器 ──
+from engine.config_validator import get_validator
+from engine.report_generator import (
+    ReportContext, DeliveryMetadata,
+    generate_deliverable_bundle
+)
+
 # ── 嘉兴引擎（vendor 代码，一字不改） ──
 from engine.core_engine import (
     get_or_create_session, reset_session, _init_phases,
@@ -393,9 +400,19 @@ def config():
 
 @app.route("/api/config/generate", methods=["POST"])
 def api_config_generate():
-    """生成 preinstall.ini — 双模式：简单/引擎"""
+    """生成 preinstall.ini — 双模式：简单/引擎 + 参数校验"""
     data = request.get_json() or {}
     use_engine = data.get("use_engine", False)
+
+    # 参数校验（非 engine 模式）
+    if not use_engine:
+        validator = get_validator()
+        errors = validator.validate(data)
+        if errors:
+            return jsonify({
+                "error": "配置参数校验失败",
+                "errors": [e.to_dict() for e in errors],
+            }), 400
 
     if use_engine:
         # 使用嘉兴引擎生成完整 LLD 配置
