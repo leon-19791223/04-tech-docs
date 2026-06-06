@@ -22,9 +22,11 @@ hybrid模式: 可 SSH 的节点自动执行，不可达的显示命令文本
 import re
 import time
 import logging
+import socket
 from typing import Optional
 from dataclasses import dataclass, field
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
@@ -178,28 +180,55 @@ class SSHExecutor:
             return self._run_demo(item, node_ip)
         return self._run_ssh(item, node_ip)
 
-    def run_checks(self, items: list, node_ips: list, parallel: bool = True) -> list:
+    def run_checks(self, items: list, node_ips: list, parallel: bool = True,
+                   max_workers: int = 8, retry_config: Optional[dict] = None) -> list:
         """批量执行预检项
 
         Args:
             items: PRECHECK_ITEMS 列表
             node_ips: 节点 IP 列表
-            parallel: 是否并行执行（ssh 模式下生效）
+            parallel: 是否并行执行（ssh/hybrid 模式下生效）
+            max_workers: 并行最大线程数（默认 8）
+            retry_config: 重试配置 {"max_retries": 2, "cmd_timeout": 60}
 
         Returns: [{"item_id":..., "node":..., "status":..., ...}, ...]
         """
-        results = []
+        self._retry_config = retry_config or {"max_retries": 0, "cmd_timeout": 60}
+
         if self.mode == self.MODE_DEMO or not parallel:
-            # 串行执行
+            # 串行执行（demo 模式）
+            results = []
             for item in items:
                 for ip in node_ips:
                     results.append(self.run_check(item, ip))
-        else:
-            # ssh 模式下暂不实现真并行，先串行（避免连接风暴）
-            # 后续可升级为 ThreadPoolExecutor
-            for item in items:
-                for ip in node_ips:
-                    results.append(self.run_check(item, ip))
+            return results
+
+        # SSH/混合模式：真并行执行
+        tasks = [(item, ip) for item in items for ip in node_ips]
+        results = [None] * len(tasks)
+        completed = 0
+
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            future_map = {}
+            for i, (item, ip) in enumerate(tasks):
+                future = pool.submit(self._run_ssh, item, ip)
+                future_map[future] = i
+
+            for future in as_completed(future_map):
+                idx = future_map[future]
+                try:
+                    results[idx] = future.result()
+                except Exception as e:
+                    item, ip = tasks[idx]
+                    results[idx] = {
+                        "item_id": item.get("id", ""),
+                        "item_name": item.get("name", ""),
+                        "node": ip, "mode": "ssh",
+                        "status": "fail",
+                        "detail": f"执行异常: {str(e)[:100]}",
+                    }
+                completed += 1
+
         return results
 
     def format_node_commands(self, items: list, node_ips: list) -> str:
@@ -322,11 +351,16 @@ class SSHExecutor:
             self._client = None
             raise ConnectionError(f"无法连接到 {host}:{self.port} — {e}")
 
-    def _exec_cmd(self, cmd: str) -> tuple:
-        """在已连接的节点上执行单条命令，返回 (stdout, stderr, exit_code)"""
+    def _exec_cmd(self, cmd: str, timeout: int = 60) -> tuple:
+        """在已连接的节点上执行单条命令，返回 (stdout, stderr, exit_code)
+
+        Args:
+            cmd: 要执行的命令
+            timeout: 超时秒数（默认 60s，可通过 retry_config 配置）
+        """
         if not self._client:
             raise RuntimeError("未连接，请先调用 connect()")
-        stdin, stdout, stderr = self._client.exec_command(cmd, timeout=30)
+        stdin, stdout, stderr = self._client.exec_command(cmd, timeout=timeout)
         exit_code = stdout.channel.recv_exit_status()
         return stdout.read().decode("utf-8", errors="replace"), \
                stderr.read().decode("utf-8", errors="replace"), \
@@ -608,86 +642,72 @@ class SSHExecutor:
         return {"status": "warn", "detail": stdout_clean[:100] if stdout_clean else "无输出"}
 
     def _run_ssh(self, item: dict, node_ip: str) -> dict:
-        """ssh 模式：真实执行并解析结果"""
+        """ssh 模式：真实执行并解析结果（支持自动重试）"""
         cmd = item.get("check_cmd", "")
         if not cmd:
             return {
                 "item_id": item.get("id", ""),
                 "item_name": item.get("name", ""),
                 "category": item.get("category", ""),
-                "node": node_ip,
-                "mode": "ssh",
-                "status": "fail",
-                "detail": "无检查命令",
+                "node": node_ip, "mode": "ssh",
+                "status": "fail", "detail": "无检查命令",
             }
 
-        try:
-            connected = self._connect(node_ip)
-            if not connected:
-                raise ConnectionError(f"无法连接到 {node_ip}")
+        retry_config = getattr(self, '_retry_config', {"max_retries": 0, "cmd_timeout": 60})
+        max_retries = retry_config.get("max_retries", 0)
+        cmd_timeout = retry_config.get("cmd_timeout", 60)
+        last_error = None
 
-            self._last_host = node_ip
-            start = time.time()
-            stdout, stderr, exit_code = self._exec_cmd(cmd)
-            elapsed = round(time.time() - start, 1)
+        for attempt in range(max_retries + 1):
+            try:
+                if not self._connect(node_ip):
+                    raise ConnectionError(f"无法连接到 {node_ip}")
+                self._last_host = node_ip
+                start = time.time()
+                stdout, stderr, exit_code = self._exec_cmd(cmd, timeout=cmd_timeout)
+                elapsed = round(time.time() - start, 1)
+                parsed = self._parse_result(item, stdout)
+                status, detail = parsed["status"], parsed["detail"]
+                if exit_code != 0 and status == "pass":
+                    status, detail = "warn", f"{detail} (exit_code={exit_code})"
+                self._close()
+                self._add_audit_record(node_ip, cmd, exit_code, elapsed, status != "fail", detail[:100])
+                return {
+                    "item_id": item.get("id", ""), "item_name": item.get("name", ""),
+                    "category": item.get("category", ""), "node": node_ip, "mode": "ssh",
+                    "status": status, "detail": detail, "stdout": stdout[:500],
+                    "stderr": stderr[:200] if stderr else "", "exit_code": exit_code,
+                    "elapsed_sec": elapsed, "attempt": attempt + 1,
+                    "solution": item.get("solution", "") if status != "pass" else "",
+                }
+            except (socket.timeout, ConnectionError, OSError) as e:
+                last_error = e
+                self._close()
+                if attempt < max_retries:
+                    time.sleep(min(1.0 * (2 ** attempt), 5.0))
+                    continue
+            except ImportError:
+                self._close()
+                return {
+                    "item_id": item.get("id", ""), "item_name": item.get("name", ""),
+                    "category": item.get("category", ""), "node": node_ip, "mode": "ssh",
+                    "status": "fail", "detail": "paramiko 未安装。执行: pip install paramiko",
+                }
+            except Exception as e:
+                self._close()
+                last_error = e
+                if attempt < max_retries:
+                    time.sleep(1.0)
+                    continue
+                break
 
-            parsed = self._parse_result(item, stdout)
-            status = parsed["status"]
-            detail = parsed["detail"]
-
-            # 如果 exit_code != 0 且解析结果是 pass，降级为 warn
-            if exit_code != 0 and status == "pass":
-                status = "warn"
-                detail = f"{detail} (exit_code={exit_code})"
-
-            self._close()
-
-            # 记录审计
-            self._add_audit_record(
-                target_host=node_ip,
-                command=cmd,
-                exit_code=exit_code,
-                duration_sec=elapsed,
-                success=(status != "fail"),
-                detail=detail[:100],
-            )
-
-            return {
-                "item_id": item.get("id", ""),
-                "item_name": item.get("name", ""),
-                "category": item.get("category", ""),
-                "node": node_ip,
-                "mode": "ssh",
-                "status": status,
-                "detail": detail,
-                "stdout": stdout[:500],
-                "stderr": stderr[:200] if stderr else "",
-                "exit_code": exit_code,
-                "elapsed_sec": elapsed,
-                "solution": item.get("solution", "") if status != "pass" else "",
-            }
-
-        except ImportError:
-            return {
-                "item_id": item.get("id", ""),
-                "item_name": item.get("name", ""),
-                "category": item.get("category", ""),
-                "node": node_ip,
-                "mode": "ssh",
-                "status": "fail",
-                "detail": "paramiko 未安装。执行: pip install paramiko",
-            }
-        except Exception as e:
-            self._close()
-            return {
-                "item_id": item.get("id", ""),
-                "item_name": item.get("name", ""),
-                "category": item.get("category", ""),
-                "node": node_ip,
-                "mode": "ssh",
-                "status": "fail",
-                "detail": str(e)[:200],
-            }
+        self._add_audit_record(node_ip, cmd, -1, 0, False, str(last_error)[:100] if last_error else "未知错误")
+        return {
+            "item_id": item.get("id", ""), "item_name": item.get("name", ""),
+            "category": item.get("category", ""), "node": node_ip, "mode": "ssh",
+            "status": "fail",
+            "detail": f"重试 {max_retries} 次后失败: {str(last_error)[:100] if last_error else '未知'}",
+        }
 
     def __enter__(self):
         return self
