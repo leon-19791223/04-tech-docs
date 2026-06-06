@@ -5,7 +5,10 @@
 <div class="card">
   <div class="card-hdr">
     <span class="card-title"><span class="ti">&#x2705;</span> DWS 部署预检 (42项)</span>
-    <div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <select id="scenarioSelect" onchange="switchScenario(this.value)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--gray3);font-size:12px;background:#fff;">
+        <option value="">加载场景...</option>
+      </select>
       <span class="tag tg-grn" id="pc-pass">0 通过</span>
       <span class="tag tg-org" id="pc-warn">0 警告</span>
       <span class="tag tg-red" id="pc-fail">0 失败</span>
@@ -70,8 +73,21 @@
 
 <script src="/static/dws_charts.js"></script>
 <script>
+  fetch('/api/scenarios').then(function(r){ return r.json(); }).then(function(data){
+    var sel = document.getElementById('scenarioSelect');
+    sel.innerHTML = '';
+    for(var key in data.scenarios){
+      var opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = data.scenarios[key].label;
+      if(key == data.current) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }).catch(function(){});
+  function switchScenario(key){
+    fetch('/api/scenarios/switch/' + key).then(function(){ location.reload(); });
+  }
   (function(){
-    // 统计
     var pass=0,warn=0,fail=0;
     document.querySelectorAll('.pc-item').forEach(function(el){
       var t = el.querySelector('.tag');
@@ -82,15 +98,12 @@
     document.getElementById('pc-pass').textContent = pass + ' 通过';
     document.getElementById('pc-warn').textContent = warn + ' 警告';
     document.getElementById('pc-fail').textContent = fail + ' 失败';
-
-    // 加载雷达图数据
     fetch('/api/precheck/summary').then(function(r){ return r.json(); }).then(function(data){
       if(window.DWSCharts && data.categories){
         DWSCharts.drawRadarChart('radarChart', {
           categories: data.categories,
           width: 360, height: 300
         });
-        // 柱状图（3 节点模拟）
         var barData = {
           title: '节点对比（模拟）',
           bars: [

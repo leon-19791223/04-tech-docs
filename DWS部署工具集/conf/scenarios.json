@@ -1,0 +1,52 @@
+{
+  "_description": "DWS 预检 Mock 场景 — 用于演示不同预检结果",
+  "_current": "typical_issues",
+  "scenarios": {
+    "all_pass": {
+      "label": "全部通过",
+      "desc": "42 项全部通过，展示理想部署环境",
+      "seed": 1,
+      "overrides": {}
+    },
+    "typical_issues": {
+      "label": "典型问题",
+      "desc": "5项警告+2项失败，模拟真实 POC 现场",
+      "seed": 42,
+      "overrides": {
+        "os-umask": {"status": "warn", "detail": "umask=0077 (建议0022)"},
+        "os-tcp-params": {"status": "warn", "detail": "somaxconn=128 (需≥65535)"},
+        "os-password-policy": {"status": "warn", "detail": "PASS_MAX_DAYS=99999 (需≤90)"},
+        "os-audit": {"status": "warn", "detail": "auditd运行中，建议关闭"},
+        "os-ntp-offset": {"status": "warn", "detail": "NTP偏移≈50ms (需<10ms)"},
+        "net-retrans": {"status": "fail", "detail": "重传率0.5% (需<0.01%)"},
+        "stor-readahead": {"status": "fail", "detail": "readahead=256 (需≥4096)"}
+      }
+    },
+    "network_bottleneck": {
+      "label": "网络瓶颈",
+      "desc": "网络类3项失败+2项警告，展示预检捕获能力",
+      "seed": 7,
+      "overrides": {
+        "net-bandwidth-test": {"status": "fail", "detail": "iperf3: 320MB/s (需≥800MB/s)"},
+        "net-retrans": {"status": "fail", "detail": "重传率2.3% (需<0.01%)"},
+        "net-port-negotiation": {"status": "fail", "detail": "eth1: 1000Mb/s (需≥10000)"},
+        "net-vlan-config": {"status": "warn", "detail": "业务平面VLAN未配置"},
+        "net-stp-status": {"status": "warn", "detail": "存在端口STP协商中"},
+        "os-tcp-params": {"status": "warn", "detail": "tcp_tw_reuse=0 (需=1)"}
+      }
+    },
+    "storage_misconfig": {
+      "label": "存储配置错误",
+      "desc": "存储类2项失败+OS类1项失败+3项警告",
+      "seed": 13,
+      "overrides": {
+        "stor-mount": {"status": "fail", "detail": "/srv/BigData/dbdata_om 未挂载"},
+        "stor-fstab": {"status": "fail", "detail": "/etc/fstab未配置数据盘挂载"},
+        "os-swap": {"status": "fail", "detail": "swap未完全关闭 (分区还存在)"},
+        "stor-striping": {"status": "warn", "detail": "条带大小=64KB (建议≥256KB)"},
+        "stor-alignment": {"status": "warn", "detail": "分区起始扇区=63 (4K未对齐)"},
+        "stor-readahead": {"status": "warn", "detail": "readahead=1024 (建议≥4096)"}
+      }
+    }
+  }
+}

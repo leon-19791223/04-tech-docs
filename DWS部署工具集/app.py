@@ -115,6 +115,30 @@ RACK_LAYOUT = _load_vendor_data("RACK_LAYOUT", [])
 app = Flask(__name__)
 app.jinja_env.auto_reload = True
 
+# ─── Mock 场景管理 ──────────────────────────────────────
+_SCENARIOS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "conf", "scenarios.json")
+_scenarios_data = None
+_current_scenario = "typical_issues"
+
+def _load_scenarios():
+    global _scenarios_data
+    if _scenarios_data is None:
+        if os.path.exists(_SCENARIOS_PATH):
+            try:
+                with open(_SCENARIOS_PATH, "r", encoding="utf-8") as f:
+                    _scenarios_data = json.load(f)
+            except Exception:
+                _scenarios_data = {"scenarios": {"all_pass": {"label": "全部通过"}}}
+        else:
+            _scenarios_data = {"scenarios": {"all_pass": {"label": "全部通过"}}}
+    return _scenarios_data
+
+def _get_scenario_overrides(scenario_key=None):
+    sc = _load_scenarios()
+    key = scenario_key or _current_scenario
+    scenario = sc.get("scenarios", {}).get(key, {})
+    return scenario.get("overrides", {})
+
 # ─── 鉴权配置（可选） ─────────────────────────────────────
 app.config['AUTH_ENABLED'] = os.environ.get('DWS_AUTH_ENABLED', 'false').lower() == 'true'
 app.config['AUTH_TOKEN'] = os.environ.get('DWS_AUTH_TOKEN', 'dws-default-token')
@@ -240,7 +264,14 @@ def precheck():
 
 @app.route("/api/precheck")
 def api_precheck():
-    results = MOCK_PRECHECK
+    """预检结果 API（已考虑当前 Mock 场景）"""
+    import copy
+    results = copy.deepcopy(MOCK_PRECHECK)
+    # 应用场景 override
+    overrides = _get_scenario_overrides()
+    for item_id, override in overrides.items():
+        if item_id in results:
+            results[item_id].update(override)
     summary = {"pass": 0, "warn": 0, "fail": 0, "total": len(results)}
     for v in results.values():
         summary[v["status"]] += 1
@@ -328,6 +359,32 @@ def api_precheck_run():
         "security_warning": executor.security_warning,
         "audit_count": len(executor.audit_log),
     })
+
+# ================================================================
+# Mock 场景管理
+# ================================================================
+@app.route("/api/scenarios")
+def api_scenarios():
+    """获取可用 Mock 场景列表和当前场景"""
+    sc = _load_scenarios()
+    scenarios = {
+        k: {"label": v.get("label", k), "desc": v.get("desc", "")}
+        for k, v in sc.get("scenarios", {}).items()
+    }
+    return jsonify({
+        "scenarios": scenarios,
+        "current": _current_scenario,
+    })
+
+@app.route("/api/scenarios/switch/<scenario_key>")
+def api_scenario_switch(scenario_key):
+    """切换 Mock 场景"""
+    global _current_scenario
+    sc = _load_scenarios()
+    if scenario_key in sc.get("scenarios", {}):
+        _current_scenario = scenario_key
+        return jsonify({"ok": True, "current": scenario_key})
+    return jsonify({"error": f"未知场景: {scenario_key}"}), 400
 
 # ================================================================
 # 预检统计 API（供雷达图使用）
