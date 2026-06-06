@@ -39,25 +39,55 @@ from engine.core_engine import (
 app = Flask(__name__)
 app.jinja_env.auto_reload = True
 
-# ─── 模拟预检数据（demo 模式用） ───
+# ─── 模拟预检数据（demo 模式用, 40项） ───
 MOCK_PRECHECK = {
-    "hw-raid":      {"status": "pass", "detail": "storcli64可用, RAID策略已配置"},
-    "hw-disk-count": {"status": "pass", "detail": "8块盘/节点 (满足生产≥6)"},
-    "hw-network-card": {"status": "pass", "detail": "25GE, MTU=1500, Hi1822已配置"},
-    "hw-ssd-check": {"status": "pass", "detail": "全部为SSD(ROTA=0)"},
-    "hw-bios-numa": {"status": "pass", "detail": "numa_balancing=0, 节能模式关闭"},
-    "os-audit":     {"status": "pass", "detail": "auditd已关闭"},
-    "os-firewall":  {"status": "warn", "detail": "firewalld已关闭, iptables未开启"},
-    "os-selinux":   {"status": "pass", "detail": "SELinux=disabled"},
-    "os-swap":      {"status": "pass", "detail": "swap已关闭"},
-    "os-hugepage":  {"status": "pass", "detail": "透明大页已关闭"},
-    "os-timezone":  {"status": "pass", "detail": "Asia/Shanghai"},
-    "os-charset":   {"status": "pass", "detail": "en_US.UTF-8"},
+    # 硬件 (12项)
+    "hw-raid":          {"status": "pass", "detail": "storcli64可用, RAID策略已配置"},
+    "hw-disk-count":    {"status": "pass", "detail": "8块盘/节点 (满足生产≥6)"},
+    "hw-network-card":  {"status": "pass", "detail": "25GE, MTU=1500, Hi1822已配置"},
+    "hw-ssd-check":     {"status": "pass", "detail": "全部为SSD(ROTA=0)"},
+    "hw-bios-numa":     {"status": "pass", "detail": "numa_balancing=0, 节能模式关闭"},
+    "hw-bios-version":  {"status": "pass", "detail": "BIOS V158 (Kunpeng)"},
+    "hw-uefi-mode":     {"status": "pass", "detail": "UEFI模式"},
+    "hw-cpu-freq":      {"status": "pass", "detail": "2400MHz"},
+    "hw-mem-freq":      {"status": "pass", "detail": "2933MT/s"},
+    "hw-pcie-link":     {"status": "pass", "detail": "PCIe Gen3 x8 正常"},
+    "hw-raid-cache":    {"status": "pass", "detail": "RAID缓存=2GB, Read Ahead已启用"},
+    "hw-bbu-status":    {"status": "pass", "detail": "BBU状态正常, 电量100%"},
+    # OS (15项)
+    "os-audit":         {"status": "pass", "detail": "auditd已关闭"},
+    "os-firewall":      {"status": "warn", "detail": "firewalld已关闭, iptables未开启"},
+    "os-selinux":       {"status": "pass", "detail": "SELinux=disabled"},
+    "os-swap":          {"status": "pass", "detail": "swap已关闭"},
+    "os-hugepage":      {"status": "pass", "detail": "透明大页已关闭"},
+    "os-timezone":      {"status": "pass", "detail": "Asia/Shanghai"},
+    "os-charset":       {"status": "pass", "detail": "en_US.UTF-8"},
     "os-kernel-params": {"status": "warn", "detail": "watermark=100 ✅, numa=0 ✅, OOM待确认"},
-    "stor-mount":   {"status": "pass", "detail": "4个目录全部挂载"},
-    "stor-fstab":   {"status": "pass", "detail": "/etc/fstab已配置"},
-    "sw-python":    {"status": "pass", "detail": "Python 3.8.5 已安装"},
-    "sw-yum":       {"status": "pass", "detail": "yum源可用, ISO已挂载"},
+    "os-umask":         {"status": "pass", "detail": "umask=0022"},
+    "os-file-max":      {"status": "pass", "detail": "fs.file-max=1000000"},
+    "os-tcp-params":    {"status": "warn", "detail": "tcp_tw_reuse=1, somaxconn=65535 ✅, ip_local_port_range=20000-60999(需调整)"},
+    "os-arp-filter":    {"status": "pass", "detail": "arp_filter=0, arp_ignore=0, arp_announce=2"},
+    "os-ntp-offset":    {"status": "pass", "detail": "NTP已同步, 偏移<1ms"},
+    "os-ssh-config":    {"status": "pass", "detail": "MaxSessions=1024, UseDNS=no"},
+    "os-password-policy": {"status": "warn", "detail": "PASS_MAX_DAYS=99999(需调整为90天)"},
+    # 网络 (8项)
+    "net-switch-mtu":       {"status": "pass", "detail": "MTU=1500 全网一致"},
+    "net-vlan-config":      {"status": "warn", "detail": "管理平面VLAN=101, 业务平面VLAN=102"},
+    "net-route-reach":      {"status": "pass", "detail": "3节点全部可达"},
+    "net-bandwidth-test":   {"status": "pass", "detail": "iperf3: 950MB/s(满足≥800MB/s)"},
+    "net-retrans":          {"status": "pass", "detail": "重传率≈0.002%(满足<0.01%)"},
+    "net-port-negotiation": {"status": "pass", "detail": "所有端口=10000Mb/s"},
+    "net-stp-status":       {"status": "pass", "detail": "STP边缘端口已配置"},
+    "net-mac-table":        {"status": "pass", "detail": "MAC学习正常"},
+    # 存储 (5项)
+    "stor-mount":       {"status": "pass", "detail": "4个目录全部挂载"},
+    "stor-fstab":       {"status": "pass", "detail": "/etc/fstab已配置"},
+    "stor-striping":    {"status": "pass", "detail": "RAID5条带=256KB"},
+    "stor-alignment":   {"status": "pass", "detail": "分区2048s对齐, 4K对齐确认"},
+    "stor-readahead":   {"status": "pass", "detail": "readahead=4096 (2MB)"},
+    # 软件 (2项)
+    "sw-python":        {"status": "pass", "detail": "Python 3.8.5 已安装"},
+    "sw-yum":           {"status": "pass", "detail": "yum源可用, ISO已挂载"},
 }
 
 # ================================================================

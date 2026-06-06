@@ -1,12 +1,16 @@
 """
 DWS 部署预检引擎
 基于嘉兴银行 DWS 部署实践 + DWS 9.1.0 产品文档规范
+
+版本: v2.0 (扩展至 42 项)
+类别: hardware=12, os=15, network=8, storage=5, software=2
 """
 
 PRECHECK_ITEMS = [
     # ================================================================
-    # 硬件环境 (5项)
+    # 硬件环境 (12项)
     # ================================================================
+    # ── 原有 5 项 ──
     {
         "id": "hw-raid",
         "name": "RAID策略",
@@ -52,10 +56,75 @@ PRECHECK_ITEMS = [
         "check_cmd": "cat /proc/sys/vm/numa_balancing",
         "solution": "BIOS设置关闭节能; sysctl -w kernel.numa_balancing=0",
     },
+    # ── 新增 7 项 ──
+    {
+        "id": "hw-bios-version",
+        "name": "BIOS版本检查",
+        "category": "hardware",
+        "severity": "warning",
+        "description": "BIOS版本≥Kunpeng BIOS V158 (华为鲲鹏服务器推荐)",
+        "check_cmd": "dmidecode -s bios-version 2>/dev/null || cat /sys/class/dmi/id/bios_version",
+        "solution": "升级BIOS固件: 登录IBMC -> 固件升级 -> BIOS固件更新",
+    },
+    {
+        "id": "hw-uefi-mode",
+        "name": "UEFI启动模式",
+        "category": "hardware",
+        "severity": "error",
+        "description": "必须为UEFI模式 (DWS不支持Legacy)",
+        "check_cmd": "ls /sys/firmware/efi 2>/dev/null && echo 'UEFI' || echo 'Legacy'",
+        "solution": "重装OS时选择UEFI模式: IBMC配置->启动设置->UEFI",
+    },
+    {
+        "id": "hw-cpu-freq",
+        "name": "CPU频率检查",
+        "category": "hardware",
+        "severity": "warning",
+        "description": "CPU频率≥2.4GHz (鲲鹏920标准频率)",
+        "check_cmd": "lscpu | grep 'CPU MHz' | awk '{print $3}'",
+        "solution": "BIOS设置关闭节能模式, 确认Performance Policy=Performance",
+    },
+    {
+        "id": "hw-mem-freq",
+        "name": "内存频率检查",
+        "category": "hardware",
+        "severity": "warning",
+        "description": "内存频率≥2933MT/s (DDR4标准频率)",
+        "check_cmd": "dmidecode -t memory 2>/dev/null | grep -i 'Speed' | head -4",
+        "solution": "确认内存条规格≥2933MT/s, 并安装在正确通道",
+    },
+    {
+        "id": "hw-pcie-link",
+        "name": "PCIe链路状态",
+        "category": "hardware",
+        "severity": "warning",
+        "description": "PCIe链路宽度和速度正常(无降速)",
+        "check_cmd": "lspci -vvv 2>/dev/null | grep -E 'LnkCap|LnkSta' | head -10",
+        "solution": "重新插拔PCIe设备, 检查PCIe插槽是否支持Gen3/Gen4",
+    },
+    {
+        "id": "hw-raid-cache",
+        "name": "RAID缓存配置",
+        "category": "hardware",
+        "severity": "error",
+        "description": "RAID控制器缓存≥2GB, 读策略=Read Ahead",
+        "check_cmd": "storcli64 /c0 show all 2>/dev/null | grep -iE 'Cache|Read' | head -5",
+        "solution": "IBMC -> 存储管理 -> 调整RAID策略: Read Ahead + Write Back With BBU",
+    },
+    {
+        "id": "hw-bbu-status",
+        "name": "RAID BBU状态",
+        "category": "hardware",
+        "severity": "error",
+        "description": "BBU(后备电池)状态正常, 电量≥100%",
+        "check_cmd": "storcli64 /c0/bbu show 2>/dev/null | grep -E 'State|Temperature|Voltage' || echo '未检测到BBU'",
+        "solution": "更换故障BBU电池, 确认充电完成: storcli64 /c0/bbu start learn",
+    },
 
     # ================================================================
-    # OS配置 (6项)
+    # OS配置 (15项)
     # ================================================================
+    # ── 原有 8 项 ──
     {
         "id": "os-audit",
         "name": "audit服务",
@@ -128,10 +197,151 @@ PRECHECK_ITEMS = [
         "check_cmd": "sysctl vm.watermark_scale_factor kernel.numa_balancing",
         "solution": "echo 'vm.watermark_scale_factor=100' >> /etc/sysctl.conf; sysctl -p",
     },
+    # ── 新增 7 项 ──
+    {
+        "id": "os-umask",
+        "name": "umask配置",
+        "category": "os",
+        "severity": "warning",
+        "description": "umask=0022 (默认安全配置)",
+        "check_cmd": "umask",
+        "solution": "echo 'umask 0022' >> /etc/profile && source /etc/profile",
+    },
+    {
+        "id": "os-file-max",
+        "name": "file-max系统限制",
+        "category": "os",
+        "severity": "error",
+        "description": "fs.file-max≥1000000 (DWS并行连接高)",
+        "check_cmd": "sysctl -n fs.file-max",
+        "solution": "echo 'fs.file-max=1000000' >> /etc/sysctl.conf && sysctl -p",
+    },
+    {
+        "id": "os-tcp-params",
+        "name": "TCP内核参数",
+        "category": "os",
+        "severity": "warning",
+        "description": "tcp_tw_reuse=1, somaxconn≥65535, ip_local_port_range=26000-65535",
+        "check_cmd": "sysctl net.ipv4.tcp_tw_reuse net.core.somaxconn net.ipv4.ip_local_port_range",
+        "solution": "追加到/etc/sysctl.conf: net.ipv4.tcp_tw_reuse=1; net.core.somaxconn=65535; net.ipv4.ip_local_port_range='26000 65335'",
+    },
+    {
+        "id": "os-arp-filter",
+        "name": "ARP过滤配置",
+        "category": "os",
+        "severity": "warning",
+        "description": "arp_filter=0, arp_ignore=0, arp_announce=2 (DWS推荐值)",
+        "check_cmd": "sysctl net.ipv4.conf.all.arp_filter net.ipv4.conf.all.arp_ignore net.ipv4.conf.all.arp_announce",
+        "solution": "追加到/etc/sysctl.conf: net.ipv4.conf.all.arp_filter=0; net.ipv4.conf.all.arp_ignore=0; net.ipv4.conf.all.arp_announce=2",
+    },
+    {
+        "id": "os-ntp-offset",
+        "name": "NTP时钟偏移",
+        "category": "os",
+        "severity": "error",
+        "description": "时钟偏移<10ms (DWS多节点一致性要求)",
+        "check_cmd": "chronyc tracking 2>/dev/null | grep 'System time' || timedatectl show | grep 'NTPSynchronized'",
+        "solution": "检查chrony配置: server指向NTP服务器; chronyc makestep; 确认防火墙开放123/udp",
+    },
+    {
+        "id": "os-ssh-config",
+        "name": "SSH连接配置",
+        "category": "os",
+        "severity": "warning",
+        "description": "SSH连接数≥1024, UseDNS=no (加速连接)",
+        "check_cmd": "grep -E 'MaxSessions|UseDNS' /etc/ssh/sshd_config | head -3",
+        "solution": "在/etc/ssh/sshd_config中: MaxSessions=1024; UseDNS=no; MaxStartups=100:30:200",
+    },
+    {
+        "id": "os-password-policy",
+        "name": "密码策略",
+        "category": "os",
+        "severity": "warning",
+        "description": "密码最小长度≥8, 最大有效期≤90天",
+        "check_cmd": "grep -E 'PASS_MIN_LEN|PASS_MAX_DAYS' /etc/login.defs 2>/dev/null | head -3",
+        "solution": "修改/etc/login.defs: PASS_MAX_DAYS=90; PASS_MIN_LEN=8",
+    },
 
     # ================================================================
-    # 存储 (2项)
+    # 网络环境 (8项) — 新增类别
     # ================================================================
+    {
+        "id": "net-switch-mtu",
+        "name": "交换机MTU检查",
+        "category": "network",
+        "severity": "error",
+        "description": "交换机端到端MTU≥1500 (与OS侧一致)",
+        "check_cmd": "ip link | grep -o 'mtu [0-9]*' | sort -u",
+        "solution": "确认交换机端口MTU=1500: display interface <端口> | include mtu",
+    },
+    {
+        "id": "net-vlan-config",
+        "name": "VLAN配置检查",
+        "category": "network",
+        "severity": "warning",
+        "description": "管理平面VLAN=101, 业务平面VLAN=102 (或按客户规划)",
+        "check_cmd": "ip -d link show | grep -E 'vlan|802.1Q' | head -5 || echo '未配置VLAN标记'",
+        "solution": "在交换机创建VLAN并将对应端口划入: vlan batch 101 102; port default vlan 101",
+    },
+    {
+        "id": "net-route-reach",
+        "name": "路由可达性检查",
+        "category": "network",
+        "severity": "error",
+        "description": "所有节点管理IP互相可达, 业务IP互相可达",
+        "check_cmd": "ping -c 2 -W 2 $(ip route | grep default | awk '{print $3}' | head -1) 2>/dev/null || echo '不可达'",
+        "solution": "检查路由表: ip route; 确认下一跳网关正确; 检查交换机路由配置",
+    },
+    {
+        "id": "net-bandwidth-test",
+        "name": "节点间带宽测试",
+        "category": "network",
+        "severity": "error",
+        "description": "节点间带宽≥800MB/s (对应10GE线速80%)",
+        "check_cmd": "which iperf3 2>/dev/null && echo 'iperf3已安装' || echo 'iperf3未安装, 请安装后测试: yum install -y iperf3'",
+        "solution": "服务端: iperf3 -s -p 12345; 客户端: iperf3 -c <server_ip> -p 12345 -t 30 -P 4",
+    },
+    {
+        "id": "net-retrans",
+        "name": "TCP重传率检查",
+        "category": "network",
+        "severity": "error",
+        "description": "TCP重传率<0.01% (DWS集群通信要求)",
+        "check_cmd": "grep -E 'retransmit|Retrans' /proc/net/snmp 2>/dev/null | awk '{print $NF}' || echo '无法获取'",
+        "solution": "检查网卡协商速率是否正常; 检查交换机端口是否有CRC错误; 更换网线/光模块",
+    },
+    {
+        "id": "net-port-negotiation",
+        "name": "端口协商速率",
+        "category": "network",
+        "severity": "error",
+        "description": "所有节点网卡协商速率≥10000Mb/s (10GE)",
+        "check_cmd": "for eth in /sys/class/net/*; do speed=$(cat $eth/speed 2>/dev/null); [ -n \"$speed\" ] && echo \"$(basename $eth): ${speed}Mb/s\"; done",
+        "solution": "检查网线/光模块; 交换机端口shutdown/no-shutdown; 强制协商速率",
+    },
+    {
+        "id": "net-stp-status",
+        "name": "STP/环路检测",
+        "category": "network",
+        "severity": "warning",
+        "description": "交换机STP状态正常, 无环路",
+        "check_cmd": "echo '请在交换机上确认: display stp brief | include <端口名>'; ip link show | grep 'NO-CARRIER' | head -3",
+        "solution": "交换机确认STP配置: stp enable; stp mode rstp; 边缘端口使能stp edged-port",
+    },
+    {
+        "id": "net-mac-table",
+        "name": "MAC表学习检查",
+        "category": "network",
+        "severity": "warning",
+        "description": "所有节点MAC地址在交换机MAC表中正确学习",
+        "check_cmd": "ip neighbor show | head -10",
+        "solution": "检查交换机MAC表是否有漂移: display mac-address flapping record; 确认没有重复MAC",
+    },
+
+    # ================================================================
+    # 存储 (5项)
+    # ================================================================
+    # ── 原有 2 项 ──
     {
         "id": "stor-mount",
         "name": "磁盘挂载",
@@ -150,9 +360,37 @@ PRECHECK_ITEMS = [
         "check_cmd": "grep /srv/BigData /etc/fstab 2>/dev/null || echo '未配置'",
         "solution": "blkid获取UUID -> 写入/etc/fstab -> mount -a验证",
     },
+    # ── 新增 3 项 ──
+    {
+        "id": "stor-striping",
+        "name": "条带化配置",
+        "category": "storage",
+        "severity": "warning",
+        "description": "数据盘条带大小≥256KB (DWS数据仓库工作负载推荐)",
+        "check_cmd": "storcli64 /c0 /vall show 2>/dev/null | grep -i 'Strip' || mdadm --detail /dev/md* 2>/dev/null | grep 'Chunk Size'",
+        "solution": "在RAID配置界面重建虚拟磁盘, 设置条带大小=256KB",
+    },
+    {
+        "id": "stor-alignment",
+        "name": "分区对齐检查",
+        "category": "storage",
+        "severity": "warning",
+        "description": "分区起始扇区为8的倍数(4K对齐), 推荐2048扇区",
+        "check_cmd": "parted /dev/$(lsblk -d -o NAME | grep -v sr0 | tail -1) unit s print free 2>/dev/null | grep -E '^ [0-9]' | head -5",
+        "solution": "使用parted创建分区时: mkpart primary 2048s 100%; 避免使用fdisk默认值",
+    },
+    {
+        "id": "stor-readahead",
+        "name": "磁盘预读大小",
+        "category": "storage",
+        "severity": "warning",
+        "description": "数据盘readahead≥4096 (即2MB, 8扇区×512byte)",
+        "check_cmd": "blockdev --getra /dev/$(lsblk -d -o NAME | grep -v sr0 | tail -1)",
+        "solution": "blockdev --setra 4096 /dev/<数据盘>; 追加到/etc/rc.local实现持久化",
+    },
 
     # ================================================================
-    # 软件环境 (2项)
+    # 软件环境 (2项) — 不变
     # ================================================================
     {
         "id": "sw-python",
@@ -175,8 +413,9 @@ PRECHECK_ITEMS = [
 ]
 
 PRECHECK_PHASES = {
-    "hardware": {"name": "硬件环境", "icon": "🖥️", "count": 5},
-    "os": {"name": "OS配置", "icon": "💿", "count": 8},
-    "storage": {"name": "存储配置", "icon": "💾", "count": 2},
-    "software": {"name": "软件环境", "icon": "📦", "count": 2},
+    "hardware": {"name": "硬件环境", "icon": "🖥️", "count": 12},
+    "os":       {"name": "OS配置",   "icon": "💿", "count": 15},
+    "network":  {"name": "网络环境",  "icon": "🌐", "count": 8},
+    "storage":  {"name": "存储配置",  "icon": "💾", "count": 5},
+    "software": {"name": "软件环境",  "icon": "📦", "count": 2},
 }
