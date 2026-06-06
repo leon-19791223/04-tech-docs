@@ -11,7 +11,7 @@
 .cfg-preview.hidden{display:none}
 
 .cfg-section{margin-bottom:14px}
-.cfg-section h4{font-size:13px;font-weight:600;color:var(--ac);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:6px}
+.cfg-section h4{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--gray3);display:flex;align-items:center;gap:6px}
 .cfg-section h4 .s-icon{font-size:15px}
 
 .cfg-row{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-bottom:8px}
@@ -20,29 +20,29 @@
 .cfg-row.col1{grid-template-columns:1fr}
 
 .cfg-f{display:flex;flex-direction:column}
-.cfg-f label{font-size:10.5px;font-weight:600;color:var(--t2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
-.cfg-f input,.cfg-f select{width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;font-size:12.5px;color:var(--tx);transition:.15s}
-.cfg-f input:focus,.cfg-f select:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 2px var(--ac-bg)}
+.cfg-f label{font-size:10.5px;font-weight:600;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.cfg-f input,.cfg-f select{width:100%;padding:7px 10px;background:var(--card);border:1px solid var(--gray3);border-radius:6px;font-size:12.5px;color:var(--text);transition:.15s}
+.cfg-f input:focus,.cfg-f select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
 .cfg-f select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:28px}
-.cfg-f .hint{font-size:10px;color:var(--t3);margin-top:2px}
+.cfg-f .hint{font-size:10px;color:var(--gray2);margin-top:2px}
 
-.node-card{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-bottom:8px}
+.node-card{background:var(--g50);border:1px solid var(--gray3);border-radius:8px;padding:12px;margin-bottom:8px}
 .node-card .nc-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;font-size:12.5px}
-.node-card .nc-head input{width:130px;padding:5px 8px;background:var(--s1);border:1px solid var(--bd);border-radius:5px;font-size:12px;color:var(--tx)}
-.node-card .nc-head select{width:90px;padding:5px 8px;background:var(--s1);border:1px solid var(--bd);border-radius:5px;font-size:12px;color:var(--tx)}
+.node-card .nc-head input{width:130px;padding:5px 8px;background:var(--card);border:1px solid var(--gray3);border-radius:5px;font-size:12px;color:var(--text)}
+.node-card .nc-head select{width:90px;padding:5px 8px;background:var(--card);border:1px solid var(--gray3);border-radius:5px;font-size:12px;color:var(--text)}
 .node-card .nc-head .nc-tag{font-size:10.5px;padding:1px 8px;border-radius:8px;font-weight:600}
-.node-card .nc-head .nc-tag.ctrl{background:var(--ac-bg);color:var(--ac)}
+.node-card .nc-head .nc-tag.ctrl{background:var(--accent-bg);color:var(--accent)}
 .node-card .nc-head .nc-tag.data{background:var(--pr-bg);color:var(--pr)}
 
 .actions{display:flex;gap:10px;align-items:center;padding:12px 0}
-.tgl-label{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--t2);cursor:pointer}
-.tgl-label input{accent-color:var(--ac)}
+.tgl-label{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--gray);cursor:pointer}
+.tgl-label input{accent-color:var(--accent)}
 
 @media(max-width:1100px){.cfg-layout{flex-direction:column}.cfg-preview{width:100%;position:static;max-height:none}}
 </style>
 
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-    <div><h3 style="font-size:15px;font-weight:700;color:var(--tx);margin:0;">LLD 配置中心</h3><div style="font-size:11px;color:var(--t2);">填写参数 → 实时预览 → 保存生成模板</div></div>
+    <div><h3 style="font-size:15px;font-weight:700;color:var(--text);margin:0;">LLD 配置中心</h3><div style="font-size:11px;color:var(--gray);">填写参数 → 实时预览 → 保存生成模板</div></div>
     <div class="actions">
         <label class="tgl-label"><input type="checkbox" id="tgl" checked onchange="document.querySelector('.cfg-preview').classList.toggle('hidden')"> 预览</label>
         <button type="submit" form="cf" class="btn btn-primary">保存并生成模板</button>
@@ -118,8 +118,8 @@
 <!-- Preview panel -->
 <div class="cfg-preview">
     <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-        <div style="padding:10px 14px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:11px;color:var(--t2);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:6px;">
-            <span style="width:8px;height:8px;border-radius:50%;background:var(--ac);"></span>preinstall.ini 实时预览
+        <div style="padding:10px 14px;background:var(--g50);border-bottom:1px solid var(--gray3);font-size:11px;color:var(--gray);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:6px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);"></span>preinstall.ini 实时预览
         </div>
         <div class="code" id="pv" style="flex:1;max-height:none;border-radius:0;border:none;font-size:11.5px;line-height:1.55;padding:12px 14px;"></div>
     </div>
